@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ユーザープロフィール（本人のみ）
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ユーザーサブコレクション（個人支出等、本人のみ）
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 世帯ドキュメント本体
+    // 読み取り: ログイン済みであれば可（招待コード照合のため）
+    // 作成: ログイン済みかつ自分がmemberIdsに含まれる
+    // 更新: 現メンバー による更新 OR 招待コードによる新規参加
+    match /households/{householdId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.auth.uid in request.resource.data.memberIds;
+      allow update: if request.auth != null
+        && (
+          // 既存メンバーは自由に更新可
+          request.auth.uid in resource.data.memberIds
+          // 招待コードによる新規参加:
+          //   - 自分のUIDが新しいmemberIdsに含まれている
+          //   - 招待コードは変更していない
+          //   - 既存メンバーは全員保持している
+          //   - 追加されるのは自分1人だけ
+          || (
+            request.auth.uid in request.resource.data.memberIds
+            && request.resource.data.inviteCode == resource.data.inviteCode
+            && request.resource.data.memberIds.hasAll(resource.data.memberIds)
+            && request.resource.data.memberIds.size() == resource.data.memberIds.size() + 1
+          )
+        );
+      allow delete: if false;
+    }
+
+    // 世帯サブコレクション（メンバーのみ読み書き）
+    match /households/{householdId}/{document=**} {
+      allow read, write: if request.auth != null
+        && request.auth.uid in get(
+          /databases/$(database)/documents/households/$(householdId)
+        ).data.memberIds;
+    }
+  }
+}

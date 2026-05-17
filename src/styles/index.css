@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@media (max-width: 767px) {
+  .fab-mobile {
+    bottom: calc(var(--bn-height, 56px) + 24px);
+  }
+}

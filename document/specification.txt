@@ -1,0 +1,309 @@
+家計簿アプリ 仕様書
+作成日: 2026-05-12
+
+================================================================================
+
+1. 現状仕様（リバースエンジニアリング）
+
+================================================================================
+
+1-1. システム概要
+
+  フレームワーク  : React + TypeScript（Vite）
+  スタイリング    : Tailwind CSS
+  データベース    : Firebase Firestore
+  ホスティング    : Firebase Hosting
+  グラフ          : Chart.js
+  DnD             : @dnd-kit
+  URL             : https://kakeibo-app-478c5.web.app
+
+--------------------------------------------------------------------------------
+
+1-2. 画面一覧
+
+  画面名            パス                説明
+  ---------------   ----------------    ----------------------------------------
+  月別収支          /months/:yearMonth  指定月のトランザクション一覧・収支サマリー
+  年間収支          /annual             1年分の月別集計を表形式で表示
+  キャッシュフロー  /cashflow           10年間の収支シミュレーション表
+  固定費一覧        /fixed-costs        固定費の引き落とし日管理（カレンダー）
+
+--------------------------------------------------------------------------------
+
+1-3. Firestore スキーマ
+
+【categories/{docId}】
+  interface Category {
+    id: string
+    name: string
+    type: 'income' | 'expense'
+    expenseType?: 'fixed' | 'variable'  // 支出のみ
+    color: string                        // hex カラーコード
+    order: number
+  }
+  初期データ：15カテゴリ（収入3, 固定費5, 変動費7）
+
+【paymentMethods/{docId}】
+  interface PaymentMethod {
+    id: string
+    name: string
+    order: number
+  }
+  初期データ：現金、クレジットカード、電子マネー、QRコード、銀行振込
+
+【months/{YYYY-MM}】
+  interface MonthDocument {
+    year: number
+    month: number
+    transactions: Transaction[]
+  }
+  interface Transaction {
+    id: string
+    type: 'income' | 'expense'
+    amount: number
+    categoryId: string
+    paymentMethodId?: string
+    date: string  // "YYYY-MM-DD"
+    memo: string
+  }
+
+【cfPlan/main】
+  interface CfPlan {
+    startYear: number
+    initialSavings: number                   // 万円
+    members: CfMember[]
+    incomeItems: CfItem[]
+    expenseItems: CfItem[]
+    lifeEvents?: Record<string, string>      // {"2026": "長男入学"}
+  }
+  interface CfMember {
+    id: string
+    name: string
+    birthYear: number
+    role?: string                            // 夫/妻/子/その他
+  }
+  interface CfItem {
+    id: string
+    name: string
+    rate: number                             // 変動率 (%)
+    order: number
+    values: Record<string, number>           // {"2026": 300}  単位: 万円
+  }
+
+【fixedCosts/{docId}】
+  interface FixedCost {
+    id: string
+    name: string           // 費目名（例：家賃、電気代）
+    dayOfMonth: number     // 引き落とし日（1〜31）
+    amount: number         // 金額（円）
+    paymentMethod: string  // 支払い方法・口座（自由テキスト）
+    memo?: string          // メモ・備考
+    order: number          // 表示順（登録順）
+  }
+
+--------------------------------------------------------------------------------
+
+1-4. 主要コンポーネント
+
+【pages/】
+  ファイル               役割
+  ------------------     --------------------------------------------------------
+  MonthlyPage.tsx        月別収支画面。年月ナビゲーション、サマリー表示、
+                         TransactionList統合
+  AnnualPage.tsx         年間収支表。12ヶ月分を表形式で集計（固定費・変動費・
+                         収入分類）、支払い方法サブ行
+  CashflowPage.tsx       CF計画表。家族構成テーブル＋収支テーブル（10年）、
+                         インライン編集、DnD並べ替え
+  FixedCostsPage.tsx     固定費一覧。月別カレンダー＋固定費リスト表示
+
+【features/】
+  ファイル               役割
+  ------------------     --------------------------------------------------------
+  TransactionList.tsx    トランザクション一覧（日付グループ）、編集・削除操作
+  TransactionModal.tsx   収支新規・編集フォームモーダル
+  CategoryAddModal.tsx   カテゴリ追加モーダル（カラーピッカー付き）
+  PaymentMethodAddModal  支払い方法追加モーダル
+  CfSettingsModal.tsx    CF設定モーダル（基本設定タブ・家族構成タブ）
+  FixedCostModal.tsx     固定費追加・編集モーダル
+
+【hooks/】
+  ファイル               役割
+  ------------------     --------------------------------------------------------
+  useMonthlyData.ts      月別トランザクション取得
+  useCategories.ts       カテゴリ取得・初期化
+  usePaymentMethods.ts   支払い方法取得・初期化
+  useAnnualData.ts       12ヶ月並列取得
+  useCfPlan.ts           CFプラン取得・更新
+                         （updateItemValue/Name/Rate/reorderItems/
+                           addItem/removeItem/updateLifeEvent）
+
+【components/】
+  ファイル               役割
+  ------------------     --------------------------------------------------------
+  Layout.tsx             全画面共通レイアウト（Sidebar＋BottomNav統合、
+                         OutletContextでcategories/paymentMethods配布）
+  Sidebar.tsx            デスクトップ用左ナビゲーション
+  BottomNav.tsx          モバイル用ボトムナビゲーション
+  YearMonthPicker.tsx    年月選択ダイアログ
+
+--------------------------------------------------------------------------------
+
+1-5. UI/UX 共通ルール
+
+  ・モーダル：モバイルは下スライド、デスクトップは中央表示（createPortal 使用）
+  ・カラーシステム
+      emerald : 収入
+      rose    : 支出
+      indigo  : 操作・主要ボタン
+      amber   : 強調
+  ・テーブルスティッキー：border-separate border-spacing-0 で sticky left列を実現
+  ・レスポンシブ：md: breakpoint で PC / スマートフォン切り替え
+
+================================================================================
+
+2. 新機能仕様：固定費引き落とし日管理
+
+================================================================================
+
+2-1. 機能概要
+
+  固定費の引き落とし日・金額・支払い口座を一元管理するための機能。
+  月別収支データとは独立して管理し、
+  「いつ・どの口座から・いくら引き落とされるか」を把握する目的で使用する。
+  将来的にクレジットカードCSVインポート機能との照合への拡張も想定。
+
+--------------------------------------------------------------------------------
+
+2-2. データ設計
+
+  Firestore コレクション: fixedCosts/{docId}
+
+  interface FixedCost {
+    id: string
+    name: string           // 費目名（例：家賃、電気代）
+    dayOfMonth: number     // 引き落とし日（1〜31）
+    amount: number         // 金額（円）
+    paymentMethod: string  // 支払い方法・口座（自由テキスト、例：○○銀行）
+    memo?: string          // メモ・備考
+    order: number          // 表示順（登録順）
+  }
+
+  Firestore 操作関数（src/firebase/firestore.ts）
+    fetchFixedCosts()                        : Promise<FixedCost[]>
+    addFixedCost(cost)                       : Promise<string>
+    updateFixedCost(id, data)                : Promise<void>
+    deleteFixedCost(id)                      : Promise<void>
+
+--------------------------------------------------------------------------------
+
+2-3. 画面仕様
+
+  画面名        : 固定費一覧
+  パス          : /fixed-costs
+  ナビ表示名    : 固定費
+
+  レイアウト構成:
+
+    ┌─────────────────────────────────────┐
+    │  固定費一覧            [＋ 追加]    │
+    │                                     │
+    │  ◀ 2026年5月 ▶                      │
+    │                                     │
+    │  日  月  火  水  木  金  土          │
+    │   1   2   3   4   5   6   7        │
+    │   8   9  10  11  12  13  14        │
+    │  15  16  17  18  19  20  21        │  ← 引き落とし日に費目名チップ表示
+    │  22  23  24  25  26  27  28        │
+    │  29  30  31                         │
+    │                                     │
+    │  2026年5月の引き落とし合計: ¥XXX,XXX│
+    │  ──────────────────────────────     │
+    │  [日付順 固定費リスト]              │
+    │   5日  家賃      ¥80,000  ○○銀行  │
+    │  25日  電気代    ¥8,000   □□銀行  │
+    │  25日  水道代    ¥3,500   □□銀行  │
+    └─────────────────────────────────────┘
+
+  カレンダー表示仕様:
+    ・月ナビゲーション（前月 ◀ / 次月 ▶）
+    ・対象月のカレンダーグリッド（7列）
+    ・各日付セルに、その日が引き落とし日の固定費の費目名をチップ表示（複数可）
+    ・チップはクリック不可（表示のみ）
+    ・カレンダー下部に「今月の引き落とし合計」を表示
+    ・今日の日付をインディゴ色でハイライト
+
+  固定費リスト（カレンダー下部）:
+    ・全固定費を dayOfMonth 昇順で表示
+    ・各行：引き落とし日、費目名、金額（カンマ区切り）、支払い方法、メモ
+    ・行の右端に編集・削除ボタン
+    ・リストは月に依存せず常に全件表示（固定の登録データ）
+
+--------------------------------------------------------------------------------
+
+2-4. 固定費追加・編集モーダル
+
+  入力フィールド:
+    フィールド        入力形式        バリデーション
+    --------------    ----------      ---------------
+    費目名            テキスト        必須
+    引き落とし日      数値（1〜31）   必須
+    金額（円）        数値            必須・0以上
+    支払い方法・口座  テキスト        任意
+    メモ              テキスト        任意
+
+  ・新規追加：[＋ 追加] ボタン押下でモーダル表示
+  ・編集：リスト行の編集ボタン押下でモーダル表示（既存データ反映）
+  ・削除：リスト行の削除ボタン押下で確認なし即削除（既存パターンに準拠）
+  ・保存後はモーダルを閉じてリスト・カレンダーを更新
+
+--------------------------------------------------------------------------------
+
+2-5. ナビゲーション追加
+
+  src/components/BottomNav.tsx（モバイル）
+    ・既存タブ（月別・年間・CF）に「固定費」タブを追加
+
+  src/components/Sidebar.tsx（デスクトップ）
+    ・既存メニューに「固定費一覧」を追加
+
+  src/App.tsx
+    ・/fixed-costs ルートを追加（FixedCostsPage コンポーネント）
+
+--------------------------------------------------------------------------------
+
+2-6. 新規・変更ファイル一覧
+
+  種別  ファイル                              内容
+  ----  ------------------------------------  ----------------------------------
+  新規  src/pages/FixedCostsPage.tsx          固定費一覧ページ（カレンダー＋リスト）
+  新規  src/features/FixedCostModal.tsx       追加・編集モーダル
+  変更  src/types/index.ts                    FixedCost 型定義追加
+  変更  src/firebase/firestore.ts             fixedCosts CRUD 関数追加
+  変更  src/App.tsx                           /fixed-costs ルート追加
+  変更  src/components/BottomNav.tsx          「固定費」タブ追加
+  変更  src/components/Sidebar.tsx            「固定費一覧」メニュー追加
+
+--------------------------------------------------------------------------------
+
+2-7. 後方互換性・制約事項
+
+  ・既存機能（月別収支・年間収支・CF）への影響なし
+  ・月別収支への自動反映は行わない（将来機能として保留）
+  ・dayOfMonth が 29〜31 の場合、その月に存在しない日は
+    カレンダー表示のみ非表示（エラーにしない）
+  ・CSV照合機能は別フェーズで実装するため、この仕様には含まない
+
+--------------------------------------------------------------------------------
+
+2-8. 検証手順
+
+  1. npm run build がエラーなく通ること
+  2. 固定費ページに遷移できること（ボトムナビ・サイドバー両方）
+  3. 固定費の新規追加後にカレンダーとリストに反映されること
+  4. 編集・削除が正常に動作すること
+  5. リロード後もデータが保持されること（Firestore 確認）
+  6. 月ナビゲーションでカレンダーが正しく切り替わること
+  7. 29〜31日の固定費が存在しない月で表示崩れしないこと
+  8. npm run build → firebase deploy で本番反映
+
+================================================================================

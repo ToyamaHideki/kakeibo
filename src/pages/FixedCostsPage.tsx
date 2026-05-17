@@ -1,0 +1,521 @@
+import { useEffect, useState } from 'react'
+import { addFixedCost, deleteFixedCost, fetchFixedCosts, updateFixedCost } from '../firebase/firestore'
+import { useHousehold } from '../hooks/useHousehold'
+import { useConfirm } from '../hooks/useConfirm'
+import ConfirmDialog from '../components/ConfirmDialog'
+import FixedCostModal from '../features/FixedCostModal'
+import type { FixedCost } from '../types'
+
+function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate()
+}
+
+function getFirstDayOfWeek(year: number, month: number): number {
+  return new Date(year, month - 1, 1).getDay()
+}
+
+function getEffectiveDay(
+  dayOfMonth: number,
+  year: number,
+  month: number,
+): { effectiveDay: number; isShifted: boolean; overflows: boolean } {
+  const daysInMonth = getDaysInMonth(year, month)
+  if (dayOfMonth > daysInMonth) {
+    return { effectiveDay: dayOfMonth, isShifted: false, overflows: true }
+  }
+  const dow = new Date(year, month - 1, dayOfMonth).getDay()
+  const shift = dow === 6 ? 2 : dow === 0 ? 1 : 0
+  const effectiveDay = dayOfMonth + shift
+  return { effectiveDay, isShifted: shift > 0, overflows: effectiveDay > daysInMonth }
+}
+
+function isApplicableThisMonth(cost: FixedCost, year: number, month: number): boolean {
+  const freq = cost.frequency ?? 'monthly'
+  if (freq === 'monthly') return true
+  if (cost.month === undefined) return false
+  if (freq === 'yearly') return cost.month === month
+  if (freq === 'every2years') {
+    return cost.month === month && cost.baseYear !== undefined && Math.abs(year - cost.baseYear) % 2 === 0
+  }
+  if (freq === 'every3years') {
+    return cost.month === month && cost.baseYear !== undefined && Math.abs(year - cost.baseYear) % 3 === 0
+  }
+  return false
+}
+
+const FREQ_LABEL: Record<string, string | null> = {
+  monthly: null,
+  yearly: '毎年',
+  every2years: '隔年',
+  every3years: '3年ごと',
+}
+
+function dotColor(cost: FixedCost): string {
+  if (cost.isVariable) return 'bg-amber-400'
+  return (cost.frequency ?? 'monthly') === 'monthly' ? 'bg-sage-400' : 'bg-teal-400'
+}
+
+export default function FixedCostsPage() {
+  const { householdId } = useHousehold()
+  const today = new Date()
+  const [viewYear, setViewYear] = useState(today.getFullYear())
+  const [viewMonth, setViewMonth] = useState(today.getMonth() + 1)
+  const [costs, setCosts] = useState<FixedCost[]>([])
+  const [loading, setLoading] = useState(true)
+  const { confirm, dialogProps } = useConfirm()
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<FixedCost | null>(null)
+  const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [dayModalOpen, setDayModalOpen] = useState(false)
+
+  useEffect(() => {
+    if (!householdId) return
+    async function load() {
+      try {
+        const data = await fetchFixedCosts(householdId!)
+        setCosts(data.sort((a, b) => a.order - b.order))
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [householdId])
+
+  function prevMonth() {
+    if (viewMonth === 1) { setViewYear(y => y - 1); setViewMonth(12) }
+    else setViewMonth(m => m - 1)
+  }
+
+  function nextMonth() {
+    if (viewMonth === 12) { setViewYear(y => y + 1); setViewMonth(1) }
+    else setViewMonth(m => m + 1)
+  }
+
+  function openAdd() { setEditTarget(null); setModalOpen(true) }
+  function openEdit(cost: FixedCost) { setEditTarget(cost); setModalOpen(true) }
+
+  function openEditFromDay(cost: FixedCost) {
+    setDayModalOpen(false)
+    openEdit(cost)
+  }
+
+  async function handleDeleteFromDay(id: string) {
+    if (!await confirm('この固定費を削除しますか？')) return
+    await handleDelete(id)
+    setDayModalOpen(false)
+  }
+
+  async function handleSave(data: Omit<FixedCost, 'id' | 'order'>) {
+    if (!householdId) return
+    if (editTarget) {
+      await updateFixedCost(householdId, editTarget.id, data)
+      setCosts(prev => prev.map(c => (c.id === editTarget.id ? { ...c, ...data } : c)))
+    } else {
+      const maxOrder = costs.reduce((max, c) => Math.max(max, c.order), 0)
+      const id = await addFixedCost(householdId, { ...data, order: maxOrder + 1 })
+      setCosts(prev => [...prev, { id, ...data, order: maxOrder + 1 }].sort((a, b) => a.dayOfMonth - b.dayOfMonth))
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!householdId) return
+    await deleteFixedCost(householdId, id)
+    setCosts(prev => prev.filter(c => c.id !== id))
+  }
+
+  const daysInMonth = getDaysInMonth(viewYear, viewMonth)
+  const firstDow = getFirstDayOfWeek(viewYear, viewMonth)
+  const totalCells = Math.ceil((firstDow + daysInMonth) / 7) * 7
+
+  const costsByDay = new Map<number, FixedCost[]>()
+  for (const cost of costs) {
+    if (!isApplicableThisMonth(cost, viewYear, viewMonth)) continue
+    const { effectiveDay, overflows } = getEffectiveDay(cost.dayOfMonth, viewYear, viewMonth)
+    if (!overflows) {
+      const arr = costsByDay.get(effectiveDay) ?? []
+      arr.push(cost)
+      costsByDay.set(effectiveDay, arr)
+    }
+  }
+
+  const applicableCosts = costs.filter(c => {
+    const freq = c.frequency ?? 'monthly'
+    if (freq === 'monthly') return c.dayOfMonth <= daysInMonth
+    return isApplicableThisMonth(c, viewYear, viewMonth)
+  })
+  const monthlyTotal = applicableCosts.filter(c => !c.isVariable).reduce((sum, c) => sum + c.amount, 0)
+  const variableCount = applicableCosts.filter(c => c.isVariable).length
+
+  const sortedCosts = [...costs].sort((a, b) => {
+    const applicableA = isApplicableThisMonth(a, viewYear, viewMonth)
+    const applicableB = isApplicableThisMonth(b, viewYear, viewMonth)
+    if (applicableA && !applicableB) return -1
+    if (!applicableA && applicableB) return 1
+    if (applicableA) {
+      const ea = getEffectiveDay(a.dayOfMonth, viewYear, viewMonth)
+      const eb = getEffectiveDay(b.dayOfMonth, viewYear, viewMonth)
+      if (ea.overflows && !eb.overflows) return 1
+      if (!ea.overflows && eb.overflows) return -1
+      return ea.effectiveDay - eb.effectiveDay
+    }
+    const aMonth = a.month ?? 0
+    const bMonth = b.month ?? 0
+    if (aMonth !== bMonth) return aMonth - bMonth
+    return a.dayOfMonth - b.dayOfMonth
+  })
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-48 text-gray-500 text-sm">読み込み中...</div>
+    )
+  }
+
+  const dayModalCosts = selectedDay !== null ? (costsByDay.get(selectedDay) ?? []) : []
+
+  return (
+    <div className="p-4 md:p-6 h-full flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 shrink-0">
+        <h2 className="text-lg font-bold text-gray-800">固定費一覧</h2>
+        <button
+          onClick={openAdd}
+          className="flex items-center gap-1.5 px-3 py-2 bg-sage-600 hover:bg-sage-700 text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          追加
+        </button>
+      </div>
+
+      {/* Month navigation */}
+      <div className="flex items-center justify-center gap-4 mb-3 shrink-0">
+        <button
+          onClick={prevMonth}
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <span className="text-sm font-semibold text-gray-700">{viewYear}年{viewMonth}月</span>
+        <button
+          onClick={nextMonth}
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-h-0 overflow-hidden md:flex md:gap-6">
+
+        {/* 左カラム: カレンダー + 合計 */}
+        <div className="md:w-3/5 md:shrink-0 md:flex md:flex-col md:gap-4 md:overflow-y-auto flex flex-col gap-3">
+          {/* Calendar */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden shrink-0">
+            {/* 曜日ヘッダー */}
+            <div className="grid grid-cols-7 border-b border-gray-100">
+              {['日', '月', '火', '水', '木', '金', '土'].map((d, i) => (
+                <div
+                  key={d}
+                  className={`py-1.5 text-center text-xs font-medium ${
+                    i === 0 ? 'text-terracotta-400' : i === 6 ? 'text-teal-500' : 'text-gray-500'
+                  }`}
+                >
+                  {d}
+                </div>
+              ))}
+            </div>
+            {/* 日付セル */}
+            <div className="grid grid-cols-7">
+              {Array.from({ length: totalCells }).map((_, idx) => {
+                const day = idx - firstDow + 1
+                const isValid = day >= 1 && day <= daysInMonth
+                const dow = idx % 7
+                const dayCosts = isValid ? (costsByDay.get(day) ?? []) : []
+                const hasCosts = dayCosts.length > 0
+                const isToday =
+                  isValid &&
+                  day === today.getDate() &&
+                  viewYear === today.getFullYear() &&
+                  viewMonth === today.getMonth() + 1
+
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => { if (isValid && hasCosts) { setSelectedDay(day); setDayModalOpen(true) } }}
+                    className={`h-[50px] md:h-auto md:min-h-[90px] p-1 border-t border-r border-gray-100 last:border-r-0 ${
+                      !isValid ? 'bg-gray-50' : ''
+                    } ${isValid && hasCosts ? 'cursor-pointer active:bg-sage-50/60 md:cursor-default md:active:bg-transparent' : ''}`}
+                  >
+                    {isValid && (
+                      <>
+                        <div
+                          className={`text-xs font-medium w-5 h-5 flex items-center justify-center rounded-full ${
+                            isToday
+                              ? 'bg-sage-600 text-white'
+                              : dow === 0
+                              ? 'text-terracotta-400'
+                              : dow === 6
+                              ? 'text-teal-500'
+                              : 'text-gray-600'
+                          }`}
+                        >
+                          {day}
+                        </div>
+
+                        {/* モバイル: カラードット */}
+                        {hasCosts && (
+                          <div className="md:hidden flex flex-wrap gap-0.5 justify-center mt-1">
+                            {dayCosts.slice(0, 4).map(c => (
+                              <span key={c.id} className={`w-1.5 h-1.5 rounded-full ${dotColor(c)}`} />
+                            ))}
+                            {dayCosts.length > 4 && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                            )}
+                          </div>
+                        )}
+
+                        {/* デスクトップ: テキスト */}
+                        <div className="hidden md:flex flex-col gap-0.5 mt-0.5">
+                          {dayCosts.map(c => (
+                            <span
+                              key={c.id}
+                              className={`block text-[10px] leading-tight rounded px-1 py-0.5 truncate ${
+                                c.isVariable
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : (c.frequency ?? 'monthly') === 'monthly'
+                                  ? 'bg-sage-50 text-sage-700'
+                                  : 'bg-teal-50 text-teal-700'
+                              }`}
+                              title={c.name}
+                            >
+                              {c.name}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Monthly total */}
+          <div className="px-4 py-3 bg-terracotta-50 rounded-xl shrink-0">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-terracotta-700">{viewYear}年{viewMonth}月の固定費合計</span>
+              <span className="text-base font-bold text-terracotta-700">¥{monthlyTotal.toLocaleString()}</span>
+            </div>
+            {variableCount > 0 && (
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-xs text-amber-600">変動（金額未確定）</span>
+                <span className="text-xs font-semibold text-amber-600">{variableCount}件</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 右カラム: 固定費リスト（デスクトップのみ） */}
+        <div className="hidden md:block md:flex-1 md:overflow-y-auto md:min-h-0">
+          {costs.length === 0 ? (
+            <div className="text-center py-10 text-gray-500 text-sm">固定費が登録されていません</div>
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="divide-y divide-gray-100">
+                {sortedCosts.map(cost => {
+                  const freq = cost.frequency ?? 'monthly'
+                  const applicable = isApplicableThisMonth(cost, viewYear, viewMonth)
+                  const { effectiveDay, isShifted, overflows } = getEffectiveDay(cost.dayOfMonth, viewYear, viewMonth)
+                  const freqLabel = FREQ_LABEL[freq]
+
+                  return (
+                    <div
+                      key={cost.id}
+                      className={`flex items-center gap-3 px-4 py-3 ${!applicable ? 'opacity-50' : ''}`}
+                    >
+                      <div className="w-10 shrink-0 text-center">
+                        {!applicable ? (
+                          <>
+                            <span className="text-xs font-bold text-gray-300 block">{cost.month}月</span>
+                            <span className="text-xs text-gray-300 block leading-none">{cost.dayOfMonth}日</span>
+                          </>
+                        ) : overflows ? (
+                          <>
+                            <span className="text-sm font-bold text-gray-300">{cost.dayOfMonth}</span>
+                            <span className="text-xs text-gray-300 block leading-none">日</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className={`text-sm font-bold ${isShifted ? 'text-amber-600' : 'text-sage-600'}`}>
+                              {effectiveDay}
+                            </span>
+                            <span className="text-xs text-gray-500 block leading-none">
+                              {isShifted ? '振替' : '日'}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="text-sm font-medium text-gray-800 truncate">{cost.name}</div>
+                          {freqLabel && (
+                            <span className="text-[10px] shrink-0 px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-600">
+                              {freqLabel}
+                            </span>
+                          )}
+                        </div>
+                        {cost.paymentMethod && (
+                          <div className="text-xs text-gray-500 truncate">{cost.paymentMethod}</div>
+                        )}
+                        {cost.memo && (
+                          <div className="text-xs text-gray-500 truncate">{cost.memo}</div>
+                        )}
+                      </div>
+                      <div className="shrink-0 text-right">
+                        {cost.isVariable ? (
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">変動</span>
+                        ) : (
+                          <div className="text-sm font-semibold text-gray-800">¥{cost.amount.toLocaleString()}</div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => openEdit(cost)}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={async () => { if (await confirm('この固定費を削除しますか？')) await handleDelete(cost.id) }}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:bg-terracotta-50 hover:text-terracotta-500 transition-colors"
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                            <path d="M10 11v6M14 11v6" />
+                            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 日別モーダル（モバイルのみ） */}
+      {dayModalOpen && selectedDay !== null && (
+        <div className="md:hidden fixed inset-0 z-50 flex items-end">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDayModalOpen(false)} />
+          <div className="relative w-full bg-white rounded-t-2xl shadow-xl">
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-800">
+                {viewMonth}月{selectedDay}日の固定費
+              </h3>
+              <button
+                onClick={() => setDayModalOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+              {dayModalCosts.map(cost => {
+                const freq = cost.frequency ?? 'monthly'
+                const { effectiveDay, isShifted } = getEffectiveDay(cost.dayOfMonth, viewYear, viewMonth)
+                const freqLabel = FREQ_LABEL[freq]
+
+                return (
+                  <div key={cost.id} className="flex items-center gap-3 px-5 py-3">
+                    <div className="w-8 shrink-0 text-center">
+                      <span className={`text-sm font-bold ${isShifted ? 'text-amber-600' : 'text-sage-600'}`}>
+                        {effectiveDay}
+                      </span>
+                      <span className="text-[10px] text-gray-500 block leading-none">{isShifted ? '振替' : '日'}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium text-gray-800 truncate">{cost.name}</span>
+                        {freqLabel && (
+                          <span className="text-[10px] shrink-0 px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-600">
+                            {freqLabel}
+                          </span>
+                        )}
+                      </div>
+                      {cost.paymentMethod && (
+                        <div className="text-xs text-gray-500 truncate">{cost.paymentMethod}</div>
+                      )}
+                      {cost.memo && (
+                        <div className="text-xs text-gray-500 truncate">{cost.memo}</div>
+                      )}
+                    </div>
+                    <div className="shrink-0">
+                      {cost.isVariable ? (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">変動</span>
+                      ) : (
+                        <span className="text-sm font-semibold text-gray-800">¥{cost.amount.toLocaleString()}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => openEditFromDay(cost)}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFromDay(cost.id)}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:bg-terracotta-50 hover:text-terracotta-500"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                          <path d="M10 11v6M14 11v6" />
+                          <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="px-5 py-4">
+              <button
+                onClick={() => setDayModalOpen(false)}
+                className="w-full py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <FixedCostModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        cost={editTarget}
+        onSave={handleSave}
+      />
+      <ConfirmDialog {...dialogProps} />
+    </div>
+  )
+}
