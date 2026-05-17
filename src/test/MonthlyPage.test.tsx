@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import MonthlyPage from './MonthlyPage'
+import MonthlyPage from '../pages/MonthlyPage'
 import type { Category, PaymentMethod, Transaction } from '../types'
 
 const mockNavigate = vi.fn()

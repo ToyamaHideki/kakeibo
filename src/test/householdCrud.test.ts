@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Firebase モック（SUT と同ディレクトリなので ./firebase が正しいパス）
-vi.mock('./firebase', () => ({ db: {} }))
+// Firebase モック
+vi.mock('../firebase/firebase', () => ({ db: {} }))
 
 const mockCollection = vi.fn(() => 'mock-col-ref')
 const mockDoc = vi.fn(() => 'mock-doc-ref')
@@ -35,7 +35,7 @@ describe('savingsAccountFirestore', () => {
   })
 
   it('fetchSavingsAccounts: Firestore から口座一覧を返す', async () => {
-    const { fetchSavingsAccounts } = await import('./savingsAccountFirestore')
+    const { fetchSavingsAccounts } = await import('../firebase/savingsAccountFirestore')
     mockGetDocs.mockResolvedValue(makeSnapshot([
       { id: 'a1', data: { name: '普通預金', order: 0, currentAmount: 100000, color: '#fff', lastUpdated: '2025-01-01' } },
     ]))
@@ -47,7 +47,7 @@ describe('savingsAccountFirestore', () => {
   })
 
   it('addSavingsAccount: addDoc を呼び新しい ID を返す', async () => {
-    const { addSavingsAccount } = await import('./savingsAccountFirestore')
+    const { addSavingsAccount } = await import('../firebase/savingsAccountFirestore')
     mockAddDoc.mockResolvedValue({ id: 'new-id' })
 
     const data = { name: '定期預金', order: 1, currentAmount: 0, color: '#000', lastUpdated: '2025-01-01' }
@@ -58,7 +58,7 @@ describe('savingsAccountFirestore', () => {
   })
 
   it('updateSavingsAccount: updateDoc を呼ぶ', async () => {
-    const { updateSavingsAccount } = await import('./savingsAccountFirestore')
+    const { updateSavingsAccount } = await import('../firebase/savingsAccountFirestore')
     mockUpdateDoc.mockResolvedValue(undefined)
 
     await updateSavingsAccount(HID, 'a1', { currentAmount: 200000 })
@@ -68,7 +68,7 @@ describe('savingsAccountFirestore', () => {
   })
 
   it('deleteSavingsAccount: deleteDoc を呼ぶ', async () => {
-    const { deleteSavingsAccount } = await import('./savingsAccountFirestore')
+    const { deleteSavingsAccount } = await import('../firebase/savingsAccountFirestore')
     mockDeleteDoc.mockResolvedValue(undefined)
 
     await deleteSavingsAccount(HID, 'a1')
@@ -87,7 +87,7 @@ describe('savingsFirestore', () => {
   })
 
   it('fetchSavingsGoals: 目標一覧を返す', async () => {
-    const { fetchSavingsGoals } = await import('./savingsFirestore')
+    const { fetchSavingsGoals } = await import('../firebase/savingsFirestore')
     mockGetDocs.mockResolvedValue(makeSnapshot([
       { id: 'g1', data: { name: '旅行', order: 0, targetAmount: 200000, currentAmount: 50000, color: '#f00', contributions: {} } },
     ]))
@@ -100,7 +100,7 @@ describe('savingsFirestore', () => {
   })
 
   it('addSavingsGoal: addDoc を呼び新しい ID を返す', async () => {
-    const { addSavingsGoal } = await import('./savingsFirestore')
+    const { addSavingsGoal } = await import('../firebase/savingsFirestore')
     mockAddDoc.mockResolvedValue({ id: 'g-new' })
 
     const data = { name: '車', order: 1, targetAmount: 1000000, currentAmount: 0, color: '#00f', contributions: {} }
@@ -110,7 +110,7 @@ describe('savingsFirestore', () => {
   })
 
   it('updateSavingsGoal: updateDoc を呼ぶ', async () => {
-    const { updateSavingsGoal } = await import('./savingsFirestore')
+    const { updateSavingsGoal } = await import('../firebase/savingsFirestore')
     mockUpdateDoc.mockResolvedValue(undefined)
 
     await updateSavingsGoal(HID, 'g1', { currentAmount: 100000 })
@@ -119,7 +119,7 @@ describe('savingsFirestore', () => {
   })
 
   it('deleteSavingsGoal: deleteDoc を呼ぶ', async () => {
-    const { deleteSavingsGoal } = await import('./savingsFirestore')
+    const { deleteSavingsGoal } = await import('../firebase/savingsFirestore')
     mockDeleteDoc.mockResolvedValue(undefined)
 
     await deleteSavingsGoal(HID, 'g1')
@@ -137,7 +137,7 @@ describe('securitiesFirestore', () => {
   })
 
   it('fetchSecuritiesAccounts: 証券口座一覧を返す', async () => {
-    const { fetchSecuritiesAccounts } = await import('./securitiesFirestore')
+    const { fetchSecuritiesAccounts } = await import('../firebase/securitiesFirestore')
     mockGetDocs.mockResolvedValue(makeSnapshot([
       { id: 's1', data: { name: 'NISA口座', order: 0, currentValue: 500000, color: '#0f0', monthlyValues: {} } },
     ]))
@@ -149,7 +149,7 @@ describe('securitiesFirestore', () => {
   })
 
   it('addSecuritiesAccount: addDoc を呼ぶ', async () => {
-    const { addSecuritiesAccount } = await import('./securitiesFirestore')
+    const { addSecuritiesAccount } = await import('../firebase/securitiesFirestore')
     mockAddDoc.mockResolvedValue({ id: 's-new' })
 
     const data = { name: '特定口座', order: 1, currentValue: 0, color: '#111', monthlyValues: {} }
@@ -159,7 +159,7 @@ describe('securitiesFirestore', () => {
   })
 
   it('updateSecuritiesAccount: updateDoc を呼ぶ', async () => {
-    const { updateSecuritiesAccount } = await import('./securitiesFirestore')
+    const { updateSecuritiesAccount } = await import('../firebase/securitiesFirestore')
     mockUpdateDoc.mockResolvedValue(undefined)
 
     await updateSecuritiesAccount(HID, 's1', { currentValue: 600000 })
@@ -168,7 +168,7 @@ describe('securitiesFirestore', () => {
   })
 
   it('deleteSecuritiesAccount: deleteDoc を呼ぶ', async () => {
-    const { deleteSecuritiesAccount } = await import('./securitiesFirestore')
+    const { deleteSecuritiesAccount } = await import('../firebase/securitiesFirestore')
     mockDeleteDoc.mockResolvedValue(undefined)
 
     await deleteSecuritiesAccount(HID, 's1')
@@ -186,7 +186,7 @@ describe('contractFirestore', () => {
   })
 
   it('fetchContracts: 契約一覧を返す', async () => {
-    const { fetchContracts } = await import('./contractFirestore')
+    const { fetchContracts } = await import('../firebase/contractFirestore')
     mockGetDocs.mockResolvedValue(makeSnapshot([
       { id: 'c1', data: { name: 'Netflix', order: 0, contractType: 'subscription', amount: 1800, frequency: 'monthly', isAutoRenew: true } },
     ]))
@@ -198,7 +198,7 @@ describe('contractFirestore', () => {
   })
 
   it('addContract: addDoc を呼ぶ', async () => {
-    const { addContract } = await import('./contractFirestore')
+    const { addContract } = await import('../firebase/contractFirestore')
     mockAddDoc.mockResolvedValue({ id: 'c-new' })
 
     const data = { name: 'Spotify', order: 1, contractType: 'subscription' as const, amount: 980, frequency: 'monthly' as const, isAutoRenew: true }
@@ -208,7 +208,7 @@ describe('contractFirestore', () => {
   })
 
   it('updateContract: updateDoc を呼ぶ', async () => {
-    const { updateContract } = await import('./contractFirestore')
+    const { updateContract } = await import('../firebase/contractFirestore')
     mockUpdateDoc.mockResolvedValue(undefined)
 
     await updateContract(HID, 'c1', { amount: 1980 })
@@ -217,7 +217,7 @@ describe('contractFirestore', () => {
   })
 
   it('deleteContract: deleteDoc を呼ぶ', async () => {
-    const { deleteContract } = await import('./contractFirestore')
+    const { deleteContract } = await import('../firebase/contractFirestore')
     mockDeleteDoc.mockResolvedValue(undefined)
 
     await deleteContract(HID, 'c1')

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 // useHousehold モック
-vi.mock('./useHousehold', () => ({
+vi.mock('../hooks/useHousehold', () => ({
   useHousehold: vi.fn(),
 }))
 // Firebase CRUD モック（自動 mock → 全エクスポートが vi.fn() になる）
@@ -11,7 +11,7 @@ vi.mock('../firebase/savingsFirestore')
 vi.mock('../firebase/securitiesFirestore')
 vi.mock('../firebase/contractFirestore')
 
-import { useHousehold } from './useHousehold'
+import { useHousehold } from '../hooks/useHousehold'
 import * as savingsAccountApi from '../firebase/savingsAccountFirestore'
 import * as savingsApi from '../firebase/savingsFirestore'
 import * as securitiesApi from '../firebase/securitiesFirestore'
@@ -43,7 +43,7 @@ describe('useSavingsAccounts', () => {
   it('householdId がある場合、フェッチして order 順に並べる', async () => {
     vi.mocked(savingsAccountApi.fetchSavingsAccounts).mockResolvedValue(ACCOUNTS)
 
-    const { useSavingsAccounts } = await import('./useSavingsAccounts')
+    const { useSavingsAccounts } = await import('../hooks/useSavingsAccounts')
     const { result } = renderHook(() => useSavingsAccounts())
 
     expect(result.current.loading).toBe(true)
@@ -57,7 +57,7 @@ describe('useSavingsAccounts', () => {
   it('householdId が null の場合、フェッチしない', async () => {
     vi.mocked(useHousehold).mockReturnValue({ ...DEFAULT_HH, householdId: null })
 
-    const { useSavingsAccounts } = await import('./useSavingsAccounts')
+    const { useSavingsAccounts } = await import('../hooks/useSavingsAccounts')
     renderHook(() => useSavingsAccounts())
 
     expect(savingsAccountApi.fetchSavingsAccounts).not.toHaveBeenCalled()
@@ -67,7 +67,7 @@ describe('useSavingsAccounts', () => {
     vi.mocked(savingsAccountApi.fetchSavingsAccounts).mockResolvedValue([])
     vi.mocked(savingsAccountApi.addSavingsAccount).mockResolvedValue('new-id')
 
-    const { useSavingsAccounts } = await import('./useSavingsAccounts')
+    const { useSavingsAccounts } = await import('../hooks/useSavingsAccounts')
     const { result } = renderHook(() => useSavingsAccounts())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -85,7 +85,7 @@ describe('useSavingsAccounts', () => {
     ])
     vi.mocked(savingsAccountApi.updateSavingsAccount).mockResolvedValue(undefined)
 
-    const { useSavingsAccounts } = await import('./useSavingsAccounts')
+    const { useSavingsAccounts } = await import('../hooks/useSavingsAccounts')
     const { result } = renderHook(() => useSavingsAccounts())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -101,7 +101,7 @@ describe('useSavingsAccounts', () => {
     ])
     vi.mocked(savingsAccountApi.deleteSavingsAccount).mockResolvedValue(undefined)
 
-    const { useSavingsAccounts } = await import('./useSavingsAccounts')
+    const { useSavingsAccounts } = await import('../hooks/useSavingsAccounts')
     const { result } = renderHook(() => useSavingsAccounts())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -125,7 +125,7 @@ describe('useSavingsGoals', () => {
   it('フェッチして goals を返す', async () => {
     vi.mocked(savingsApi.fetchSavingsGoals).mockResolvedValue([GOAL])
 
-    const { useSavingsGoals } = await import('./useSavingsGoals')
+    const { useSavingsGoals } = await import('../hooks/useSavingsGoals')
     const { result } = renderHook(() => useSavingsGoals())
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -138,7 +138,7 @@ describe('useSavingsGoals', () => {
     vi.mocked(savingsApi.fetchSavingsGoals).mockResolvedValue([GOAL])
     vi.mocked(savingsApi.updateSavingsGoal).mockResolvedValue(undefined)
 
-    const { useSavingsGoals } = await import('./useSavingsGoals')
+    const { useSavingsGoals } = await import('../hooks/useSavingsGoals')
     const { result } = renderHook(() => useSavingsGoals())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -154,7 +154,7 @@ describe('useSavingsGoals', () => {
   it('logContribution: amount <= 0 の場合は何もしない', async () => {
     vi.mocked(savingsApi.fetchSavingsGoals).mockResolvedValue([GOAL])
 
-    const { useSavingsGoals } = await import('./useSavingsGoals')
+    const { useSavingsGoals } = await import('../hooks/useSavingsGoals')
     const { result } = renderHook(() => useSavingsGoals())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -167,7 +167,7 @@ describe('useSavingsGoals', () => {
     vi.mocked(savingsApi.fetchSavingsGoals).mockResolvedValue([GOAL])
     vi.mocked(savingsApi.deleteSavingsGoal).mockResolvedValue(undefined)
 
-    const { useSavingsGoals } = await import('./useSavingsGoals')
+    const { useSavingsGoals } = await import('../hooks/useSavingsGoals')
     const { result } = renderHook(() => useSavingsGoals())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -190,7 +190,7 @@ describe('useSecuritiesAccounts', () => {
   it('フェッチして accounts を返す', async () => {
     vi.mocked(securitiesApi.fetchSecuritiesAccounts).mockResolvedValue([ACCOUNT])
 
-    const { useSecuritiesAccounts } = await import('./useSecuritiesAccounts')
+    const { useSecuritiesAccounts } = await import('../hooks/useSecuritiesAccounts')
     const { result } = renderHook(() => useSecuritiesAccounts())
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -202,7 +202,7 @@ describe('useSecuritiesAccounts', () => {
     vi.mocked(securitiesApi.fetchSecuritiesAccounts).mockResolvedValue([ACCOUNT])
     vi.mocked(securitiesApi.updateSecuritiesAccount).mockResolvedValue(undefined)
 
-    const { useSecuritiesAccounts } = await import('./useSecuritiesAccounts')
+    const { useSecuritiesAccounts } = await import('../hooks/useSecuritiesAccounts')
     const { result } = renderHook(() => useSecuritiesAccounts())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -218,7 +218,7 @@ describe('useSecuritiesAccounts', () => {
   it('recordMonthlyValue: value < 0 の場合は何もしない', async () => {
     vi.mocked(securitiesApi.fetchSecuritiesAccounts).mockResolvedValue([ACCOUNT])
 
-    const { useSecuritiesAccounts } = await import('./useSecuritiesAccounts')
+    const { useSecuritiesAccounts } = await import('../hooks/useSecuritiesAccounts')
     const { result } = renderHook(() => useSecuritiesAccounts())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -231,7 +231,7 @@ describe('useSecuritiesAccounts', () => {
     vi.mocked(securitiesApi.fetchSecuritiesAccounts).mockResolvedValue([ACCOUNT])
     vi.mocked(securitiesApi.updateSecuritiesAccount).mockResolvedValue(undefined)
 
-    const { useSecuritiesAccounts } = await import('./useSecuritiesAccounts')
+    const { useSecuritiesAccounts } = await import('../hooks/useSecuritiesAccounts')
     const { result } = renderHook(() => useSecuritiesAccounts())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -248,7 +248,7 @@ describe('useSecuritiesAccounts', () => {
     vi.mocked(securitiesApi.fetchSecuritiesAccounts).mockResolvedValue([singleMonth])
     vi.mocked(securitiesApi.updateSecuritiesAccount).mockResolvedValue(undefined)
 
-    const { useSecuritiesAccounts } = await import('./useSecuritiesAccounts')
+    const { useSecuritiesAccounts } = await import('../hooks/useSecuritiesAccounts')
     const { result } = renderHook(() => useSecuritiesAccounts())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -274,7 +274,7 @@ describe('useContracts', () => {
   it('フェッチして contracts を返す', async () => {
     vi.mocked(contractApi.fetchContracts).mockResolvedValue([CONTRACT])
 
-    const { useContracts } = await import('./useContracts')
+    const { useContracts } = await import('../hooks/useContracts')
     const { result } = renderHook(() => useContracts())
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -286,7 +286,7 @@ describe('useContracts', () => {
     vi.mocked(contractApi.fetchContracts).mockResolvedValue([])
     vi.mocked(contractApi.addContract).mockResolvedValue('c-new')
 
-    const { useContracts } = await import('./useContracts')
+    const { useContracts } = await import('../hooks/useContracts')
     const { result } = renderHook(() => useContracts())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -301,7 +301,7 @@ describe('useContracts', () => {
     vi.mocked(contractApi.fetchContracts).mockResolvedValue([CONTRACT])
     vi.mocked(contractApi.updateContract).mockResolvedValue(undefined)
 
-    const { useContracts } = await import('./useContracts')
+    const { useContracts } = await import('../hooks/useContracts')
     const { result } = renderHook(() => useContracts())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -315,7 +315,7 @@ describe('useContracts', () => {
     vi.mocked(contractApi.fetchContracts).mockResolvedValue([CONTRACT])
     vi.mocked(contractApi.deleteContract).mockResolvedValue(undefined)
 
-    const { useContracts } = await import('./useContracts')
+    const { useContracts } = await import('../hooks/useContracts')
     const { result } = renderHook(() => useContracts())
     await waitFor(() => expect(result.current.loading).toBe(false))
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import FixedCostModal from './FixedCostModal'
+import FixedCostModal from '../features/FixedCostModal'
 import type { FixedCost } from '../types'
 
 const BASE_COST: FixedCost = {

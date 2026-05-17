@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import TransactionModal from './TransactionModal'
+import TransactionModal from '../features/TransactionModal'
 import type { Category, PaymentMethod, Transaction } from '../types'
 
 vi.mock('../hooks/useHousehold', () => ({
@@ -12,8 +12,8 @@ vi.mock('../firebase/firestore', () => ({
   updateTransaction: vi.fn().mockResolvedValue(undefined),
   moveTransaction: vi.fn().mockResolvedValue(undefined),
 }))
-vi.mock('./CategoryAddModal', () => ({ default: () => null }))
-vi.mock('./PaymentMethodAddModal', () => ({ default: () => null }))
+vi.mock('../features/CategoryAddModal', () => ({ default: () => null }))
+vi.mock('../features/PaymentMethodAddModal', () => ({ default: () => null }))
 
 import { saveTransaction, updateTransaction, moveTransaction } from '../firebase/firestore'
 

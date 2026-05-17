@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import MonthlyChart from './MonthlyChart'
+import MonthlyChart from '../features/MonthlyChart'
 import type { Category, Transaction } from '../types'
 
 // Chart.js はキャンバス API が不要なスタブに差し替える

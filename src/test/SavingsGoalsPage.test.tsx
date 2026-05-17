@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import SavingsGoalsPage from './SavingsGoalsPage'
+import SavingsGoalsPage from '../pages/SavingsGoalsPage'
 import type { SavingsGoal } from '../types'
 
 vi.mock('../hooks/useHousehold', () => ({

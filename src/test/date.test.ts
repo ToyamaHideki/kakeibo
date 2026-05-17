@@ -6,7 +6,7 @@ import {
   adjacentMonth,
   getPayPeriodRange,
   formatPayPeriodLabel,
-} from './date'
+} from '../utils/date'
 
 afterEach(() => {
   vi.useRealTimers()

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import TransactionList from './TransactionList'
+import TransactionList from '../features/TransactionList'
 import type { Category, PaymentMethod, Transaction } from '../types'
 
 vi.mock('../hooks/useHousehold', () => ({
