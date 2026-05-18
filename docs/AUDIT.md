@@ -376,7 +376,7 @@ const CashflowPage = lazy(() => import('./pages/CashflowPage'))
 
 ### Phase 3（1ヶ月以内・セキュリティ強化）
 - [ ] **`memberProfiles` をサブコレクション化**：他世帯のメール露出を遮断
-- [ ] **招待コード長を 8 文字に拡張** + Cloud Function 化（総当たり耐性）
+- [x] **招待コード長を 10 文字に拡張**（32種×10文字≒1兆通り、Cloud Function 化は見送り）
 - [x] **App Check 有効化**：自サイト外からの API 呼び出しブロック
 
 ### Phase 4（時間がある時）
