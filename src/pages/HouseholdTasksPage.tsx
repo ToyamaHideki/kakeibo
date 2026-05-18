@@ -4,7 +4,7 @@ import { useHousehold } from '../hooks/useHousehold'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
-import { fetchHousehold, addExtraAssignee, removeExtraAssignee } from '../firebase/householdFirestore'
+import { fetchHousehold, fetchMemberProfiles, addExtraAssignee, removeExtraAssignee } from '../firebase/householdFirestore'
 import type { HouseholdTask } from '../types'
 
 function TrashIcon() {
@@ -56,9 +56,9 @@ export default function HouseholdTasksPage() {
   // 世帯データから担当者候補を構築
   useEffect(() => {
     if (!householdId) return
-    fetchHousehold(householdId).then(data => {
+    Promise.all([fetchHousehold(householdId), fetchMemberProfiles(householdId)]).then(([data, profiles]) => {
       if (!data) return
-      const nicknames = Object.values(data.memberProfiles ?? {})
+      const nicknames = Object.values(profiles)
         .map(p => p.nickname)
         .filter((n): n is string => !!n)
       const extras = data.extraAssignees ?? []

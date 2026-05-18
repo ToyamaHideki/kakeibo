@@ -5,6 +5,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteField,
   query,
   where,
   arrayUnion,
@@ -27,7 +28,6 @@ export interface Household {
   inviteCode: string
   createdAt: number
   payDay?: number
-  memberProfiles?: Record<string, MemberProfile>
   extraAssignees?: string[]
 }
 
@@ -108,12 +108,28 @@ export async function removeExtraAssignee(householdId: string, name: string): Pr
   await updateDoc(doc(db, 'households', householdId), { extraAssignees: arrayRemove(name) })
 }
 
+export async function fetchMemberProfiles(householdId: string): Promise<Record<string, MemberProfile>> {
+  const snap = await getDoc(doc(db, 'households', householdId, 'private', 'memberProfiles'))
+  if (snap.exists()) return snap.data() as Record<string, MemberProfile>
+
+  // 旧フィールド（households ドキュメント本体）からの一回限りマイグレーション
+  const householdSnap = await getDoc(doc(db, 'households', householdId))
+  const oldProfiles = (householdSnap.data() as { memberProfiles?: Record<string, MemberProfile> } | undefined)?.memberProfiles
+  if (oldProfiles) {
+    await setDoc(doc(db, 'households', householdId, 'private', 'memberProfiles'), oldProfiles)
+    await updateDoc(doc(db, 'households', householdId), { memberProfiles: deleteField() })
+  }
+  return oldProfiles ?? {}
+}
+
 export async function updateMemberProfile(
   householdId: string,
   uid: string,
   profile: MemberProfile
 ): Promise<void> {
-  await updateDoc(doc(db, 'households', householdId), {
-    [`memberProfiles.${uid}`]: profile,
-  })
+  await setDoc(
+    doc(db, 'households', householdId, 'private', 'memberProfiles'),
+    { [uid]: profile },
+    { merge: true }
+  )
 }

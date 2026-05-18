@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   fetchHousehold,
+  fetchMemberProfiles,
   refreshInviteCode,
   updateHouseholdSettings,
   updateMemberProfile,
@@ -9,12 +10,13 @@ import { useHousehold } from '../hooks/useHousehold'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { signOut } from '../firebase/auth'
-import type { Household } from '../firebase/householdFirestore'
+import type { Household, MemberProfile } from '../firebase/householdFirestore'
 
 export default function HouseholdSettingsPage() {
   const { householdId, user, reloadHousehold } = useHousehold()
   const { confirm, dialogProps } = useConfirm()
   const [household, setHousehold] = useState<(Household & { id: string }) | null>(null)
+  const [memberProfiles, setMemberProfiles] = useState<Record<string, MemberProfile>>({})
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -27,29 +29,24 @@ export default function HouseholdSettingsPage() {
 
   useEffect(() => {
     if (!householdId || !user) return
-    fetchHousehold(householdId)
-      .then(async data => {
-        setHousehold(data)
-        setSelectedPayDay(data?.payDay ?? null)
+    Promise.all([fetchHousehold(householdId), fetchMemberProfiles(householdId)])
+      .then(async ([householdData, profiles]) => {
+        setHousehold(householdData)
+        setSelectedPayDay(householdData?.payDay ?? null)
+        setMemberProfiles(profiles)
 
         // 現在ユーザーのメール・ニックネームを同期
-        const existing = data?.memberProfiles?.[user.uid]
+        const existing = profiles[user.uid]
         setNickname(existing?.nickname ?? '')
         if (!existing || existing.email !== user.email) {
           await updateMemberProfile(householdId, user.uid, {
             email: user.email ?? '',
             nickname: existing?.nickname,
           })
-          setHousehold(prev => {
-            if (!prev) return prev
-            return {
-              ...prev,
-              memberProfiles: {
-                ...prev.memberProfiles,
-                [user.uid]: { email: user.email ?? '', nickname: existing?.nickname },
-              },
-            }
-          })
+          setMemberProfiles(prev => ({
+            ...prev,
+            [user.uid]: { email: user.email ?? '', nickname: existing?.nickname },
+          }))
         }
       })
       .finally(() => setLoading(false))
@@ -96,16 +93,10 @@ export default function HouseholdSettingsPage() {
         email: user.email ?? '',
         nickname: trimmed || undefined,
       })
-      setHousehold(prev => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          memberProfiles: {
-            ...prev.memberProfiles,
-            [user.uid]: { email: user.email ?? '', nickname: trimmed || undefined },
-          },
-        }
-      })
+      setMemberProfiles(prev => ({
+        ...prev,
+        [user.uid]: { email: user.email ?? '', nickname: trimmed || undefined },
+      }))
       setNicknameSaved(true)
       setTimeout(() => setNicknameSaved(false), 2000)
     } finally {
@@ -212,7 +203,7 @@ export default function HouseholdSettingsPage() {
             </h2>
             <div className="space-y-2">
               {household.memberIds.map(uid => {
-                const profile = household.memberProfiles?.[uid]
+                const profile = memberProfiles[uid]
                 const email = profile?.email ?? uid
                 const nick = profile?.nickname
                 const isMe = uid === user?.uid
