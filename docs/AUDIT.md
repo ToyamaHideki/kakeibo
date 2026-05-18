@@ -375,7 +375,7 @@ const CashflowPage = lazy(() => import('./pages/CashflowPage'))
 - [x] **nextOrder ヘルパー**：`src/utils/order.ts` で `order` 採番を統一
 
 ### Phase 3（1ヶ月以内・セキュリティ強化）
-- [ ] **`memberProfiles` をサブコレクション化**：他世帯のメール露出を遮断
+- [x] **`memberProfiles` をサブコレクション化**：他世帯のメール露出を遮断
 - [x] **招待コード長を 10 文字に拡張**（32種×10文字≒1兆通り、Cloud Function 化は見送り）
 - [x] **App Check 有効化**：自サイト外からの API 呼び出しブロック
 
