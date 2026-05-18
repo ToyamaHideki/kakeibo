@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { addCategory, fetchCategories, updateCategory } from '../firebase/firestore'
 import { useHousehold } from './useHousehold'
 import type { Category } from '../types'
@@ -35,71 +35,74 @@ const EXPENSE_TYPE_MAP: Record<string, 'fixed' | 'variable'> = {
   'その他': 'variable',
 }
 
+async function initCategories(householdId: string): Promise<Category[]> {
+  const existing = await fetchCategories(householdId)
+
+  if (existing.length === 0) {
+    const ids = await Promise.all(DEFAULT_CATEGORIES.map(cat => addCategory(householdId, cat)))
+    return DEFAULT_CATEGORIES.map((cat, i) => ({ ...cat, id: ids[i] }))
+  }
+
+  let cats = existing
+  const updates: Promise<void>[] = []
+
+  cats = cats.map(cat => {
+    if (cat.type === 'expense' && !cat.expenseType) {
+      const expenseType = EXPENSE_TYPE_MAP[cat.name] ?? 'variable'
+      updates.push(updateCategory(householdId, cat.id, { expenseType }))
+      return { ...cat, expenseType }
+    }
+    return cat
+  })
+
+  const hasFixedComms = cats.some(c => c.name === '固定通信費')
+  if (!hasFixedComms) {
+    const maxOrder = Math.max(0, ...cats.filter(c => c.type === 'expense').map(c => c.order))
+    const newCat = {
+      name: '固定通信費',
+      type: 'expense' as const,
+      expenseType: 'fixed' as const,
+      color: '#6366f1',
+      order: maxOrder + 1,
+    }
+    const id = await addCategory(householdId, newCat)
+    cats = [...cats, { ...newCat, id }]
+  }
+
+  await Promise.all(updates)
+  return sortCategories(cats)
+}
+
 export function useCategories() {
   const { householdId } = useHousehold()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    if (!householdId) return
-    async function init() {
-      try {
-        const existing = await fetchCategories(householdId!)
-
-        if (existing.length === 0) {
-          const ids = await Promise.all(DEFAULT_CATEGORIES.map(cat => addCategory(householdId!, cat)))
-          setCategories(DEFAULT_CATEGORIES.map((cat, i) => ({ ...cat, id: ids[i] })))
-          return
-        }
-
-        let cats = existing
-        const updates: Promise<void>[] = []
-
-        cats = cats.map(cat => {
-          if (cat.type === 'expense' && !cat.expenseType) {
-            const expenseType = EXPENSE_TYPE_MAP[cat.name] ?? 'variable'
-            updates.push(updateCategory(householdId!, cat.id, { expenseType }))
-            return { ...cat, expenseType }
-          }
-          return cat
-        })
-
-        const hasFixedComms = cats.some(c => c.name === '固定通信費')
-        if (!hasFixedComms) {
-          const maxOrder = Math.max(0, ...cats.filter(c => c.type === 'expense').map(c => c.order))
-          const newCat = {
-            name: '固定通信費',
-            type: 'expense' as const,
-            expenseType: 'fixed' as const,
-            color: '#6366f1',
-            order: maxOrder + 1,
-          }
-          const id = await addCategory(householdId!, newCat)
-          cats = [...cats, { ...newCat, id }]
-        }
-
-        await Promise.all(updates)
-        setCategories(sortCategories(cats))
-      } finally {
-        setLoading(false)
-      }
-    }
-    init()
-  }, [householdId])
+  const { data: categories = [], isLoading: loading } = useQuery({
+    queryKey: ['categories', householdId],
+    queryFn: () => initCategories(householdId!),
+    enabled: !!householdId,
+    staleTime: Infinity,
+  })
 
   function addCategoryLocally(category: Category) {
-    setCategories(prev => sortCategories([...prev, category]))
+    queryClient.setQueryData<Category[]>(
+      ['categories', householdId],
+      prev => sortCategories([...(prev ?? []), category]),
+    )
   }
 
   function removeCategoryLocally(id: string) {
-    setCategories(prev => prev.filter(c => c.id !== id))
+    queryClient.setQueryData<Category[]>(
+      ['categories', householdId],
+      prev => (prev ?? []).filter(c => c.id !== id),
+    )
   }
 
   return { categories, loading, addCategoryLocally, removeCategoryLocally }
 }
 
 function sortCategories(cats: Category[]): Category[] {
-  return cats.sort((a, b) => {
+  return [...cats].sort((a, b) => {
     if (a.type !== b.type) return a.type === 'expense' ? -1 : 1
     return a.order - b.order
   })
