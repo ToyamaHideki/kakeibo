@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useHousehold } from '../hooks/useHousehold'
-import { signInWithGoogle } from '../firebase/auth'
+import { signInAsGuest, signInWithGoogle } from '../firebase/auth'
 import type { Category, PaymentMethod } from '../types'
 import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
@@ -18,7 +18,7 @@ export interface OutletContext {
 }
 
 export default function Layout() {
-  const { state, user } = useHousehold()
+  const { state, user, isGuest } = useHousehold()
   const { categories, addCategoryLocally, removeCategoryLocally } = useCategories()
   const { paymentMethods, addPaymentMethodLocally, removePaymentMethodLocally } = usePaymentMethods()
 
@@ -48,6 +48,25 @@ export default function Layout() {
             </svg>
             Googleでログイン
           </button>
+          <div className="flex items-center gap-3 w-full">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400">または</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+          <button
+            onClick={() => signInAsGuest()}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-stone-100 hover:bg-stone-200 rounded-xl text-gray-600 font-medium text-sm transition-colors w-full"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            ゲストとして試す
+          </button>
+          <p className="text-xs text-gray-400 text-center leading-relaxed">
+            サンプルデータで全機能を体験できます。<br />
+            変更はリロードでリセットされます。
+          </p>
         </div>
       </div>
     )
@@ -74,8 +93,21 @@ export default function Layout() {
         <Sidebar />
       </div>
 
-      <main className="flex-1 overflow-hidden pb-16 md:pb-0">
-        <Outlet context={context} />
+      <main className="flex-1 overflow-hidden pb-16 md:pb-0 flex flex-col">
+        {isGuest && (
+          <div className="flex items-center justify-between px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs shrink-0">
+            <span>ゲストモード：サンプルデータを表示中。変更はリロードでリセットされます。</span>
+            <button
+              onClick={() => signInWithGoogle()}
+              className="underline text-amber-700 hover:text-amber-900 shrink-0 ml-3 whitespace-nowrap"
+            >
+              Googleでログイン
+            </button>
+          </div>
+        )}
+        <div className="flex-1 overflow-hidden">
+          <Outlet context={context} />
+        </div>
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden">

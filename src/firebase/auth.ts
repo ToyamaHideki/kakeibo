@@ -6,6 +6,10 @@ export async function signInWithGoogle() {
   return signInWithRedirect(auth, provider)
 }
 
+export function signInAsGuest(): void {
+  window.dispatchEvent(new CustomEvent('kakeibo:guest-mode'))
+}
+
 export function signOut() {
   return firebaseSignOut(auth)
 }

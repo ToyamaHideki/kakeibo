@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react'
 import { fetchPersonalCategories } from '../firebase/personalFirestore'
+import { useHousehold } from './useHousehold'
+import { GUEST_PERSONAL_CATEGORIES } from '../data/guestData'
 import type { Category } from '../types'
 
 export function usePersonalCategories(uid: string) {
+  const { isGuest } = useHousehold()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (isGuest) {
+      setCategories(sortCategories([...GUEST_PERSONAL_CATEGORIES]))
+      setLoading(false)
+      return
+    }
     async function init() {
       try {
         const existing = await fetchPersonalCategories(uid)
@@ -16,7 +24,7 @@ export function usePersonalCategories(uid: string) {
       }
     }
     init()
-  }, [uid])
+  }, [uid, isGuest])
 
   function addCategoryLocally(category: Category) {
     setCategories(prev => sortCategories([...prev, category]))

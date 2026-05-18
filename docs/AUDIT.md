@@ -354,26 +354,36 @@ const CashflowPage = lazy(() => import('./pages/CashflowPage'))
 
 ## 6. 改善ロードマップ
 
+> 最終確認日: 2026-05-18
+
 ### Phase 1（今週中・実装コスト小）
-1. **ErrorBoundary 追加**：`src/components/ErrorBoundary.tsx` を作成し App.tsx 直下に
-2. **HouseholdContext 値の useMemo 化**：1ファイル数行の修正
-3. **git 初期化**：`git init` → 初回コミット前に `.env.local` 除外を再確認
+- [x] **ErrorBoundary 追加**：`src/components/ErrorBoundary.tsx` 作成・`App.tsx` 直下に配置済み
+- [x] **HouseholdContext 値の useMemo 化**：`useHousehold.ts` L70 で実装済み
+- [ ] **git 初期化**：未実施（`.env.local` 除外確認後に `git init` → 初回コミット）
 
 ### Phase 2（2週以内・中規模リファクタ）
-4. **CRUD ジェネリック化**：`createHouseholdCrud` 導入 → 4ファイル削除
-5. **useFirestoreCollection フック**：4ファイルを統合
-6. **コード分割**：`React.lazy` でページごとに分離
+- [x] **CRUD ジェネリック化**：`src/firebase/crud.ts` の `createHouseholdCrud` 導入済み（4ファイルが各10行に圧縮）
+- [x] **useFirestoreCollection フック**：`src/hooks/useFirestoreCollection.ts` 作成・4フック統合済み
+- [x] **コード分割**：`App.tsx` で全ページを `React.lazy` 化済み
+
+### Phase 2 追加実施（audit 後に対応）
+- [x] **useEscapeKey フック**：`src/hooks/useEscapeKey.ts` 作成・各モーダルで共通化
+- [x] **useConfirm + ConfirmDialog**：`window.confirm` を全廃（0件）→ カスタムダイアログに統一
+- [x] **BottomSheetModal 共通コンポーネント**：`src/components/BottomSheetModal.tsx` 作成
+- [x] **Chart.js 一元 register**：`src/lib/chart.ts` で集約済み
+- [x] **エラーロギング**：`useHousehold` の catch に `console.warn` 追加済み
+- [x] **nextOrder ヘルパー**：`src/utils/order.ts` で `order` 採番を統一
 
 ### Phase 3（1ヶ月以内・セキュリティ強化）
-7. **`memberProfiles` をサブコレクション化**：他世帯のメール露出を遮断
-8. **招待コード長を 8 文字に拡張** + Cloud Function 化（総当たり耐性）
-9. **App Check 有効化**：自サイト外からの API 呼び出しブロック
+- [ ] **`memberProfiles` をサブコレクション化**：他世帯のメール露出を遮断
+- [ ] **招待コード長を 8 文字に拡張** + Cloud Function 化（総当たり耐性）
+- [ ] **App Check 有効化**：自サイト外からの API 呼び出しブロック
 
 ### Phase 4（時間がある時）
-10. **巨大ページ分割**：CashflowPage / SecuritiesAccountsPage を最優先
-11. **コントラスト改善**：gray-400 → gray-500 一括置換 + 目視確認
-12. **モーダル共通化**：BottomSheetModal + フォーカストラップ
-13. **React Query 導入**：フェッチ重複解消
+- [ ] **巨大ページ分割**：CashflowPage（917行）/ SecuritiesAccountsPage（671行）を最優先
+- [ ] **コントラスト改善**：`text-gray-300` / `text-gray-400` が 42 箇所残存 → `gray-500` 以上へ統一
+- [ ] **モーダル共通化（残り）**：TransactionModal / PersonalTransactionModal の重複解消・フォーカストラップ導入
+- [ ] **React Query 導入**：フェッチ重複解消（useCategories / usePaymentMethods のページ間キャッシュ）
 
 ---
 
