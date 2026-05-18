@@ -2,13 +2,22 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { User } from 'firebase/auth'
 import TransactionList from '../features/TransactionList'
-import PersonalTransactionModal from '../features/PersonalTransactionModal'
+import TransactionModal from '../features/TransactionModal'
 import MonthlyChart from '../features/MonthlyChart'
 import { useHousehold } from '../hooks/useHousehold'
 import { usePersonalMonthlyData } from '../hooks/usePersonalMonthlyData'
 import { usePersonalCategories } from '../hooks/usePersonalCategories'
 import { usePersonalPaymentMethods } from '../hooks/usePersonalPaymentMethods'
-import { deletePersonalTransaction } from '../firebase/personalFirestore'
+import {
+  deletePersonalTransaction,
+  savePersonalTransaction,
+  updatePersonalTransaction,
+  movePersonalTransaction,
+  addPersonalCategory,
+  deletePersonalCategory,
+  addPersonalPaymentMethod,
+  deletePersonalPaymentMethod,
+} from '../firebase/personalFirestore'
 import YearMonthPicker from '../components/YearMonthPicker'
 import type { Transaction } from '../types'
 import { adjacentMonth, currentYearMonth, formatYearMonth, formatPayPeriodLabel } from '../utils/date'
@@ -205,8 +214,8 @@ function PersonalExpenseView({ user }: { user: User }) {
       </button>
 
       {/* 新規追加モーダル */}
-      <PersonalTransactionModal
-        uid={user.uid}
+      <TransactionModal
+        title="個人収支"
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSaved={reload}
@@ -217,11 +226,18 @@ function PersonalExpenseView({ user }: { user: User }) {
         categories={categories}
         paymentMethods={paymentMethods}
         yearMonth={yearMonth}
+        saveFn={(ym, tx) => savePersonalTransaction(user.uid, ym, tx)}
+        updateFn={(ym, tx) => updatePersonalTransaction(user.uid, ym, tx)}
+        moveFn={(from, to, tx) => movePersonalTransaction(user.uid, from, to, tx)}
+        addCategoryFn={cat => addPersonalCategory(user.uid, cat)}
+        deleteCategoryFn={id => deletePersonalCategory(user.uid, id)}
+        addPaymentMethodFn={pm => addPersonalPaymentMethod(user.uid, pm)}
+        deletePaymentMethodFn={id => deletePersonalPaymentMethod(user.uid, id)}
       />
 
-      {/* 編雁E��ーダル */}
-      <PersonalTransactionModal
-        uid={user.uid}
+      {/* 編集モーダル */}
+      <TransactionModal
+        title="個人収支"
         isOpen={isEditModalOpen}
         onClose={handleEditClose}
         onSaved={reload}
@@ -233,6 +249,13 @@ function PersonalExpenseView({ user }: { user: User }) {
         paymentMethods={paymentMethods}
         yearMonth={editTarget?.date.slice(0, 7) ?? yearMonth}
         editTarget={editTarget}
+        saveFn={(ym, tx) => savePersonalTransaction(user.uid, ym, tx)}
+        updateFn={(ym, tx) => updatePersonalTransaction(user.uid, ym, tx)}
+        moveFn={(from, to, tx) => movePersonalTransaction(user.uid, from, to, tx)}
+        addCategoryFn={cat => addPersonalCategory(user.uid, cat)}
+        deleteCategoryFn={id => deletePersonalCategory(user.uid, id)}
+        addPaymentMethodFn={pm => addPersonalPaymentMethod(user.uid, pm)}
+        deletePaymentMethodFn={id => deletePersonalPaymentMethod(user.uid, id)}
       />
     </div>
   )

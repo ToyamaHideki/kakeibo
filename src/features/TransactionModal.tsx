@@ -18,6 +18,15 @@ interface Props {
   paymentMethods: PaymentMethod[]
   yearMonth: string
   editTarget?: Transaction
+  // personal モード用オーバーライド（省略時は household 動作）
+  title?: string
+  saveFn?: (yearMonth: string, tx: Transaction) => Promise<void>
+  updateFn?: (yearMonth: string, tx: Transaction) => Promise<void>
+  moveFn?: (fromYM: string, toYM: string, tx: Transaction) => Promise<void>
+  addCategoryFn?: (cat: Omit<Category, 'id'>) => Promise<string>
+  deleteCategoryFn?: (id: string) => Promise<void>
+  addPaymentMethodFn?: (pm: Omit<PaymentMethod, 'id'>) => Promise<string>
+  deletePaymentMethodFn?: (id: string) => Promise<void>
 }
 
 export default function TransactionModal({
@@ -32,6 +41,14 @@ export default function TransactionModal({
   paymentMethods,
   yearMonth,
   editTarget,
+  title = '収支',
+  saveFn,
+  updateFn,
+  moveFn,
+  addCategoryFn,
+  deleteCategoryFn,
+  addPaymentMethodFn,
+  deletePaymentMethodFn,
 }: Props) {
   const { householdId } = useHousehold()
   const [type, setType] = useState<TransactionType>('expense')
@@ -116,12 +133,12 @@ export default function TransactionModal({
 
       if (editTarget) {
         if (yearMonth !== newYearMonth) {
-          await moveTransaction(householdId!, yearMonth, newYearMonth, transaction)
+          await (moveFn ?? ((from, to, tx) => moveTransaction(householdId!, from, to, tx)))(yearMonth, newYearMonth, transaction)
         } else {
-          await updateTransaction(householdId!, yearMonth, transaction)
+          await (updateFn ?? ((ym, tx) => updateTransaction(householdId!, ym, tx)))(yearMonth, transaction)
         }
       } else {
-        await saveTransaction(householdId!, newYearMonth, transaction)
+        await (saveFn ?? ((ym, tx) => saveTransaction(householdId!, ym, tx)))(newYearMonth, transaction)
       }
 
       onSaved()
@@ -133,7 +150,7 @@ export default function TransactionModal({
 
   return (
     <>
-      <BottomSheetModal isOpen={isOpen} onClose={onClose} title={editTarget ? '収支を編集' : '収支を登録'}>
+      <BottomSheetModal isOpen={isOpen} onClose={onClose} title={editTarget ? `${title}を編集` : `${title}を登録`}>
           <div className="px-5 py-5 overflow-y-auto">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* 収入 / 支出 切替 */}
@@ -286,6 +303,8 @@ export default function TransactionModal({
         type={type}
         nextOrder={nextCategoryOrder}
         categories={filteredCategories}
+        addCategoryFn={addCategoryFn}
+        deleteCategoryFn={deleteCategoryFn}
       />
 
       <PaymentMethodAddModal
@@ -295,6 +314,8 @@ export default function TransactionModal({
         onDeleted={handlePaymentMethodDeleted}
         nextOrder={nextPaymentMethodOrder}
         paymentMethods={paymentMethods}
+        addPaymentMethodFn={addPaymentMethodFn}
+        deletePaymentMethodFn={deletePaymentMethodFn}
       />
     </>
   )
