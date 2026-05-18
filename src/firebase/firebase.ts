@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { initializeFirestore } from 'firebase/firestore'
 import { getAnalytics } from 'firebase/analytics'
 import { getAuth } from 'firebase/auth'
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -14,6 +15,12 @@ const firebaseConfig = {
 }
 
 const app = initializeApp(firebaseConfig)
+
+initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
+  isTokenAutoRefreshEnabled: true,
+})
+
 // ignoreUndefinedProperties: undefined フィールドをエラーにせずスキップする
 export const db = initializeFirestore(app, { ignoreUndefinedProperties: true })
 export const analytics = getAnalytics(app)
