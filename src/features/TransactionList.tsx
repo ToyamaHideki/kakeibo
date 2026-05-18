@@ -54,7 +54,7 @@ export default function TransactionList({
     return (
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center">
         <p className="text-gray-500 text-sm">収支データがありません</p>
-        <p className="text-gray-300 text-xs mt-1">＋ボタンから収支を登録してください</p>
+        <p className="text-gray-500 text-xs mt-1">＋ボタンから収支を登録してください</p>
       </div>
     )
   }

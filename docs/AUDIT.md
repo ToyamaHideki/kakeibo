@@ -381,7 +381,7 @@ const CashflowPage = lazy(() => import('./pages/CashflowPage'))
 
 ### Phase 4（時間がある時）
 - [x] **巨大ページ分割**：CashflowPage（921行→650行）/ SecuritiesAccountsPage（660行→285行）分割完了
-- [ ] **コントラスト改善**：`text-gray-300` / `text-gray-400` が 42 箇所残存 → `gray-500` 以上へ統一
+- [x] **コントラスト改善**：プレーンテキスト 7件（Layout・TransactionList・FixedCostsPage）を gray-500 へ修正。アイコンボタンの hover用薄さ・値ゼロ表示は意図的デザインのため維持
 - [x] **モーダル共通化**：PersonalTransactionModal を廃止、TransactionModal に optional props（title/saveFn/updateFn/moveFn/category系fn）を追加して統合
 - [x] **React Query 導入**：useCategories / usePaymentMethods を useQuery に移行。staleTime=Infinity でページ間キャッシュ共有、addCategoryLocally 等は setQueryData で楽観的更新
 

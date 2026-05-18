@@ -50,7 +50,7 @@ export default function Layout() {
           </button>
           <div className="flex items-center gap-3 w-full">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400">または</span>
+            <span className="text-xs text-gray-500">または</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
           <button
@@ -63,7 +63,7 @@ export default function Layout() {
             </svg>
             ゲストとして試す
           </button>
-          <p className="text-xs text-gray-400 text-center leading-relaxed">
+          <p className="text-xs text-gray-500 text-center leading-relaxed">
             サンプルデータで全機能を体験できます。<br />
             変更はリロードでリセットされます。
           </p>

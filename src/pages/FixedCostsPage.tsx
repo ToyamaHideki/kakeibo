@@ -342,13 +342,13 @@ export default function FixedCostsPage() {
                       <div className="w-10 shrink-0 text-center">
                         {!applicable ? (
                           <>
-                            <span className="text-xs font-bold text-gray-300 block">{cost.month}月</span>
-                            <span className="text-xs text-gray-300 block leading-none">{cost.dayOfMonth}日</span>
+                            <span className="text-xs font-bold text-gray-500 block">{cost.month}月</span>
+                            <span className="text-xs text-gray-500 block leading-none">{cost.dayOfMonth}日</span>
                           </>
                         ) : overflows ? (
                           <>
-                            <span className="text-sm font-bold text-gray-300">{cost.dayOfMonth}</span>
-                            <span className="text-xs text-gray-300 block leading-none">日</span>
+                            <span className="text-sm font-bold text-gray-500">{cost.dayOfMonth}</span>
+                            <span className="text-xs text-gray-500 block leading-none">日</span>
                           </>
                         ) : (
                           <>
