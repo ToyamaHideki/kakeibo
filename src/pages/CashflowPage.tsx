@@ -11,218 +11,17 @@ import {
 import {
   SortableContext,
   arrayMove,
-  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useState } from 'react'
 import CfSettingsModal from '../features/CfSettingsModal'
+import { SortableCfRow } from '../features/SortableCfRow'
+import { CfLifeEventModal } from '../features/CfLifeEventModal'
+import { getCfValue, fmtBalance, nKey } from '../features/cfUtils'
 import { useCfPlan } from '../hooks/useCfPlan'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
 import type { CfItem } from '../types'
-
-// ─── Helper ───────────────────────────────────────────────────────────────────
-
-function getCfValue(item: CfItem, year: number): number {
-  const yearStr = String(year)
-  if (item.values[yearStr] !== undefined) return item.values[yearStr]
-  const explicitYears = Object.keys(item.values)
-    .map(Number)
-    .filter(y => y < year)
-    .sort((a, b) => a - b)
-  if (explicitYears.length === 0) return 0
-  const baseYear = explicitYears[explicitYears.length - 1]
-  const baseVal = item.values[String(baseYear)]
-  const elapsed = year - baseYear
-  return Math.round(baseVal * Math.pow(1 + item.rate / 100, elapsed))
-}
-
-function fmt(n: number): string {
-  if (n === 0) return ''
-  return n.toLocaleString()
-}
-
-function fmtBalance(n: number): string {
-  return n.toLocaleString()
-}
-
-const vKey = (type: 'income' | 'expense', id: string, year: number) => `v|${type}|${id}|${year}`
-const nKey = (type: 'income' | 'expense', id: string) => `n|${type}|${id}`
-const rKey = (type: 'income' | 'expense', id: string) => `r|${type}|${id}`
-
-// ─── SortableCfRow ────────────────────────────────────────────────────────────
-
-interface RowProps {
-  item: CfItem
-  type: 'income' | 'expense'
-  displayYears: number[]
-  thisYear: number
-  isUnlocked: boolean
-  editingCell: string | null
-  editValue: string
-  onStartEdit: (key: string, value: string) => void
-  onEditChange: (value: string) => void
-  onCommit: () => void
-  onCancel: () => void
-  onRemove: (id: string) => void
-}
-
-function SortableCfRow({
-  item,
-  type,
-  displayYears,
-  thisYear,
-  isUnlocked,
-  editingCell,
-  editValue,
-  onStartEdit,
-  onEditChange,
-  onCommit,
-  onCancel,
-  onRemove,
-}: RowProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: item.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0 : 1,
-  }
-
-  const nameKey = nKey(type, item.id)
-  const rateKey = rKey(type, item.id)
-
-  return (
-    <tr ref={setNodeRef} style={style} className="hover:bg-gray-50 group">
-      {/* 費目名（sticky） */}
-      <td className="sticky left-0 z-20 bg-white group-hover:bg-gray-50 border-r border-gray-200 py-1 px-1.5 min-w-0">
-        <div className="flex items-center gap-1 min-w-0">
-          <button
-            {...attributes}
-            {...listeners}
-            className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0 px-0.5 py-1 touch-none"
-            tabIndex={-1}
-          >
-            <svg viewBox="0 0 8 14" width="8" height="14" fill="currentColor">
-              <circle cx="2" cy="2"  r="1.2" />
-              <circle cx="6" cy="2"  r="1.2" />
-              <circle cx="2" cy="7"  r="1.2" />
-              <circle cx="6" cy="7"  r="1.2" />
-              <circle cx="2" cy="12" r="1.2" />
-              <circle cx="6" cy="12" r="1.2" />
-            </svg>
-          </button>
-
-          {editingCell === nameKey ? (
-            <input
-              type="text"
-              value={editValue}
-              onChange={e => onEditChange(e.target.value)}
-              onBlur={onCommit}
-              onKeyDown={e => {
-                if (e.key === 'Enter') onCommit()
-                if (e.key === 'Escape') onCancel()
-              }}
-              autoFocus
-              className="flex-1 text-xs px-1 py-0.5 border border-sage-300 rounded outline-none min-w-0"
-            />
-          ) : (
-            <span
-              className="flex-1 text-xs text-gray-700 truncate cursor-pointer hover:text-sage-600 transition-colors min-w-0"
-              onClick={() => onStartEdit(nameKey, item.name)}
-              title={item.name}
-            >
-              {item.name}
-            </span>
-          )}
-
-          <button
-            onClick={() => onRemove(item.id)}
-            className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 shrink-0 transition-all"
-            tabIndex={-1}
-            title="削除"
-          >
-            <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
-              <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/>
-              <path fillRule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 01-1-1V2a1 1 0 011-1H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1v1zM4.118 4L4 4.059V13a1 1 0 001 1h6a1 1 0 001-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-            </svg>
-          </button>
-        </div>
-      </td>
-
-      {/* 変動率（sticky） */}
-      <td className="sticky left-[160px] z-20 bg-white group-hover:bg-gray-50 border-r border-gray-200 text-center py-1 px-1">
-        {editingCell === rateKey ? (
-          <input
-            type="number"
-            value={editValue}
-            onChange={e => onEditChange(e.target.value)}
-            onBlur={onCommit}
-            onKeyDown={e => {
-              if (e.key === 'Enter') onCommit()
-              if (e.key === 'Escape') onCancel()
-            }}
-            autoFocus
-            className="w-full text-xs text-center px-1 py-0.5 border border-sage-300 rounded outline-none"
-          />
-        ) : (
-          <span
-            className="text-xs text-gray-500 cursor-pointer hover:text-sage-600 transition-colors"
-            onClick={() => onStartEdit(rateKey, String(item.rate))}
-          >
-            {item.rate}%
-          </span>
-        )}
-      </td>
-
-      {/* 年別セル */}
-      {displayYears.map(year => {
-        const cellKey = vKey(type, item.id, year)
-        const isPast = year < thisYear
-        const locked = isPast && !isUnlocked
-        const val = getCfValue(item, year)
-        const isExplicit = item.values[String(year)] !== undefined
-
-        return (
-          <td
-            key={year}
-            className={`py-1.5 px-2 text-right text-xs tabular-nums border-l border-gray-100 transition-colors ${
-              locked
-                ? 'text-gray-500'
-                : isPast
-                  ? 'bg-amber-50 cursor-pointer hover:bg-amber-100'
-                  : 'cursor-pointer hover:bg-sage-50'
-            }`}
-            onClick={!locked ? () => onStartEdit(cellKey, String(val === 0 && !isExplicit ? '' : val)) : undefined}
-          >
-            {editingCell === cellKey ? (
-              <input
-                type="number"
-                value={editValue}
-                onChange={e => onEditChange(e.target.value)}
-                onBlur={onCancel}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') onCommit()
-                  if (e.key === 'Escape') onCancel()
-                }}
-                autoFocus
-                className="w-full text-xs text-right px-0 py-0 bg-sage-50 border border-sage-300 rounded outline-none"
-              />
-            ) : (
-              <span className={isExplicit ? 'font-medium text-gray-800' : 'text-gray-500'}>
-                {val === 0 && !isExplicit ? '' : fmt(val)}
-              </span>
-            )}
-          </td>
-        )
-      })}
-    </tr>
-  )
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function CashflowPage() {
   const { plan, loading, updatePlan, updateItemValue, updateItemName, updateItemRate, reorderItems, addItem, removeItem, updateLifeEvent } =
@@ -242,6 +41,7 @@ export default function CashflowPage() {
     window.addEventListener('resize', handler)
     return () => window.removeEventListener('resize', handler)
   }, [])
+
   const [editingCell, setEditingCell] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const [isUnlocked, setIsUnlocked] = useState(false)
@@ -255,9 +55,8 @@ export default function CashflowPage() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [lifeEventModal])
-  const [activeItem, setActiveItem] = useState<{ item: CfItem; type: 'income' | 'expense' } | null>(
-    null,
-  )
+
+  const [activeItem, setActiveItem] = useState<{ item: CfItem; type: 'income' | 'expense' } | null>(null)
 
   const displayYears = isMobile
     ? [selectedYear]
@@ -609,7 +408,6 @@ export default function CashflowPage() {
                         />
                       ) : (
                         <>
-                          {/* モバイル・タブレット: 入力あり→吹き出しアイコン、なし→薄いダッシュ */}
                           <span className="lg:hidden flex justify-center items-center h-4">
                             {currentEvent ? (
                               <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14" className="text-sage-500 shrink-0">
@@ -619,7 +417,6 @@ export default function CashflowPage() {
                               <span className="text-gray-200 text-[10px]">—</span>
                             )}
                           </span>
-                          {/* デスクトップ: テキストをそのまま表示 */}
                           <span className={`hidden lg:inline ${currentEvent ? 'text-gray-700' : 'text-gray-300'}`}>
                             {currentEvent || '—'}
                           </span>
@@ -831,81 +628,12 @@ export default function CashflowPage() {
         </DragOverlay>
       </DndContext>
 
-      {/* ライフイベント閲覧・編集モーダル（モバイル用） */}
-      {lifeEventModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setLifeEventModal(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            {/* ヘッダー */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100">
-              <h3 className="font-bold text-gray-800 text-base">
-                {lifeEventModal.year}年 ライフイベント
-              </h3>
-              <button
-                onClick={() => setLifeEventModal(null)}
-                className="text-gray-500 hover:text-gray-600 transition-colors p-1"
-              >
-                <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-
-            {/* 本体 */}
-            <div className="px-5 py-4">
-              {lifeEventModal.isEditing ? (
-                <>
-                  <input
-                    type="text"
-                    value={lifeEventModal.text}
-                    onChange={e => setLifeEventModal(prev => prev ? { ...prev, text: e.target.value } : null)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') saveLifeEventModal()
-                      if (e.key === 'Escape') setLifeEventModal(prev => prev ? { ...prev, isEditing: false } : null)
-                    }}
-                    autoFocus
-                    placeholder="ライフイベントを入力"
-                    className="w-full border border-sage-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sage-300 mb-4"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setLifeEventModal(prev => prev ? { ...prev, isEditing: false, text: (plan.lifeEvents ?? {})[String(prev.year)] ?? '' } : null)}
-                      className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 transition-colors"
-                    >
-                      キャンセル
-                    </button>
-                    <button
-                      onClick={saveLifeEventModal}
-                      className="flex-1 py-2.5 rounded-xl bg-sage-600 hover:bg-sage-700 text-white text-sm font-medium transition-colors"
-                    >
-                      保存
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className={`text-sm min-h-[3em] mb-4 ${lifeEventModal.text ? 'text-gray-800' : 'text-gray-500'}`}>
-                    {lifeEventModal.text || '（未入力）'}
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setLifeEventModal(null)}
-                      className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 transition-colors"
-                    >
-                      閉じる
-                    </button>
-                    <button
-                      onClick={() => setLifeEventModal(prev => prev ? { ...prev, isEditing: true } : null)}
-                      className="flex-1 py-2.5 rounded-xl bg-sage-600 hover:bg-sage-700 text-white text-sm font-medium transition-colors"
-                    >
-                      編集する
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <CfLifeEventModal
+        lifeEventModal={lifeEventModal}
+        lifeEvents={plan.lifeEvents}
+        setLifeEventModal={setLifeEventModal}
+        onSave={saveLifeEventModal}
+      />
 
       </div>
 
