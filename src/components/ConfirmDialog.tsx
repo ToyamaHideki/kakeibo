@@ -15,7 +15,7 @@ export default function ConfirmDialog({
 }: Props) {
   if (!isOpen) return null
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
       <div className="relative bg-white rounded-2xl shadow-xl p-6 mx-4 max-w-sm w-full">
         <p className="text-sm text-gray-700 whitespace-pre-line mb-6">{message}</p>
