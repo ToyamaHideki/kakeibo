@@ -16,7 +16,7 @@ const ops = {
 }
 
 export function useSecuritiesAccounts() {
-  const { items: accounts, setItems: setAccounts, loading, householdId, add, update, remove } = useFirestoreCollection<SecuritiesAccount>(ops)
+  const { items: accounts, setItems: setAccounts, loading, householdId, add, update, remove, reorderItems } = useFirestoreCollection<SecuritiesAccount>(ops)
 
   async function addAccount(account: Omit<SecuritiesAccount, 'id' | 'order'>) {
     await add({ ...account, order: nextOrder(accounts) })
@@ -45,5 +45,5 @@ export function useSecuritiesAccounts() {
     setAccounts(prev => prev.map(a => a.id === id ? { ...a, monthlyValues, currentValue } : a))
   }
 
-  return { accounts, loading, addAccount, updateAccount: update, deleteAccount: remove, recordMonthlyValue, deleteMonthlyValue }
+  return { accounts, loading, addAccount, updateAccount: update, deleteAccount: remove, recordMonthlyValue, deleteMonthlyValue, reorderAccounts: reorderItems }
 }

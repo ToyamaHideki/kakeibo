@@ -15,6 +15,6 @@ const ops = {
 }
 
 export function useSavingsAccounts() {
-  const { items: accounts, loading, add, update, remove } = useFirestoreCollection<SavingsAccount>(ops)
-  return { accounts, loading, addAccount: add, updateAccount: update, deleteAccount: remove }
+  const { items: accounts, loading, add, update, remove, reorderItems } = useFirestoreCollection<SavingsAccount>(ops)
+  return { accounts, loading, addAccount: add, updateAccount: update, deleteAccount: remove, reorderAccounts: reorderItems }
 }

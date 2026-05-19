@@ -16,7 +16,7 @@ const ops = {
 }
 
 export function useSavingsGoals() {
-  const { items: goals, setItems: setGoals, loading, householdId, add, update, remove } = useFirestoreCollection<SavingsGoal>(ops)
+  const { items: goals, setItems: setGoals, loading, householdId, add, update, remove, reorderItems } = useFirestoreCollection<SavingsGoal>(ops)
 
   async function addGoal(goal: Omit<SavingsGoal, 'id' | 'order'>) {
     await add({ ...goal, order: nextOrder(goals) })
@@ -32,5 +32,5 @@ export function useSavingsGoals() {
     setGoals(prev => prev.map(g => g.id === id ? { ...g, contributions, currentAmount } : g))
   }
 
-  return { goals, loading, addGoal, updateGoal: update, deleteGoal: remove, logContribution }
+  return { goals, loading, addGoal, updateGoal: update, deleteGoal: remove, logContribution, reorderGoals: reorderItems }
 }
