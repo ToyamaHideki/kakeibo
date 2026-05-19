@@ -74,6 +74,11 @@ function PersonalExpenseView({ user }: { user: User }) {
   const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0)
   const balance = income - expense
 
+  const incomeStr = `¥${income.toLocaleString()}`
+  const expenseStr = `¥${expense.toLocaleString()}`
+  const balanceStr = `${balance >= 0 ? '+' : ''}¥${balance.toLocaleString()}`
+  const amtSize = (s: string) => s.length <= 9 ? 'text-lg' : s.length <= 12 ? 'text-base' : 'text-sm'
+
   function handleEdit(transaction: Transaction) {
     setEditTarget(transaction)
     setIsEditModalOpen(true)
@@ -129,20 +134,20 @@ function PersonalExpenseView({ user }: { user: User }) {
         onChange={ym => navigate(`/personal/months/${ym}`)}
       />
 
-      {/* 収支サマリー�E�モバイルのみ�E�E*/}
+      {/* 収支サマリー（モバイルのみ）*/}
       <div className="grid grid-cols-3 gap-3 mb-5 md:hidden">
         <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
           <p className="text-xs text-gray-500 mb-1">収入</p>
-          <p className="text-lg font-bold text-sage-600 tabular-nums">¥{income.toLocaleString()}</p>
+          <p className={`${amtSize(incomeStr)} font-bold text-sage-600 tabular-nums`}>{incomeStr}</p>
         </div>
         <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
           <p className="text-xs text-gray-500 mb-1">支出</p>
-          <p className="text-lg font-bold text-terracotta-500 tabular-nums">¥{expense.toLocaleString()}</p>
+          <p className={`${amtSize(expenseStr)} font-bold text-terracotta-500 tabular-nums`}>{expenseStr}</p>
         </div>
         <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
           <p className="text-xs text-gray-500 mb-1">収支</p>
-          <p className={`text-lg font-bold tabular-nums ${balance >= 0 ? 'text-sage-600' : 'text-terracotta-500'}`}>
-            {balance >= 0 ? '+' : ''}¥{balance.toLocaleString()}
+          <p className={`${amtSize(balanceStr)} font-bold tabular-nums ${balance >= 0 ? 'text-sage-600' : 'text-terracotta-500'}`}>
+            {balanceStr}
           </p>
         </div>
       </div>
@@ -197,16 +202,16 @@ function PersonalExpenseView({ user }: { user: User }) {
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                   <p className="text-xs text-gray-500 mb-1">収入</p>
-                  <p className="text-lg font-bold text-sage-600 tabular-nums">¥{income.toLocaleString()}</p>
+                  <p className={`${amtSize(incomeStr)} font-bold text-sage-600 tabular-nums`}>{incomeStr}</p>
                 </div>
                 <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                   <p className="text-xs text-gray-500 mb-1">支出</p>
-                  <p className="text-lg font-bold text-terracotta-500 tabular-nums">¥{expense.toLocaleString()}</p>
+                  <p className={`${amtSize(expenseStr)} font-bold text-terracotta-500 tabular-nums`}>{expenseStr}</p>
                 </div>
                 <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                   <p className="text-xs text-gray-500 mb-1">収支</p>
-                  <p className={`text-lg font-bold tabular-nums ${balance >= 0 ? 'text-sage-600' : 'text-terracotta-500'}`}>
-                    {balance >= 0 ? '+' : ''}¥{balance.toLocaleString()}
+                  <p className={`${amtSize(balanceStr)} font-bold tabular-nums ${balance >= 0 ? 'text-sage-600' : 'text-terracotta-500'}`}>
+                    {balanceStr}
                   </p>
                 </div>
               </div>
