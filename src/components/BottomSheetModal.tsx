@@ -1,5 +1,7 @@
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect, useRef } from 'react'
 import { useEscapeKey } from '../hooks/useEscapeKey'
+
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 
 interface Props {
   isOpen: boolean
@@ -22,6 +24,35 @@ export default function BottomSheetModal({
 }: Props) {
   useEscapeKey(onClose, isOpen)
 
+  const panelRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+    previousFocusRef.current = document.activeElement as HTMLElement
+    const panel = panelRef.current
+    if (!panel) return
+    const focusable = panel.querySelectorAll<HTMLElement>(FOCUSABLE)
+    focusable[0]?.focus()
+
+    function handleTab(e: KeyboardEvent) {
+      if (e.key !== 'Tab') return
+      const els = panel!.querySelectorAll<HTMLElement>(FOCUSABLE)
+      const first = els[0]
+      const last = els[els.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last?.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first?.focus() }
+      }
+    }
+    panel.addEventListener('keydown', handleTab)
+    return () => {
+      panel.removeEventListener('keydown', handleTab)
+      previousFocusRef.current?.focus()
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   return (
@@ -30,6 +61,7 @@ export default function BottomSheetModal({
       onClick={onClose}
     >
       <div
+        ref={panelRef}
         className={`bg-white w-full md:max-w-md md:rounded-xl rounded-t-2xl shadow-xl flex flex-col ${maxHeightClass}`}
         onClick={e => e.stopPropagation()}
       >
