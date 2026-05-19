@@ -24,8 +24,34 @@ import { adjacentMonth, currentYearMonth, formatYearMonth, formatPayPeriodLabel 
 
 export default function PersonalPage() {
   const { user } = useHousehold()
-  if (!user) return null
+  if (!user) return <PersonalGuestNotice />
   return <PersonalExpenseView user={user} />
+}
+
+function PersonalGuestNotice() {
+  return (
+    <div className="flex items-center justify-center h-full px-6">
+      <div className="text-center max-w-sm">
+        <div className="w-16 h-16 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-5">
+          <svg className="w-8 h-8 text-sage-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </div>
+        <h2 className="text-lg font-bold text-gray-800 mb-3">個人収支について</h2>
+        <p className="text-sm text-gray-600 leading-relaxed mb-2">
+          個人収支は、世帯の月別収支とは別に自分だけの収支を管理する機能です。
+        </p>
+        <p className="text-sm text-gray-500 leading-relaxed">
+          お小遣いの内訳、副収入、個人的な趣味の支出など、
+          世帯全体とは分けて把握したいお金の管理にご利用いただけます。
+        </p>
+        <p className="text-xs text-gray-400 mt-5">
+          ご利用にはGoogleアカウントでのログインが必要です。
+        </p>
+      </div>
+    </div>
+  )
 }
 
 function PersonalExpenseView({ user }: { user: User }) {
