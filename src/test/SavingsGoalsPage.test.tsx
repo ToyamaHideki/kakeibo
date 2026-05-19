@@ -29,6 +29,7 @@ const DEFAULT_HOOK = {
   updateGoal: vi.fn().mockResolvedValue(undefined),
   deleteGoal: vi.fn().mockResolvedValue(undefined),
   logContribution: vi.fn().mockResolvedValue(undefined),
+  reorderGoals: vi.fn().mockResolvedValue(undefined),
 }
 
 beforeEach(() => {
