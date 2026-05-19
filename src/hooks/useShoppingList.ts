@@ -56,10 +56,20 @@ export function useShoppingList() {
     setItems(prev => prev.filter(i => !i.checked))
   }
 
+  async function reorderItems(newUnchecked: ShoppingItem[]) {
+    if (!householdId) return
+    setItems(prev => [...newUnchecked, ...prev.filter(i => i.checked)])
+    await Promise.all(
+      newUnchecked.map((item, idx) =>
+        updateShoppingItem(householdId!, item.id, { order: idx * 1000 })
+      )
+    )
+  }
+
   const uncheckedItems = items.filter(i => !i.checked)
   const checkedItems = items.filter(i => i.checked)
 
-  return { uncheckedItems, checkedItems, loading, addItem, toggleItem, deleteItem, clearChecked }
+  return { uncheckedItems, checkedItems, loading, addItem, toggleItem, deleteItem, clearChecked, reorderItems }
 }
 
 function sorted(items: ShoppingItem[]): ShoppingItem[] {

@@ -1,5 +1,9 @@
 import { type FormEvent, useRef, useState } from 'react'
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useShoppingList } from '../hooks/useShoppingList'
+import type { ShoppingItem } from '../types'
 
 function TrashIcon() {
   return (
@@ -10,8 +14,18 @@ function TrashIcon() {
   )
 }
 
+function GripIcon() {
+  return (
+    <svg viewBox="0 0 8 14" width="10" height="14" fill="currentColor">
+      <circle cx="2" cy="2"  r="1.2" /><circle cx="6" cy="2"  r="1.2" />
+      <circle cx="2" cy="7"  r="1.2" /><circle cx="6" cy="7"  r="1.2" />
+      <circle cx="2" cy="12" r="1.2" /><circle cx="6" cy="12" r="1.2" />
+    </svg>
+  )
+}
+
 export default function ShoppingListPage() {
-  const { uncheckedItems, checkedItems, loading, addItem, toggleItem, deleteItem, clearChecked } = useShoppingList()
+  const { uncheckedItems, checkedItems, loading, addItem, toggleItem, deleteItem, clearChecked, reorderItems } = useShoppingList()
   const [name, setName] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -22,6 +36,15 @@ export default function ShoppingListPage() {
     setName('')
     await addItem(trimmed)
     inputRef.current?.focus()
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = uncheckedItems.findIndex(i => i.id === active.id)
+    const newIndex = uncheckedItems.findIndex(i => i.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    reorderItems(arrayMove(uncheckedItems, oldIndex, newIndex))
   }
 
   if (loading) {
@@ -67,7 +90,7 @@ export default function ShoppingListPage() {
         </button>
       </form>
 
-      {/* 空の状慁E*/}
+      {/* 空の状態 */}
       {isEmpty && (
         <div className="text-center py-16 text-gray-500 max-w-lg">
           <svg className="w-12 h-12 mx-auto mb-3 text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -81,28 +104,22 @@ export default function ShoppingListPage() {
         </div>
       )}
 
-      {/* 未チェックアイテム */}
+      {/* 未チェックアイテム（D&D対応）*/}
       {uncheckedItems.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
-          {uncheckedItems.map(item => (
-            <div
-              key={item.id}
-              className="flex items-center gap-3 bg-white px-4 py-3.5 rounded-xl shadow-sm border border-gray-100"
-            >
-              <button
-                onClick={() => toggleItem(item.id)}
-                className="w-5 h-5 rounded-full border-2 border-gray-300 hover:border-sage-500 transition-colors shrink-0"
-              />
-              <span className="flex-1 text-sm text-gray-800">{item.name}</span>
-              <button
-                onClick={() => deleteItem(item.id)}
-                className="text-gray-300 hover:text-red-400 transition-colors shrink-0"
-              >
-                <TrashIcon />
-              </button>
+        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={uncheckedItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
+              {uncheckedItems.map(item => (
+                <SortableShoppingItem
+                  key={item.id}
+                  item={item}
+                  onToggle={toggleItem}
+                  onDelete={deleteItem}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* チェック済みアイテム */}
@@ -137,6 +154,54 @@ export default function ShoppingListPage() {
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+function SortableShoppingItem({
+  item,
+  onToggle,
+  onDelete,
+}: {
+  item: ShoppingItem
+  onToggle: (id: string) => void
+  onDelete: (id: string) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 bg-white px-4 py-3.5 rounded-xl shadow-sm border border-gray-100"
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0 touch-none"
+        tabIndex={-1}
+        aria-label="並び替え"
+      >
+        <GripIcon />
+      </button>
+      <button
+        onClick={() => onToggle(item.id)}
+        className="w-5 h-5 rounded-full border-2 border-gray-300 hover:border-sage-500 transition-colors shrink-0"
+      />
+      <span className="flex-1 text-sm text-gray-800">{item.name}</span>
+      <button
+        onClick={() => onDelete(item.id)}
+        className="text-gray-300 hover:text-red-400 transition-colors shrink-0"
+      >
+        <TrashIcon />
+      </button>
     </div>
   )
 }
