@@ -30,38 +30,48 @@
 
 ### Phase A：即時対応（今日中）
 
-- [ ] **A-1【高】招待コード入力フィールドを 10 文字に修正** → §1
+- [x] **A-1【高】招待コード入力フィールドを 10 文字に修正** → §1
   - `HouseholdSetupPage.tsx:113` の `maxLength={6}` → `maxLength={10}`
   - `HouseholdSetupPage.tsx:117` の `inviteCode.length < 6` → `< 10`
   - プレースホルダ "例：ABC123" を更新
-- [ ] **A-2【中】ESLint エラー2件の解消** → §2
+  - 対応済み（2026-05-19 commit 287ec2d）
+- [x] **A-2【中】ESLint エラー2件の解消** → §2
   - `useCfPlan.ts:76` の `_` 破棄パターン対応
   - `IncomeStatementPage.tsx:377` の全角スペース対応
+  - 対応済み（2026-05-19 commit 287ec2d）
 
 ### Phase B：短期対応（1週間以内）
 
-- [ ] **B-1【中】文字化けコメントの清掃** → §3
-  - `MonthlyPage.tsx` / `PersonalPage.tsx` / `ShoppingListPage.tsx` / `BudgetPage.tsx` の4ファイル
-- [ ] **B-2【中】ゲストモード PersonalPage の方針決定** → §4
-  - 実装する：`personalFirestore.ts` に guest 分岐追加 + `PersonalPage.tsx` の `if (!user)` をゲスト対応
-  - 非対応にする：サイドバーで非表示 + `guestData` の personal データ定義を削除
-- [ ] **B-3【中】useHousehold のエラー分岐に `'error'` 状態追加** → §5
+- [x] **B-1【中】文字化けコメントの清掃** → §3
+  - `MonthlyPage.tsx` / `PersonalPage.tsx` / `ShoppingListPage.tsx` / `BudgetPage.tsx` の4ファイル（+ `MonthlyChart.tsx`）
+  - 対応済み（2026-05-19 commit 8c21f74）
+- [x] **B-2【中】ゲストモード PersonalPage の方針決定** → §4
+  - 案内画面表示を選択：「世帯の月別収支とは別にお小遣い等の個人支出を管理できる」旨のメッセージ + ログイン誘導
+  - 対応済み（2026-05-19 commit 113e908）
+- [x] **B-3【中】useHousehold のエラー分岐に `'error'` 状態追加** → §5
   - `HouseholdState` に `'error'` を追加
   - エラー画面（再試行ボタン付き）を `Layout.tsx` に追加
-- [ ] **B-4【中】joinHousehold の既存所属チェック** → §6
+  - 対応済み（2026-05-19 commit 9f10dee）
+- [x] **B-4【中】joinHousehold の既存所属チェック** → §6
   - `fetchUserProfile` で既存 householdId を確認
-  - 別世帯所属時は確認ダイアログを出す
+  - 別世帯所属時は確認ダイアログを出す（`forceSwitch` フラグで明示的承認後のみ上書き）
+  - 対応済み（2026-05-19 commit fe5eee0）
 
 ### Phase C：中期対応（2週間以内）
 
-- [ ] **C-1【中】フォーカストラップ実装** → §7.1
-  - `focus-trap-react` 等を `BottomSheetModal.tsx` に組み込む
-  - AUDIT.md の Phase 4「フォーカストラップ導入」完了マークを実態に合わせて訂正
-- [ ] **C-2【中】タップターゲット 44×44px 確保** → §7.2
-  - BottomNav 等の `w-7 h-7` ボタンに `min-w-[44px] min-h-[44px]` を付与
-- [ ] **C-3【中】useMonthlyData の React Query 化** → §8
-  - `useMonthlyData` / `usePersonalMonthlyData` を `useQuery` に置換
-  - 楽観的更新は `queryClient.setQueryData` で対応
+- [x] **C-1【中】フォーカストラップ実装** → §7.1
+  - ネイティブ実装（外部ライブラリなし）で `BottomSheetModal.tsx` に組み込み
+  - Tab/Shift+Tab のサイクル制御・モーダル開閉時のフォーカス移動・復元
+  - 対応済み（2026-05-19 commit a2497b1）
+- [x] **C-2【中】タップターゲット 44×44px 確保** → §7.2
+  - `BottomSheetModal` 閉じるボタン：`w-8 h-8` → `min-w-[44px] min-h-[44px]`
+  - `BottomNav` カテゴリボタン：`min-h-[44px] justify-center` を追加
+  - 対応済み（2026-05-19 commit 0460ab6）
+- [x] **C-3【中】useMonthlyData の React Query 化** → §8
+  - `useMonthlyData` / `usePersonalMonthlyData` を `useQuery` に置換（staleTime: 30秒）
+  - `reload()` は `queryClient.invalidateQueries` で実装
+  - 副次効果：`exhaustive-deps` ESLint 警告2件が解消
+  - 対応済み（2026-05-19 commit a344153）
 
 ### Phase D：長期対応（時間がある時）
 
