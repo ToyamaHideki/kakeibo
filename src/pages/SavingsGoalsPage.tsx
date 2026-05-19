@@ -1,4 +1,7 @@
 import { useCallback, useState } from 'react'
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useSavingsGoals } from '../hooks/useSavingsGoals'
 import { appendCfLifeEvent } from '../firebase/firestore'
 import { useHousehold } from '../hooks/useHousehold'
@@ -68,7 +71,7 @@ function goalToForm(g: SavingsGoal): FormState {
 
 export default function SavingsGoalsPage() {
   const { householdId } = useHousehold()
-  const { goals, loading, addGoal, updateGoal, deleteGoal, logContribution } = useSavingsGoals()
+  const { goals, loading, addGoal, updateGoal, deleteGoal, logContribution, reorderGoals } = useSavingsGoals()
   const { confirm, dialogProps } = useConfirm()
   const [showModal, setShowModal] = useState(false)
   const [editTarget, setEditTarget] = useState<SavingsGoal | null>(null)
@@ -152,6 +155,15 @@ export default function SavingsGoalsPage() {
   const totalCurrent = goals.reduce((s, g) => s + g.currentAmount, 0)
   const totalTarget = goals.reduce((s, g) => s + g.targetAmount, 0)
 
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIdx = goals.findIndex(g => g.id === active.id)
+    const newIdx = goals.findIndex(g => g.id === over.id)
+    if (oldIdx === -1 || newIdx === -1) return
+    reorderGoals(arrayMove(goals, oldIdx, newIdx))
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center h-48 text-gray-500 text-sm">読み込み中...</div>
   }
@@ -181,9 +193,13 @@ export default function SavingsGoalsPage() {
             <p className="text-xs mt-1">右下のボタンから目標を追加してください</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 pb-2">
-            {goals.map(goal => <GoalCard key={goal.id} goal={goal} onEdit={openEdit} />)}
-          </div>
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={goals.map(g => g.id)} strategy={rectSortingStrategy}>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 pb-2">
+                {goals.map(goal => <SortableGoalCard key={goal.id} goal={goal} onEdit={openEdit} />)}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
@@ -374,7 +390,37 @@ export default function SavingsGoalsPage() {
   )
 }
 
-// ─── GoalCard ─────────────────────────────────────────────────────────────────
+// ─── SortableGoalCard / GoalCard ──────────────────────────────────────────────
+
+function SortableGoalCard({ goal, onEdit }: { goal: SavingsGoal; onEdit: (g: SavingsGoal) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: goal.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative">
+      <GoalCard goal={goal} onEdit={onEdit} />
+      <button
+        {...attributes}
+        {...listeners}
+        className="absolute top-2 right-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none p-1"
+        tabIndex={-1}
+        aria-label="並び替え"
+      >
+        <svg viewBox="0 0 8 14" width="10" height="14" fill="currentColor">
+          <circle cx="2" cy="2"  r="1.2" /><circle cx="6" cy="2"  r="1.2" />
+          <circle cx="2" cy="7"  r="1.2" /><circle cx="6" cy="7"  r="1.2" />
+          <circle cx="2" cy="12" r="1.2" /><circle cx="6" cy="12" r="1.2" />
+        </svg>
+      </button>
+    </div>
+  )
+}
 
 function GoalCard({ goal, onEdit }: { goal: SavingsGoal; onEdit: (g: SavingsGoal) => void }) {
   const pct = goal.targetAmount > 0 ? Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100)) : 0
