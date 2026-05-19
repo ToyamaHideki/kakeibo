@@ -16,10 +16,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 
-initializeAppCheck(app, {
-  provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
-  isTokenAutoRefreshEnabled: true,
-})
+try {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
+  })
+} catch (err) {
+  console.warn('[AppCheck] init failed:', err)
+}
 
 // ignoreUndefinedProperties: undefined フィールドをエラーにせずスキップする
 export const db = initializeFirestore(app, { ignoreUndefinedProperties: true })
