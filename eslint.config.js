@@ -23,6 +23,14 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+      'no-irregular-whitespace': [
+        'error',
+        { skipJSXText: true, skipStrings: true, skipComments: true },
+      ],
     },
   },
 )

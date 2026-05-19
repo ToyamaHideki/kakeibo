@@ -105,16 +105,16 @@ export default function HouseholdSetupPage() {
             </p>
             <input
               type="text"
-              placeholder="招待コード（例：ABC123）"
+              placeholder="招待コード（例：ABCD23XY7K）"
               value={inviteCode}
               onChange={e => setInviteCode(e.target.value.toUpperCase())}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-center tracking-widest font-mono text-lg uppercase focus:outline-none focus:ring-2 focus:ring-sage-300"
-              maxLength={6}
+              maxLength={10}
             />
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
             <button
               onClick={handleJoin}
-              disabled={loading || inviteCode.length < 6}
+              disabled={loading || inviteCode.length < 10}
               className="w-full py-3 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 transition-colors disabled:opacity-50"
             >
               {loading ? '参加中...' : '参加する'}
