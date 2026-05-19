@@ -2,6 +2,9 @@ import { useCallback, useMemo, useState } from 'react'
 import { deleteField } from 'firebase/firestore'
 import { Doughnut, Line } from 'react-chartjs-2'
 import type { ChartOptions, TooltipItem } from 'chart.js'
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import '../lib/chart'
 import { useSecuritiesAccounts } from '../hooks/useSecuritiesAccounts'
 import { useEscapeKey } from '../hooks/useEscapeKey'
@@ -17,7 +20,7 @@ export default function SecuritiesAccountsPage() {
   const {
     accounts, loading,
     addAccount, updateAccount, deleteAccount,
-    recordMonthlyValue, deleteMonthlyValue,
+    recordMonthlyValue, deleteMonthlyValue, reorderAccounts,
   } = useSecuritiesAccounts()
 
   const { confirm, dialogProps } = useConfirm()
@@ -124,6 +127,15 @@ export default function SecuritiesAccountsPage() {
   }
 
   const totalCurrent = accounts.reduce((s, a) => s + a.currentValue, 0)
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIdx = accounts.findIndex(a => a.id === active.id)
+    const newIdx = accounts.findIndex(a => a.id === over.id)
+    if (oldIdx === -1 || newIdx === -1) return
+    reorderAccounts(arrayMove(accounts, oldIdx, newIdx))
+  }
 
   const months = useMemo(() => past12Months(), [])
 
@@ -242,10 +254,16 @@ export default function SecuritiesAccountsPage() {
               </div>
             )}
 
-            {/* 一覧 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-              {accounts.map(account => <SecuritiesAccountCard key={account.id} account={account} onEdit={openEdit} />)}
-            </div>
+            {/* 一覧（D&D対応）*/}
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={accounts.map(a => a.id)} strategy={rectSortingStrategy}>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {accounts.map(account => (
+                    <SortableSecuritiesAccountCard key={account.id} account={account} onEdit={openEdit} />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </>
         )}
       </div>
@@ -280,6 +298,42 @@ export default function SecuritiesAccountsPage() {
         onDeleteRecord={handleDeleteRecord}
       />
       <ConfirmDialog {...dialogProps} />
+    </div>
+  )
+}
+
+function SortableSecuritiesAccountCard({
+  account,
+  onEdit,
+}: {
+  account: SecuritiesAccount
+  onEdit: (a: SecuritiesAccount) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: account.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative">
+      <SecuritiesAccountCard account={account} onEdit={onEdit} />
+      <button
+        {...attributes}
+        {...listeners}
+        className="absolute top-2 right-2 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none p-1"
+        tabIndex={-1}
+        aria-label="並び替え"
+      >
+        <svg viewBox="0 0 8 14" width="10" height="14" fill="currentColor">
+          <circle cx="2" cy="2"  r="1.2" /><circle cx="6" cy="2"  r="1.2" />
+          <circle cx="2" cy="7"  r="1.2" /><circle cx="6" cy="7"  r="1.2" />
+          <circle cx="2" cy="12" r="1.2" /><circle cx="6" cy="12" r="1.2" />
+        </svg>
+      </button>
     </div>
   )
 }
