@@ -1,6 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { deleteField } from 'firebase/firestore'
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useSavingsAccounts } from '../hooks/useSavingsAccounts'
 import { useHousehold } from '../hooks/useHousehold'
 import { useConfirm } from '../hooks/useConfirm'
@@ -26,7 +29,7 @@ function formatLastUpdated(dateStr: string): string {
 
 export default function SavingsManagementPage() {
   const { householdId } = useHousehold()
-  const { accounts, loading: accountsLoading, addAccount, updateAccount, deleteAccount } = useSavingsAccounts()
+  const { accounts, loading: accountsLoading, addAccount, updateAccount, deleteAccount, reorderAccounts } = useSavingsAccounts()
   const { confirm, dialogProps } = useConfirm()
   const [securities, setSecurities] = useState<SecuritiesAccount[]>([])
   const [secLoading, setSecLoading] = useState(true)
@@ -117,6 +120,15 @@ export default function SavingsManagementPage() {
 
   const loading = accountsLoading || secLoading
 
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIdx = accounts.findIndex(a => a.id === active.id)
+    const newIdx = accounts.findIndex(a => a.id === over.id)
+    if (oldIdx === -1 || newIdx === -1) return
+    reorderAccounts(arrayMove(accounts, oldIdx, newIdx))
+  }
+
   return (
     <div className="h-full overflow-y-auto">
       <div className="max-w-2xl mx-auto px-4 py-4 md:py-6 pb-24 md:pb-6">
@@ -175,58 +187,20 @@ export default function SavingsManagementPage() {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {accounts.map(acc => (
-                    <div
-                      key={acc.id}
-                      className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center gap-3"
-                    >
-                      <div
-                        className="w-3 h-10 rounded-full shrink-0"
-                        style={{ backgroundColor: acc.color }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <div className="text-sm font-semibold text-gray-800 truncate">{acc.name}</div>
-                          {acc.owner && (
-                            <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-sage-50 text-sage-600 font-medium">
-                              {acc.owner}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-500">{formatLastUpdated(acc.lastUpdated)}</div>
-                        {acc.memo && <div className="text-xs text-gray-500 truncate">{acc.memo}</div>}
-                      </div>
-                      <div className="shrink-0 text-right mr-1">
-                        <div className="text-base font-bold text-gray-800">
-                          ¥{acc.currentAmount.toLocaleString()}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          onClick={() => openEdit(acc)}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-                        >
-                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleDelete(acc.id)}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:bg-terracotta-50 hover:text-terracotta-500 transition-colors"
-                        >
-                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                            <path d="M10 11v6M14 11v6" />
-                            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-                          </svg>
-                        </button>
-                      </div>
+                <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={accounts.map(a => a.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-2">
+                      {accounts.map(acc => (
+                        <SortableSavingsAccountItem
+                          key={acc.id}
+                          account={acc}
+                          onEdit={openEdit}
+                          onDelete={handleDelete}
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               )}
             </section>
 
@@ -419,6 +393,90 @@ export default function SavingsManagementPage() {
         </div>
       )}
       <ConfirmDialog {...dialogProps} />
+    </div>
+  )
+}
+
+function SortableSavingsAccountItem({
+  account: acc,
+  onEdit,
+  onDelete,
+}: {
+  account: SavingsAccount
+  onEdit: (acc: SavingsAccount) => void
+  onDelete: (id: string) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: acc.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center gap-3"
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0 touch-none"
+        tabIndex={-1}
+        aria-label="並び替え"
+      >
+        <svg viewBox="0 0 8 14" width="10" height="14" fill="currentColor">
+          <circle cx="2" cy="2"  r="1.2" /><circle cx="6" cy="2"  r="1.2" />
+          <circle cx="2" cy="7"  r="1.2" /><circle cx="6" cy="7"  r="1.2" />
+          <circle cx="2" cy="12" r="1.2" /><circle cx="6" cy="12" r="1.2" />
+        </svg>
+      </button>
+      <div
+        className="w-3 h-10 rounded-full shrink-0"
+        style={{ backgroundColor: acc.color }}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <div className="text-sm font-semibold text-gray-800 truncate">{acc.name}</div>
+          {acc.owner && (
+            <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-sage-50 text-sage-600 font-medium">
+              {acc.owner}
+            </span>
+          )}
+        </div>
+        <div className="text-xs text-gray-500">{formatLastUpdated(acc.lastUpdated)}</div>
+        {acc.memo && <div className="text-xs text-gray-500 truncate">{acc.memo}</div>}
+      </div>
+      <div className="shrink-0 text-right mr-1">
+        <div className="text-base font-bold text-gray-800">
+          ¥{acc.currentAmount.toLocaleString()}
+        </div>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          onClick={() => onEdit(acc)}
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </button>
+        <button
+          onClick={() => onDelete(acc.id)}
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:bg-terracotta-50 hover:text-terracotta-500 transition-colors"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+            <path d="M10 11v6M14 11v6" />
+            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }
