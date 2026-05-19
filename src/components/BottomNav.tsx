@@ -134,7 +134,7 @@ export default function BottomNav() {
             <button
               key={cat.id}
               onClick={() => navigate(cat.firstPath)}
-              className={`flex-1 flex flex-col items-center py-2 gap-0.5 text-[10px] font-medium transition-colors ${
+              className={`flex-1 flex flex-col items-center min-h-[44px] justify-center gap-0.5 text-[10px] font-medium transition-colors ${
                 active ? 'text-sage-600' : 'text-gray-500'
               }`}
             >
