@@ -114,7 +114,7 @@ export default function BudgetPage() {
         </div>
       )}
 
-      {/* カチE��リグリチE�� */}
+      {/* カテゴリグリッド */}
       <div className="flex-1 overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 pb-2">
           {expenseCategories.map(cat => {
@@ -125,7 +125,6 @@ export default function BudgetPage() {
 
             return (
               <div key={cat.id} className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
-                {/* カチE��リ吁E+ 予算�E劁E*/}
                 <div className="flex items-center gap-2 mb-2">
                   <span
                     className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -148,7 +147,6 @@ export default function BudgetPage() {
                   </div>
                 </div>
 
-                {/* 実績 + パ�EセンチE*/}
                 <div className="flex items-center justify-between mb-1.5 text-xs text-gray-500">
                   <span>
                     <span className={`font-medium ${isOver ? 'text-red-500' : 'text-gray-700'}`}>{formatYen(actual)}</span>

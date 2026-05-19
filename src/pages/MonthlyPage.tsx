@@ -60,7 +60,6 @@ export default function MonthlyPage() {
           </svg>
         </button>
 
-        {/* タチE�Eで年月ピチE��ーを開ぁE*/}
         <button
           onClick={() => setIsPickerOpen(true)}
           aria-label="年月を選択"
@@ -112,7 +111,7 @@ export default function MonthlyPage() {
         </div>
       </div>
 
-      {/* タブバー�E�モバイルのみ�E�E*/}
+      {/* タブバー（モバイルのみ）*/}
       <div className="flex border-b border-gray-200 mb-4 md:hidden">
         <button
           onClick={() => setActiveTab('list')}
@@ -136,12 +135,11 @@ export default function MonthlyPage() {
         </button>
       </div>
 
-      {/* コンチE��チE*/}
       {loading ? (
         <div className="text-center py-12 text-gray-500 text-sm">読み込み中...</div>
       ) : (
         <>
-          {/* モバイル: タブ�Eり替ぁE*/}
+          {/* モバイル: タブ切り替え */}
           <div className="md:hidden flex-1 flex flex-col min-h-0 overflow-hidden">
             {activeTab === 'list' ? (
               <div className="flex-1 overflow-y-auto min-h-0">
@@ -160,7 +158,7 @@ export default function MonthlyPage() {
             )}
           </div>
 
-          {/* チE��クトッチE 左カラム�E�収支�E�グラフ）右カラム�E�リスト！E*/}
+          {/* デスクトップ: 左カラム（収支・グラフ）右カラム（リスト）*/}
           <div className="hidden md:flex md:flex-1 md:min-h-0 gap-6">
             <div className="w-3/5 shrink-0 flex flex-col gap-4 min-h-0">
               <div className="grid grid-cols-3 gap-3">

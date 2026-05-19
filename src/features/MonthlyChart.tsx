@@ -36,7 +36,7 @@ export default function MonthlyChart({ transactions, categories, fillHeight = fa
   const hasData = incomeByCategory.length > 0 || expenseByCategory.length > 0
   const hasExpense = expenseByCategory.length > 0
 
-  // ─── 棒グラチE───────────────────────────────────────────────────────────────
+  // ─── 棒グラフ ───────────────────────────────────────────────────────────────
 
   const barData = {
     labels: ['収入', '支出'],
@@ -86,7 +86,7 @@ export default function MonthlyChart({ transactions, categories, fillHeight = fa
     },
   }
 
-  // ─── ド�EナツグラチE──────────────────────────────────────────────────────────
+  // ─── ドーナツグラフ ──────────────────────────────────────────────────────────
 
   const expenseTotal = expenseByCategory.reduce((s, c) => s + c.total, 0)
 

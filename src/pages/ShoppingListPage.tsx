@@ -81,7 +81,7 @@ export default function ShoppingListPage() {
         </div>
       )}
 
-      {/* 未チェチE��アイチE�� */}
+      {/* 未チェックアイテム */}
       {uncheckedItems.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
           {uncheckedItems.map(item => (
@@ -105,7 +105,7 @@ export default function ShoppingListPage() {
         </div>
       )}
 
-      {/* チェチE��済みアイチE�� */}
+      {/* チェック済みアイテム */}
       {checkedItems.length > 0 && (
         <>
           {uncheckedItems.length > 0 && (
