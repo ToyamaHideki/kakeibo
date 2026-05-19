@@ -38,5 +38,15 @@ export function useFirestoreCollection<T extends { id: string; order: number }>(
     setItems(prev => prev.filter(item => item.id !== id))
   }
 
-  return { items, setItems, loading, householdId, add, update, remove }
+  async function reorderItems(newItems: T[]) {
+    if (!householdId) return
+    setItems(newItems)
+    await Promise.all(
+      newItems.map((item, idx) =>
+        ops.update(householdId!, item.id, { order: idx * 1000 } as Partial<Omit<T, 'id'>>)
+      )
+    )
+  }
+
+  return { items, setItems, loading, householdId, add, update, remove, reorderItems }
 }
