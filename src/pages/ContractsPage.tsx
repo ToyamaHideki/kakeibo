@@ -1,4 +1,7 @@
 import { useCallback, useState } from 'react'
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useContracts } from '../hooks/useContracts'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
@@ -99,8 +102,9 @@ function contractToForm(c: Contract): FormState {
 // ─── コンポーネント ────────────────────────────────────────────────────────────
 
 export default function ContractsPage() {
-  const { contracts: allContracts, loading, addContract, updateContract, deleteContract } = useContracts()
+  const { contracts: allContracts, loading, addContract, updateContract, deleteContract, reorderContracts } = useContracts()
   const contracts = allContracts.filter(c => c.contractType !== 'subscription')
+  const subscriptions = allContracts.filter(c => c.contractType === 'subscription')
   const { confirm, dialogProps } = useConfirm()
   const [showModal, setShowModal] = useState(false)
   const [editTarget, setEditTarget] = useState<Contract | null>(null)
@@ -160,13 +164,22 @@ export default function ContractsPage() {
     closeModal()
   }
 
-  // 更新が近い契約（30日以内）
+  // 更新が近い契約（30日以内）- 緊急度順、D&D対象外
   const upcoming = contracts
     .filter(c => c.renewalDate && daysUntil(c.renewalDate) <= 30)
     .sort((a, b) => (a.renewalDate ?? '').localeCompare(b.renewalDate ?? ''))
 
-  // 通常の一覧（種別でグループ化して表示）
+  // 通常の一覧 - order フィールド順（D&D対応）
   const rest = contracts.filter(c => !c.renewalDate || daysUntil(c.renewalDate) > 30)
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIdx = rest.findIndex(c => c.id === active.id)
+    const newIdx = rest.findIndex(c => c.id === over.id)
+    if (oldIdx === -1 || newIdx === -1) return
+    reorderContracts([...upcoming, ...arrayMove(rest, oldIdx, newIdx), ...subscriptions])
+  }
 
   // 月額換算合計
   const monthlyTotal = contracts.reduce((sum, c) => {
@@ -217,17 +230,21 @@ export default function ContractsPage() {
           </div>
         )}
 
-        {/* 通常の契約一覧 */}
+        {/* 通常の契約一覧（D&D対応）*/}
         {rest.length > 0 && (
           <div>
             {upcoming.length > 0 && (
               <p className="text-xs font-semibold text-gray-500 mb-2">すべての契約</p>
             )}
-            <div className="space-y-2">
-              {rest
-                .sort((a, b) => (a.renewalDate ?? '9999').localeCompare(b.renewalDate ?? '9999'))
-                .map(c => <ContractCard key={c.id} contract={c} onEdit={openEdit} />)}
-            </div>
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={rest.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {rest.map(c => (
+                    <SortableContractCard key={c.id} contract={c} onEdit={openEdit} />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </div>
         )}
       </div>
@@ -465,5 +482,39 @@ function ContractCard({ contract: c, onEdit }: { contract: Contract; onEdit: (c:
         </svg>
       </div>
     </button>
+  )
+}
+
+// ─── SortableContractCard ──────────────────────────────────────────────────────
+
+function SortableContractCard({ contract: c, onEdit }: { contract: Contract; onEdit: (c: Contract) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: c.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-stretch gap-1">
+      <button
+        {...attributes}
+        {...listeners}
+        className="flex items-center px-1 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none shrink-0"
+        tabIndex={-1}
+        aria-label="並び替え"
+      >
+        <svg viewBox="0 0 8 14" width="10" height="14" fill="currentColor">
+          <circle cx="2" cy="2"  r="1.2" /><circle cx="6" cy="2"  r="1.2" />
+          <circle cx="2" cy="7"  r="1.2" /><circle cx="6" cy="7"  r="1.2" />
+          <circle cx="2" cy="12" r="1.2" /><circle cx="6" cy="12" r="1.2" />
+        </svg>
+      </button>
+      <div className="flex-1 min-w-0">
+        <ContractCard contract={c} onEdit={onEdit} />
+      </div>
+    </div>
   )
 }

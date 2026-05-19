@@ -1,4 +1,7 @@
 import { useCallback, useState } from 'react'
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useContracts } from '../hooks/useContracts'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
@@ -30,10 +33,6 @@ function renewalBadge(renewalDate: string) {
 function formatDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-')
   return `${y}/${Number(m)}/${Number(d)}`
-}
-
-function toMonthly(c: Contract): number {
-  return c.frequency === 'monthly' ? c.amount : Math.round(c.amount / 12)
 }
 
 function calcStats(c: Contract): { durationText: string; totalPaid: number } | null {
@@ -102,8 +101,9 @@ function contractToForm(c: Contract): FormState {
 // ─── コンポーネント ────────────────────────────────────────────────────────────
 
 export default function SubscriptionsPage() {
-  const { contracts, loading, addContract, updateContract, deleteContract } = useContracts()
-  const subscriptions = contracts.filter(c => c.contractType === 'subscription')
+  const { contracts: allContracts, loading, addContract, updateContract, deleteContract, reorderContracts } = useContracts()
+  const subscriptions = allContracts.filter(c => c.contractType === 'subscription')
+  const nonSubscriptions = allContracts.filter(c => c.contractType !== 'subscription')
   const { confirm, dialogProps } = useConfirm()
   const [showModal, setShowModal] = useState(false)
   const [editTarget, setEditTarget] = useState<Contract | null>(null)
@@ -169,9 +169,17 @@ export default function SubscriptionsPage() {
     .filter(c => c.renewalDate && daysUntil(c.renewalDate) <= 30)
     .sort((a, b) => (a.renewalDate ?? '').localeCompare(b.renewalDate ?? ''))
 
-  const rest = subscriptions
-    .filter(c => !c.renewalDate || daysUntil(c.renewalDate) > 30)
-    .sort((a, b) => toMonthly(b) - toMonthly(a))
+  // order フィールド順（D&D対応）
+  const rest = subscriptions.filter(c => !c.renewalDate || daysUntil(c.renewalDate) > 30)
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIdx = rest.findIndex(c => c.id === active.id)
+    const newIdx = rest.findIndex(c => c.id === over.id)
+    if (oldIdx === -1 || newIdx === -1) return
+    reorderContracts([...nonSubscriptions, ...upcoming, ...arrayMove(rest, oldIdx, newIdx)])
+  }
 
   if (loading) {
     return <div className="flex items-center justify-center h-48 text-gray-500 text-sm">読み込み中...</div>
@@ -229,11 +237,17 @@ export default function SubscriptionsPage() {
         {rest.length > 0 && (
           <div>
             {upcoming.length > 0 && (
-              <p className="text-xs font-semibold text-gray-500 mb-2">すべてのサブスク（月額順）</p>
+              <p className="text-xs font-semibold text-gray-500 mb-2">すべてのサブスク</p>
             )}
-            <div className="space-y-2">
-              {rest.map(c => <SubscriptionCard key={c.id} contract={c} onEdit={openEdit} />)}
-            </div>
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={rest.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {rest.map(c => (
+                    <SortableSubscriptionCard key={c.id} contract={c} onEdit={openEdit} />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </div>
         )}
       </div>
@@ -408,7 +422,39 @@ export default function SubscriptionsPage() {
   )
 }
 
-// ─── SubscriptionCard ─────────────────────────────────────────────────────────
+// ─── SubscriptionCard / SortableSubscriptionCard ──────────────────────────────
+
+function SortableSubscriptionCard({ contract: c, onEdit }: { contract: Contract; onEdit: (c: Contract) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: c.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-stretch gap-1">
+      <button
+        {...attributes}
+        {...listeners}
+        className="flex items-center px-1 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none shrink-0"
+        tabIndex={-1}
+        aria-label="並び替え"
+      >
+        <svg viewBox="0 0 8 14" width="10" height="14" fill="currentColor">
+          <circle cx="2" cy="2"  r="1.2" /><circle cx="6" cy="2"  r="1.2" />
+          <circle cx="2" cy="7"  r="1.2" /><circle cx="6" cy="7"  r="1.2" />
+          <circle cx="2" cy="12" r="1.2" /><circle cx="6" cy="12" r="1.2" />
+        </svg>
+      </button>
+      <div className="flex-1 min-w-0">
+        <SubscriptionCard contract={c} onEdit={onEdit} />
+      </div>
+    </div>
+  )
+}
 
 function SubscriptionCard({ contract: c, onEdit }: { contract: Contract; onEdit: (c: Contract) => void }) {
   const badge = c.renewalDate ? renewalBadge(c.renewalDate) : null
