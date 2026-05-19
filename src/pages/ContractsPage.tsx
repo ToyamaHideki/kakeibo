@@ -3,6 +3,7 @@ import { useContracts } from '../hooks/useContracts'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
+import { formatYen } from '../utils/format'
 import type { Contract, ContractType, PaymentFrequency } from '../types'
 
 // ─── 定数・ユーティリティ ──────────────────────────────────────────────────────
@@ -53,10 +54,6 @@ function renewalBadge(renewalDate: string) {
 function formatDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-')
   return `${y}/${Number(m)}/${Number(d)}`
-}
-
-function formatYen(n: number): string {
-  return `¥${n.toLocaleString()}`
 }
 
 // ─── 入力フォームの型 ──────────────────────────────────────────────────────────

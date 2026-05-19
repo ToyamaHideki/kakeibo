@@ -5,6 +5,8 @@ import { useHousehold } from '../hooks/useHousehold'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
+import { currentYearMonth } from '../utils/date'
+import { formatYenCompact as formatYen } from '../utils/format'
 import type { SavingsGoal } from '../types'
 
 // ─── 定数 ─────────────────────────────────────────────────────────────────────
@@ -13,16 +15,6 @@ const GOAL_COLORS = [
   '#4a7c59', '#3b82f6', '#8b5cf6', '#f97316',
   '#ec4899', '#14b8a6', '#eab308', '#ef4444',
 ]
-
-function formatYen(n: number) {
-  if (n >= 10000) return `¥${(n / 10000).toLocaleString(undefined, { maximumFractionDigits: 1 })}万`
-  return `¥${n.toLocaleString()}`
-}
-
-function currentYearMonth() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
 
 function remainingMonths(targetYear: number): number {
   const now = new Date()

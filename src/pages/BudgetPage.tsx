@@ -5,10 +5,7 @@ import { useMonthlyData } from '../hooks/useMonthlyData'
 import { useBudget } from '../hooks/useBudget'
 import { useHousehold } from '../hooks/useHousehold'
 import { adjacentMonth, formatYearMonth, formatPayPeriodLabel } from '../utils/date'
-
-function formatYen(n: number) {
-  return `¥${n.toLocaleString()}`
-}
+import { formatYen } from '../utils/format'
 
 export default function BudgetPage() {
   const { yearMonth = '' } = useParams<{ yearMonth: string }>()

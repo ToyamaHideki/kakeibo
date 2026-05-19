@@ -1,5 +1,6 @@
 import type { SecuritiesAccount, SecuritiesAccountType } from '../types'
 import { currentYearMonth, adjacentMonth } from '../utils/date'
+export { formatYenCompact as formatYen } from '../utils/format'
 
 export const ACCOUNT_COLORS = [
   '#4a7c59', '#3b82f6', '#8b5cf6', '#f97316',
@@ -13,11 +14,6 @@ export const ACCOUNT_TYPE_OPTIONS: { value: SecuritiesAccountType; label: string
   { value: 'foreign', label: '外国株' },
   { value: 'other', label: 'その他' },
 ]
-
-export function formatYen(n: number): string {
-  if (n >= 10000) return `¥${(n / 10000).toLocaleString(undefined, { maximumFractionDigits: 1 })}万`
-  return `¥${n.toLocaleString()}`
-}
 
 export function past12Months(): string[] {
   const result: string[] = []
