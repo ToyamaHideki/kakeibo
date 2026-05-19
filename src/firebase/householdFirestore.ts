@@ -63,14 +63,31 @@ export async function createHousehold(uid: string, displayName: string | null): 
   return householdId
 }
 
-export async function joinHousehold(uid: string, inviteCode: string, displayName: string | null): Promise<string | null> {
+export type JoinResult =
+  | { status: 'success'; householdId: string }
+  | { status: 'not_found' }
+  | { status: 'switch_needed'; newHouseholdId: string }
+
+export async function joinHousehold(
+  uid: string,
+  inviteCode: string,
+  displayName: string | null,
+  options?: { forceSwitch?: boolean },
+): Promise<JoinResult> {
   const q = query(collection(db, 'households'), where('inviteCode', '==', inviteCode.toUpperCase()))
   const snapshot = await getDocs(q)
-  if (snapshot.empty) return null
+  if (snapshot.empty) return { status: 'not_found' }
 
   const householdDoc = snapshot.docs[0]
   const householdId = householdDoc.id
   const data = householdDoc.data() as Household
+
+  if (!options?.forceSwitch) {
+    const profile = await fetchUserProfile(uid)
+    if (profile?.householdId && profile.householdId !== householdId) {
+      return { status: 'switch_needed', newHouseholdId: householdId }
+    }
+  }
 
   if (!data.memberIds.includes(uid)) {
     await updateDoc(doc(db, 'households', householdId), {
@@ -78,7 +95,7 @@ export async function joinHousehold(uid: string, inviteCode: string, displayName
     })
   }
   await saveUserProfile(uid, { householdId, displayName })
-  return householdId
+  return { status: 'success', householdId }
 }
 
 export async function fetchHousehold(householdId: string): Promise<(Household & { id: string }) | null> {

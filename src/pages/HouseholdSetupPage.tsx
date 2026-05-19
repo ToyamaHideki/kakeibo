@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createHousehold, joinHousehold } from '../firebase/householdFirestore'
 import { useHousehold } from '../hooks/useHousehold'
 import { signOut } from '../firebase/auth'
+import ConfirmDialog from '../components/ConfirmDialog'
 
 export default function HouseholdSetupPage() {
   const { user, reloadHousehold } = useHousehold()
@@ -9,6 +10,7 @@ export default function HouseholdSetupPage() {
   const [inviteCode, setInviteCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [switchTarget, setSwitchTarget] = useState<string | null>(null)
 
   async function handleCreate() {
     if (!user) return
@@ -24,14 +26,18 @@ export default function HouseholdSetupPage() {
     }
   }
 
-  async function handleJoin() {
+  async function handleJoin(forceSwitch = false) {
     if (!user || !inviteCode.trim()) return
     setLoading(true)
     setError('')
     try {
-      const householdId = await joinHousehold(user.uid, inviteCode.trim(), user.displayName)
-      if (!householdId) {
+      const result = await joinHousehold(user.uid, inviteCode.trim(), user.displayName, { forceSwitch })
+      if (result.status === 'not_found') {
         setError('招待コードが見つかりません。コードを確認してください。')
+        return
+      }
+      if (result.status === 'switch_needed') {
+        setSwitchTarget(result.newHouseholdId)
         return
       }
       await reloadHousehold()
@@ -40,6 +46,11 @@ export default function HouseholdSetupPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleConfirmSwitch() {
+    setSwitchTarget(null)
+    await handleJoin(true)
   }
 
   return (
@@ -113,7 +124,7 @@ export default function HouseholdSetupPage() {
             />
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
             <button
-              onClick={handleJoin}
+              onClick={() => handleJoin()}
               disabled={loading || inviteCode.length < 10}
               className="w-full py-3 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 transition-colors disabled:opacity-50"
             >
@@ -128,6 +139,15 @@ export default function HouseholdSetupPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={switchTarget !== null}
+        message={'すでに別の世帯に所属しています。\n新しい世帯に移動すると、現在の世帯のデータにはアクセスできなくなります。\n\n移動してもよいですか？'}
+        confirmLabel="移動する"
+        cancelLabel="キャンセル"
+        onConfirm={handleConfirmSwitch}
+        onCancel={() => setSwitchTarget(null)}
+      />
     </div>
   )
 }
