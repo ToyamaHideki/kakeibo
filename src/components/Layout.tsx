@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
 import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useHousehold } from '../hooks/useHousehold'
-import { signInAsGuest, signInWithGoogle } from '../firebase/auth'
+import { signInAsGuest, signInWithGoogle, signOut } from '../firebase/auth'
 import type { Category, PaymentMethod } from '../types'
 import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
@@ -18,7 +18,7 @@ export interface OutletContext {
 }
 
 export default function Layout() {
-  const { state, user, isGuest } = useHousehold()
+  const { state, user, isGuest, reloadHousehold } = useHousehold()
   const { categories, addCategoryLocally, removeCategoryLocally } = useCategories()
   const { paymentMethods, addPaymentMethodLocally, removePaymentMethodLocally } = usePaymentMethods()
 
@@ -67,6 +67,38 @@ export default function Layout() {
             サンプルデータで全機能を体験できます。<br />
             変更はリロードでリセットされます。
           </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (state === 'error') {
+    return (
+      <div className="flex items-center justify-center h-screen bg-stone-50">
+        <div className="bg-white rounded-2xl shadow-md p-10 flex flex-col items-center gap-5 w-full max-w-sm mx-4 text-center">
+          <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center">
+            <svg className="w-7 h-7 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-800 mb-1">接続エラー</h2>
+            <p className="text-sm text-gray-500">データの読み込みに失敗しました。<br />ネットワーク接続を確認してください。</p>
+          </div>
+          <button
+            onClick={() => reloadHousehold()}
+            className="w-full py-3 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 transition-colors"
+          >
+            再試行
+          </button>
+          <button
+            onClick={() => signOut()}
+            className="text-sm text-gray-500 hover:text-gray-600 transition-colors"
+          >
+            ログアウト
+          </button>
         </div>
       </div>
     )

@@ -6,7 +6,7 @@ import { fetchUserProfile, fetchHousehold } from '../firebase/householdFirestore
 import { GUEST_HOUSEHOLD_ID, initGuestStore } from '../firebase/guestStore'
 import { buildGuestData } from '../data/guestData'
 
-export type HouseholdState = 'loading' | 'unauthenticated' | 'needs_setup' | 'ready'
+export type HouseholdState = 'loading' | 'unauthenticated' | 'needs_setup' | 'ready' | 'error'
 
 interface HouseholdContextValue {
   user: User | null
@@ -49,7 +49,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       console.warn('[useHousehold] loadHousehold failed:', err)
       setHouseholdId(null)
       setPayDay(null)
-      setState('needs_setup')
+      setState('error')
     }
   }
 
