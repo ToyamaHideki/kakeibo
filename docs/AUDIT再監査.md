@@ -75,19 +75,44 @@
 
 ### Phase D：長期対応（時間がある時）
 
-- [ ] **D-1【低】tsconfig の strict オプション追加** → §9.1
-  - `noUncheckedIndexedAccess` / `noImplicitReturns` / `exactOptionalPropertyTypes`
-- [ ] **D-2【低】ESLint 強化** → §9.2
-  - `eslint-plugin-jsx-a11y` / `eslint-plugin-import` / `no-explicit-any: 'error'`
-- [ ] **D-3【低】AppCheck 初期化の失敗ハンドリング** → §9.3
-  - `initializeAppCheck` を try/catch で囲む
-- [ ] **D-4【低】ユーティリティ関数の重複解消** → §10
-  - `currentYearMonth` / `formatYen` を `utils/` に集約
+- [~] **D-1【低】tsconfig の strict オプション追加** → §9.1
+  - `noImplicitReturns` / `exactOptionalPropertyTypes` 適用済み（2026-05-20 commit 616499c）
+  - `noUncheckedIndexedAccess` は ~30ファイル80件超のエラーが発生するため別途対応
+  - 型定義修正: `types/index.ts`・`householdFirestore.ts`（optional prop に `| undefined` 追加）
+  - Props 修正: `TransactionModal`・`CategoryAddModal`・`PaymentMethodAddModal`
+- [x] **D-2【低】ESLint 強化** → §9.2
+  - `eslint-plugin-jsx-a11y` / `eslint-plugin-import` / `no-explicit-any: 'error'` 導入済み（2026-05-20）
+  - `eslint.config.js` に3プラグイン追加、既存の any 8箇所を型安全に置換
+  - lint エラー0件・警告0件の状態を維持
+- [x] **D-3【低】AppCheck 初期化の失敗ハンドリング** → §9.3
+  - `firebase.ts` の `initializeAppCheck` を try/catch で囲み対応済み（2026-05-20）
+- [x] **D-4【低】ユーティリティ関数の重複解消** → §10
+  - `utils/format.ts` に `formatYen` を集約済み（2026-05-20）
+  - `currentYearMonth` は既存の `utils/date.ts` に統合済み
+  - 各ページのインライン実装を削除して import に統一
 - [ ] **D-5【低】認証フロー周辺のテスト追加**
   - `HouseholdSetupPage` の招待コード入力テスト（今回の退行を検出できなかった原因）
   - `useHousehold` の状態遷移テスト
 - [ ] **D-6【低】残る大規模ページの分割**
   - `SavingsGoalsPage.tsx` (526行) / `FixedCostsPage.tsx` (521行) / `BalanceSheetPage.tsx` (495行)
+
+### Phase E：監査後に追加対応した事項
+
+- [x] **E-1【高】ConfirmDialog が各種モーダルの背後に隠れるバグ修正**（2026-05-20 commit 4b8a729）
+  - `ConfirmDialog.tsx` の `z-50` → `z-[200]` に変更
+  - 原因: `CategoryAddModal`（z-[60]）・`PaymentMethodAddModal`（z-[70]）が `ConfirmDialog`（z-50）より高い z-index を持っていた
+  - 全モーダル内の削除確認ダイアログが最前面に表示されるよう修正
+- [x] **E-2【中】月別収支・個人収支の収支カード金額が大きいと2行になるバグ修正**（2026-05-20 commit ca737af）
+  - `PersonalPage.tsx` の `PersonalExpenseView` に `amtSize` 関数を追加
+  - 文字数に応じてフォントサイズを動的変更（9文字以内: text-lg / 12文字以内: text-base / それ以上: text-sm）
+  - `MonthlyPage.tsx` は既に対応済みだったため変更不要
+- [x] **E-3【中】各リスト型画面にドラッグ＆ドロップ並び替えを追加**（2026-05-20）
+  - 対象7画面: 買い物リスト・固定費・保険/ローン・サブスク・貯蓄目標・貯蓄口座・証券口座
+  - `@dnd-kit/core` / `@dnd-kit/sortable`（既存依存）を利用
+  - `useFirestoreCollection` に `reorderItems` を追加し、各派生フックを通じて公開
+  - `useShoppingList` に独自の `reorderItems` を追加（未チェックアイテムのみ対象）
+  - 家事タスク画面は期日順ソートを維持するため対象外
+  - 楽観的更新（即時 UI 反映）+ Firestore バッチ更新（`order: idx * 1000`）のパターンで実装
 
 ---
 
@@ -224,59 +249,81 @@ AUDIT 原本の指摘「MonthlyPage → 削除 → MonthlyPage で fetchMonthDat
 
 ### 9. 【低】設定の堅牢性
 
-#### 9.1 tsconfig に strict オプション追加
+#### 9.1 tsconfig に strict オプション追加（部分対応済み）
 
+**対応済み** (2026-05-20 commit 616499c):
 ```jsonc
-// tsconfig.app.json に追加
+// tsconfig.app.json に追加済み
 {
   "compilerOptions": {
-    "noUncheckedIndexedAccess": true,    // 配列・オブジェクトのインデックスアクセスが T | undefined に
-    "noImplicitReturns": true,
-    "exactOptionalPropertyTypes": true   // undefined と未指定を区別
+    "noImplicitReturns": true,          // エラーなしで適用
+    "exactOptionalPropertyTypes": true  // 型定義修正を伴い適用
   }
 }
 ```
 
-`noUncheckedIndexedAccess` を入れると `transactions[0]` が `Transaction | undefined` 扱いになり、`item.values[String(year)]` のような無検証アクセスを TypeScript が検出する。今のコードでは数十箇所が破綻するため、段階的導入が必要。
+`exactOptionalPropertyTypes` の修正内容:
+- `types/index.ts`: `HouseholdTask.completedAt`・`AssetItem.note`・`LiabilityItem.note`・`CfMember.role` に `| undefined` を明示追加
+- `householdFirestore.ts`: `MemberProfile.nickname` に `| undefined` を追加
+- `TransactionModal`・`CategoryAddModal`・`PaymentMethodAddModal` の Props でオプション関数型を `((arg) => T) | undefined` 形式に統一
 
-#### 9.2 ESLint 強化
+**未対応**: `noUncheckedIndexedAccess`
+- `arr[0]` や `record[key]` が全て `T | undefined` になり、約30ファイル・80件超のエラーが発生
+- テストコードの `buttons[0]`・`results[0]` のような定型パターンも全て影響
+- 適用する場合は各箇所で `!` アサーションまたは null ガードが必要
+- 別タスクとして段階的に対応予定
 
-現状: `js.configs.recommended` + `tseslint.configs.recommended` + `react-hooks` のみ。
+#### 9.2 ESLint 強化（対応済み）
 
-**追加すべき**:
-- `eslint-plugin-jsx-a11y` — a11y チェック（コントラスト改善の自動化に有効）
-- `eslint-plugin-import` — import 順序
-- `@typescript-eslint/no-explicit-any: 'error'` — `any` 禁止
+**対応済み** (2026-05-20):
+- `eslint-plugin-jsx-a11y` 導入: インタラクティブ要素・aria 属性のチェックを自動化
+- `eslint-plugin-import` 導入: import 順序の統一
+- `@typescript-eslint/no-explicit-any: 'error'` 追加: any 8箇所を型安全なコードに置換
 
-#### 9.3 AppCheck の失敗ハンドリング
-
-**証拠**: [`firebase.ts:19-22`](../src/firebase/firebase.ts)
-```typescript
-initializeAppCheck(app, {
-  provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
-  isTokenAutoRefreshEnabled: true,
-})
+```js
+// eslint.config.js の主な変更
+import jsxA11y from 'eslint-plugin-jsx-a11y'
+import importPlugin from 'eslint-plugin-import'
+// ...
+'@typescript-eslint/no-explicit-any': 'error',
 ```
 
-try/catch なし。reCAPTCHA がロードできない環境（厳しい広告ブロッカー、企業プロキシ等）で初期化が失敗するとアプリ全体がクラッシュ。
+現状: lint エラー0件・警告0件（CI 追加可能な状態）
 
-**推奨**:
+#### 9.3 AppCheck の失敗ハンドリング（対応済み）
+
+**対応済み** (2026-05-20 commit に含む):
+
 ```typescript
+// firebase.ts — try/catch で囲んで対応
 try {
-  initializeAppCheck(app, { ... })
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
+  })
 } catch (err) {
-  console.warn('[AppCheck] init failed:', err)
+  console.warn('[AppCheck] 初期化に失敗しました:', err)
 }
 ```
 
+広告ブロッカー・企業プロキシ環境でのアプリクラッシュを防止。
+
 ---
 
-### 10. 【低】ユーティリティ関数の重複
+### 10. 【低】ユーティリティ関数の重複（対応済み）
 
-- `currentYearMonth` → `utils/date.ts` と `SavingsGoalsPage.tsx:22` に同一実装
-- `formatYen` → `SavingsGoalsPage.tsx:17` / `features/securitiesUtils.ts` / その他に類似実装
+**対応済み** (2026-05-20):
 
-**推奨**: `utils/format.ts` に通貨フォーマット関数を集約。
+- `utils/format.ts` を新規作成し `formatYen` を集約
+- `utils/date.ts` の `currentYearMonth` に統合（`SavingsGoalsPage.tsx` 等のインライン実装を削除）
+- 各ページは `import { formatYen } from '../utils/format'` に統一
+
+```typescript
+// utils/format.ts
+export function formatYen(amount: number): string {
+  return `¥${amount.toLocaleString()}`
+}
+```
 
 ---
 
@@ -284,6 +331,7 @@ try {
 
 前回監査からの改善は大きい。以下はすべて完了確認済み。
 
+### 再監査以前（AUDIT.md Phase 1〜4 相当）
 - ✅ コード分割：`App.tsx` で全ページ `React.lazy` 化
 - ✅ ErrorBoundary：トップレベル配置
 - ✅ React Query 導入：カテゴリ/支払方法のキャッシュ共有
@@ -295,6 +343,24 @@ try {
 - ✅ コントラスト改善（プレーンテキスト）
 - ✅ npm audit 0件
 - ✅ TypeScript strict mode 有効
+
+### 再監査後（Phase A〜E）
+- ✅ 招待コード入力フィールドを10文字対応に修正（A-1）
+- ✅ ESLint エラー2件解消・lint グリーン維持（A-2）
+- ✅ 文字化けコメント清掃（B-1）
+- ✅ ゲストモード PersonalPage に案内メッセージ表示（B-2）
+- ✅ `useHousehold` に `'error'` 状態追加・再試行UI実装（B-3）
+- ✅ `joinHousehold` の既存世帯所属チェック・確認ダイアログ追加（B-4）
+- ✅ BottomSheetModal にフォーカストラップ実装（C-1）
+- ✅ タップターゲット 44×44px 確保（C-2）
+- ✅ `useMonthlyData` / `usePersonalMonthlyData` を React Query 化（C-3）
+- ✅ ESLint 強化（jsx-a11y / import / no-explicit-any）（D-2）
+- ✅ AppCheck 初期化を try/catch で保護（D-3）
+- ✅ `formatYen` / `currentYearMonth` を utils/ に集約（D-4）
+- ✅ tsconfig `noImplicitReturns` / `exactOptionalPropertyTypes` 追加（D-1 一部）
+- ✅ ConfirmDialog z-index バグ修正（z-50 → z-[200]）（E-1）
+- ✅ 収支カード金額の2行化バグ修正（文字数連動フォントサイズ）（E-2）
+- ✅ 7画面にドラッグ＆ドロップ並び替え追加（E-3）
 
 ---
 
