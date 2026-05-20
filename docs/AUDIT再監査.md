@@ -83,18 +83,27 @@
 - [x] **D-2【低】ESLint 強化** → §9.2
   - `eslint-plugin-jsx-a11y` / `eslint-plugin-import` / `no-explicit-any: 'error'` 導入済み（2026-05-20）
   - `eslint.config.js` に3プラグイン追加、既存の any 8箇所を型安全に置換
-  - lint エラー0件・警告0件の状態を維持
+  - lint エラー0件（CI 追加可能な状態）。jsx-a11y / import-order 系の警告は既存コードに多数あるため意図的に `warn` レベルとし、段階的対応とした → D-7
 - [x] **D-3【低】AppCheck 初期化の失敗ハンドリング** → §9.3
   - `firebase.ts` の `initializeAppCheck` を try/catch で囲み対応済み（2026-05-20）
 - [x] **D-4【低】ユーティリティ関数の重複解消** → §10
   - `utils/format.ts` に `formatYen` を集約済み（2026-05-20）
   - `currentYearMonth` は既存の `utils/date.ts` に統合済み
   - 各ページのインライン実装を削除して import に統一
-- [ ] **D-5【低】認証フロー周辺のテスト追加**
-  - `HouseholdSetupPage` の招待コード入力テスト（今回の退行を検出できなかった原因）
-  - `useHousehold` の状態遷移テスト
-- [ ] **D-6【低】残る大規模ページの分割**
-  - `SavingsGoalsPage.tsx` (526行) / `FixedCostsPage.tsx` (521行) / `BalanceSheetPage.tsx` (495行)
+- [x] **D-5【低】認証フロー周辺のテスト追加**（2026-05-20）
+  - `HouseholdSetupPage.test.tsx`：招待コード maxLength=10・9文字以下 disabled・参加フロー全分岐（14件）
+  - `useHousehold.test.tsx`：状態遷移テスト（loading→unauthenticated/needs_setup/ready/error・guest-mode、9件）
+- [x] **D-6【低】残る大規模ページの分割**（2026-05-20）
+  - 独立監査（Plan エージェント）の結果を反映し、行数目標ではなく「責務の単位」を基準に分割
+  - `FixedCostsPage.tsx`（521→372行）: `utils/fixedCost.ts`・`features/FixedCostCalendar.tsx`・`features/FixedCostDayModal.tsx` を抽出
+  - `SavingsGoalsPage.tsx`（526→228行）: `features/SavingsGoalModal.tsx`（form state をモーダル内に閉じる設計）・`utils/savingsGoal.ts` を抽出。`GoalCard` は過度な分割を避けページに残置
+  - `BalanceSheetPage.tsx`（495→416行）: `features/BalanceSheetItemRow.tsx`（資産/負債で重複する項目行）を抽出。セクション丸ごとの共通化は型ユニオンによる props 複雑化を避けて見送り
+- [~] **D-7【低】lint 警告の段階的解消**
+  - D-2 で `warn` 設定とした警告が当初152件（`npm run lint` 実測 2026-05-20）。エラーは0件
+  - `import/order` 34件を解消済み（2026-05-20）: `eslint --fix` で26件を自動修正。残り8件はテストファイルで `vi.mock` を import 群に挟む慣用パターンのため、`eslint.config.js` でテストファイルのみ `import/order` を off に設定
+  - 残り118件（未対応）: `jsx-a11y/label-has-associated-control` 54件 / `jsx-a11y/no-static-element-interactions` 31件 / `jsx-a11y/click-events-have-key-events` 31件 / `react-hooks/exhaustive-deps` 2件
+  - jsx-a11y はフォームの id/htmlFor 付与・モーダル背景の扱い方針決定が必要
+  - 全解消後は該当ルールを `error` に格上げして CI ゲート化する
 
 ### Phase E：監査後に追加対応した事項
 
@@ -288,7 +297,7 @@ import importPlugin from 'eslint-plugin-import'
 '@typescript-eslint/no-explicit-any': 'error',
 ```
 
-現状: lint エラー0件・警告0件（CI 追加可能な状態）
+現状: lint エラー0件。jsx-a11y / import-order 系のルールは既存コードに違反が多数あるため意図的に `warn` レベルとし、段階的に解消する方針（警告152件・2026-05-20 実測）。詳細と内訳は D-7 を参照。
 
 #### 9.3 AppCheck の失敗ハンドリング（対応済み）
 
@@ -361,6 +370,8 @@ export function formatYen(amount: number): string {
 - ✅ ConfirmDialog z-index バグ修正（z-50 → z-[200]）（E-1）
 - ✅ 収支カード金額の2行化バグ修正（文字数連動フォントサイズ）（E-2）
 - ✅ 7画面にドラッグ＆ドロップ並び替え追加（E-3）
+- ✅ 認証フロー周辺テスト追加（HouseholdSetupPage 14件・useHousehold 9件）（D-5）
+- ✅ 大規模ページ3件を分割（FixedCostsPage / SavingsGoalsPage / BalanceSheetPage）（D-6）
 
 ---
 
