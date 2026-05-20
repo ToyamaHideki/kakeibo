@@ -20,7 +20,7 @@ export interface UserProfile {
 
 export interface MemberProfile {
   email: string
-  nickname?: string
+  nickname?: string | undefined
 }
 
 export interface Household {

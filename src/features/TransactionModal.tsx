@@ -17,16 +17,16 @@ interface Props {
   categories: Category[]
   paymentMethods: PaymentMethod[]
   yearMonth: string
-  editTarget?: Transaction
+  editTarget?: Transaction | undefined
   // personal モード用オーバーライド（省略時は household 動作）
-  title?: string
-  saveFn?: (yearMonth: string, tx: Transaction) => Promise<void>
-  updateFn?: (yearMonth: string, tx: Transaction) => Promise<void>
-  moveFn?: (fromYM: string, toYM: string, tx: Transaction) => Promise<void>
-  addCategoryFn?: (cat: Omit<Category, 'id'>) => Promise<string>
-  deleteCategoryFn?: (id: string) => Promise<void>
-  addPaymentMethodFn?: (pm: Omit<PaymentMethod, 'id'>) => Promise<string>
-  deletePaymentMethodFn?: (id: string) => Promise<void>
+  title?: string | undefined
+  saveFn?: ((yearMonth: string, tx: Transaction) => Promise<void>) | undefined
+  updateFn?: ((yearMonth: string, tx: Transaction) => Promise<void>) | undefined
+  moveFn?: ((fromYM: string, toYM: string, tx: Transaction) => Promise<void>) | undefined
+  addCategoryFn?: ((cat: Omit<Category, 'id'>) => Promise<string>) | undefined
+  deleteCategoryFn?: ((id: string) => Promise<void>) | undefined
+  addPaymentMethodFn?: ((pm: Omit<PaymentMethod, 'id'>) => Promise<string>) | undefined
+  deletePaymentMethodFn?: ((id: string) => Promise<void>) | undefined
 }
 
 export default function TransactionModal({

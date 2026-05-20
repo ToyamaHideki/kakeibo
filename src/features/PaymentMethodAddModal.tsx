@@ -14,8 +14,8 @@ interface Props {
   onDeleted: (id: string) => void
   nextOrder: number
   paymentMethods: PaymentMethod[]
-  addPaymentMethodFn?: (pm: Omit<PaymentMethod, 'id'>) => Promise<string>
-  deletePaymentMethodFn?: (id: string) => Promise<void>
+  addPaymentMethodFn?: ((pm: Omit<PaymentMethod, 'id'>) => Promise<string>) | undefined
+  deletePaymentMethodFn?: ((id: string) => Promise<void>) | undefined
 }
 
 export default function PaymentMethodAddModal({

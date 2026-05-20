@@ -69,7 +69,7 @@ export interface HouseholdTask {
   isRecurring: boolean
   recurrenceType?: 'daily' | 'weekly' | 'monthly'
   isCompleted: boolean
-  completedAt?: string
+  completedAt?: string | undefined
   order: number
 }
 
@@ -166,7 +166,7 @@ export interface AssetItem {
   name: string
   amount: number
   order: number
-  note?: string
+  note?: string | undefined
 }
 
 export interface LiabilityItem {
@@ -175,7 +175,7 @@ export interface LiabilityItem {
   name: string
   amount: number
   order: number
-  note?: string
+  note?: string | undefined
 }
 
 // Firestore: balanceSheets/{year}
@@ -191,7 +191,7 @@ export interface CfMember {
   id: string
   name: string
   birthYear: number
-  role?: string
+  role?: string | undefined
 }
 
 export interface CfItem {

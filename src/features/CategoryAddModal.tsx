@@ -15,8 +15,8 @@ interface Props {
   type: TransactionType
   nextOrder: number
   categories: Category[]
-  addCategoryFn?: (category: Omit<Category, 'id'>) => Promise<string>
-  deleteCategoryFn?: (id: string) => Promise<void>
+  addCategoryFn?: ((category: Omit<Category, 'id'>) => Promise<string>) | undefined
+  deleteCategoryFn?: ((id: string) => Promise<void>) | undefined
 }
 
 const PRESET_COLORS = [
