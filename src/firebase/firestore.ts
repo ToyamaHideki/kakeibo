@@ -8,8 +8,8 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore'
-import { db } from './firebase'
 import type { Category, CfPlan, FixedCost, MonthDocument, PaymentMethod, Transaction } from '../types'
+import { db } from './firebase'
 import {
   GUEST_HOUSEHOLD_ID,
   guestGetCategories, guestAddCategory, guestUpdateCategory, guestDeleteCategory,

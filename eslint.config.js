@@ -55,4 +55,11 @@ export default tseslint.config(
       'jsx-a11y/no-autofocus': 'off',
     },
   },
+  {
+    // テストファイルは vi.mock を import 群の間に挟む慣用パターンを使うため import/order を無効化
+    files: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'import/order': 'off',
+    },
+  },
 )

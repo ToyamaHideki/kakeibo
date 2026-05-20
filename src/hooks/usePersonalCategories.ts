@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { fetchPersonalCategories } from '../firebase/personalFirestore'
-import { useHousehold } from './useHousehold'
 import { GUEST_PERSONAL_CATEGORIES } from '../data/guestData'
 import type { Category } from '../types'
+import { useHousehold } from './useHousehold'
 
 export function usePersonalCategories(uid: string) {
   const { isGuest } = useHousehold()

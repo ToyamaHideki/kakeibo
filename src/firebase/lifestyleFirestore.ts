@@ -7,8 +7,8 @@ import {
   updateDoc,
   writeBatch,
 } from 'firebase/firestore'
-import { db } from './firebase'
 import type { HouseholdTask, ShoppingItem } from '../types'
+import { db } from './firebase'
 import {
   GUEST_HOUSEHOLD_ID,
   guestGetShoppingItems, guestAddShoppingItem, guestUpdateShoppingItem,

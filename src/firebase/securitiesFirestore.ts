@@ -1,5 +1,5 @@
-import { createHouseholdCrud } from './crud'
 import type { SecuritiesAccount } from '../types'
+import { createHouseholdCrud } from './crud'
 
 const ops = createHouseholdCrud<SecuritiesAccount>('securitiesAccounts')
 

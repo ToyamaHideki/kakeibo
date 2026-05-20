@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchCfPlan, saveCfPlan } from '../firebase/firestore'
-import { useHousehold } from './useHousehold'
 import type { CfItem, CfPlan } from '../types'
+import { useHousehold } from './useHousehold'
 
 const thisYear = new Date().getFullYear()
 

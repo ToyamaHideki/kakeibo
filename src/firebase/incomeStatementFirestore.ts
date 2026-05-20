@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from './firebase'
 import type { IncomeStatement } from '../types'
+import { db } from './firebase'
 import { GUEST_HOUSEHOLD_ID, guestGetIncomeStatement, guestSaveIncomeStatement } from './guestStore'
 
 export async function fetchIncomeStatement(householdId: string, year: number): Promise<IncomeStatement | null> {

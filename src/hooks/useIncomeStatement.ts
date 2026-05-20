@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchMonthData } from '../firebase/firestore'
 import { fetchIncomeStatement, saveIncomeStatement } from '../firebase/incomeStatementFirestore'
-import { useHousehold } from './useHousehold'
 import type { Category, IncomeStatement, IncomeStatementDeductionItem } from '../types'
+import { useHousehold } from './useHousehold'
 
 function emptyStatement(year: number): IncomeStatement {
   return { year, incomeOverrides: {}, deductions: [], expenseOverrides: {} }

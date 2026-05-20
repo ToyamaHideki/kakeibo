@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useOutletContext } from 'react-router-dom'
 import MonthlyPage from '../pages/MonthlyPage'
 import type { Category, PaymentMethod, Transaction } from '../types'
 
@@ -35,7 +36,6 @@ vi.mock('../components/YearMonthPicker', () => ({
     isOpen ? <div data-testid="year-month-picker" /> : null,
 }))
 
-import { useOutletContext } from 'react-router-dom'
 import { useMonthlyData } from '../hooks/useMonthlyData'
 
 const CATEGORIES: Category[] = [

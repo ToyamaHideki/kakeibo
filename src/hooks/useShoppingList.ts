@@ -6,8 +6,8 @@ import {
   fetchShoppingItems,
   updateShoppingItem,
 } from '../firebase/lifestyleFirestore'
-import { useHousehold } from './useHousehold'
 import type { ShoppingItem } from '../types'
+import { useHousehold } from './useHousehold'
 
 export function useShoppingList() {
   const { householdId } = useHousehold()

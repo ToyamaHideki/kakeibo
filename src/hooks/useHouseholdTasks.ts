@@ -5,9 +5,9 @@ import {
   fetchHouseholdTasks,
   updateHouseholdTask,
 } from '../firebase/lifestyleFirestore'
-import { useHousehold } from './useHousehold'
 import type { HouseholdTask } from '../types'
 import { nextOrder } from '../utils/order'
+import { useHousehold } from './useHousehold'
 
 export type TaskFilter = 'active' | 'done'
 

@@ -5,8 +5,8 @@ import {
   deleteSecuritiesAccount,
 } from '../firebase/securitiesFirestore'
 import type { SecuritiesAccount } from '../types'
-import { useFirestoreCollection } from './useFirestoreCollection'
 import { nextOrder } from '../utils/order'
+import { useFirestoreCollection } from './useFirestoreCollection'
 
 const ops = {
   fetch: fetchSecuritiesAccounts,

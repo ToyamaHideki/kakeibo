@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { fetchPersonalPaymentMethods } from '../firebase/personalFirestore'
-import { useHousehold } from './useHousehold'
 import { GUEST_PERSONAL_PAYMENT_METHODS } from '../data/guestData'
 import type { PaymentMethod } from '../types'
+import { useHousehold } from './useHousehold'
 
 export function usePersonalPaymentMethods(uid: string) {
   const { isGuest } = useHousehold()

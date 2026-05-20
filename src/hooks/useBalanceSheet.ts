@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { fetchBalanceSheet, saveBalanceSheet } from '../firebase/balanceSheetFirestore'
 import { fetchContracts } from '../firebase/contractFirestore'
 import { fetchSecuritiesAccounts } from '../firebase/securitiesFirestore'
-import { useHousehold } from './useHousehold'
 import type { AssetItem, BalanceSheet, LiabilityItem } from '../types'
+import { useHousehold } from './useHousehold'
 
 function emptySheet(year: number): BalanceSheet {
   return { year, assets: [], liabilities: [] }

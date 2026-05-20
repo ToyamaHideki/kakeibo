@@ -5,8 +5,8 @@ import {
   deleteContract as deleteFn,
 } from '../firebase/contractFirestore'
 import type { Contract } from '../types'
-import { useFirestoreCollection } from './useFirestoreCollection'
 import { nextOrder } from '../utils/order'
+import { useFirestoreCollection } from './useFirestoreCollection'
 
 const ops = { fetch: fetchContracts, add: addFn, update: updateFn, remove: deleteFn }
 

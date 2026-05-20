@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { addPaymentMethod, fetchPaymentMethods } from '../firebase/firestore'
-import { useHousehold } from './useHousehold'
 import type { PaymentMethod } from '../types'
+import { useHousehold } from './useHousehold'
 
 const DEFAULT_PAYMENT_METHODS: Omit<PaymentMethod, 'id'>[] = [
   { name: '現金',           order: 1 },

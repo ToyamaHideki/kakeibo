@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchPersonalMonthData } from '../firebase/personalFirestore'
 import { guestGetPersonalMonthData } from '../firebase/guestStore'
-import { useHousehold } from './useHousehold'
 import { adjacentMonth, getPayPeriodRange } from '../utils/date'
+import { useHousehold } from './useHousehold'
 
 export function usePersonalMonthlyData(yearMonth: string, uid: string, payDay?: number) {
   const { isGuest } = useHousehold()

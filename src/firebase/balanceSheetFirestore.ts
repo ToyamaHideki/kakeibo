@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from './firebase'
 import type { BalanceSheet } from '../types'
+import { db } from './firebase'
 import { GUEST_HOUSEHOLD_ID, guestGetBalanceSheet, guestSaveBalanceSheet } from './guestStore'
 
 export async function fetchBalanceSheet(householdId: string, year: number): Promise<BalanceSheet | null> {

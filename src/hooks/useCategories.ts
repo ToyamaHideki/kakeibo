@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { addCategory, fetchCategories, updateCategory } from '../firebase/firestore'
-import { useHousehold } from './useHousehold'
 import type { Category } from '../types'
+import { useHousehold } from './useHousehold'
 
 const DEFAULT_CATEGORIES: Omit<Category, 'id'>[] = [
   { name: '食費',     type: 'expense', expenseType: 'variable', color: '#f97316', order: 1 },

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchMonthData } from '../firebase/firestore'
-import { useHousehold } from './useHousehold'
 import type { Transaction } from '../types'
+import { useHousehold } from './useHousehold'
 
 export function useAnnualData(year: number) {
   const { householdId } = useHousehold()

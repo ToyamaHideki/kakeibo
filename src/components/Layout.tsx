@@ -4,9 +4,9 @@ import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useHousehold } from '../hooks/useHousehold'
 import { signInAsGuest, signInWithGoogle, signOut } from '../firebase/auth'
 import type { Category, PaymentMethod } from '../types'
+import HouseholdSetupPage from '../pages/HouseholdSetupPage'
 import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
-import HouseholdSetupPage from '../pages/HouseholdSetupPage'
 
 export interface OutletContext {
   categories: Category[]
