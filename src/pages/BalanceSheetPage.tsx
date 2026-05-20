@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useBalanceSheet } from '../hooks/useBalanceSheet'
+import BalanceSheetItemRow from '../features/BalanceSheetItemRow'
 import type { AssetSection, LiabilitySection } from '../types'
 
 const ASSET_SECTION_LABELS: Record<AssetSection, string> = {
@@ -184,63 +185,23 @@ export default function BalanceSheetPage() {
                     </div>
                     <div className="divide-y divide-gray-100">
                       {items.map(item => (
-                        <div key={item.id} className="px-4 py-2.5">
-                          {editingId === item.id ? (
-                            <div className="space-y-2">
-                              <div className="flex gap-2">
-                                <input
-                                  type="number"
-                                  value={editAmount}
-                                  onChange={e => setEditAmount(e.target.value)}
-                                  className="flex-1 px-2 py-1.5 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
-                                  placeholder="金額（円）"
-                                  autoFocus
-                                />
-                                <button
-                                  onClick={async () => {
-                                    await updateAsset(item.id, { amount: parseFloat(editAmount) || 0, ...(editNote !== undefined ? { note: editNote || undefined } : {}) })
-                                    cancelEdit()
-                                  }}
-                                  className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                                >保存</button>
-                                <button onClick={cancelEdit} className="px-3 py-1.5 text-xs text-gray-500">戻る</button>
-                              </div>
-                              <input
-                                type="text"
-                                value={editNote}
-                                onChange={e => setEditNote(e.target.value)}
-                                className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-300"
-                                placeholder="メモ（任意）"
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 min-w-0">
-                                <span className="text-sm text-gray-800">{item.name}</span>
-                                {item.note && <p className="text-xs text-gray-500 truncate">{item.note}</p>}
-                              </div>
-                              <span className="text-sm font-medium text-gray-900 shrink-0">{fmt(item.amount)}円</span>
-                              <button
-                                onClick={() => startEdit(item.id, item.amount, item.note)}
-                                className="text-gray-300 hover:text-gray-500 shrink-0"
-                              >
-                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={() => deleteAsset(item.id)}
-                                className="text-red-200 hover:text-red-400 shrink-0"
-                              >
-                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <line x1="18" y1="6" x2="6" y2="18" />
-                                  <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                        <BalanceSheetItemRow
+                          key={item.id}
+                          item={item}
+                          isEditing={editingId === item.id}
+                          editAmount={editAmount}
+                          editNote={editNote}
+                          amountPlaceholder="金額（円）"
+                          onChangeAmount={setEditAmount}
+                          onChangeNote={setEditNote}
+                          onStartEdit={() => startEdit(item.id, item.amount, item.note)}
+                          onSaveEdit={async () => {
+                            await updateAsset(item.id, { amount: parseFloat(editAmount) || 0, ...(editNote !== undefined ? { note: editNote || undefined } : {}) })
+                            cancelEdit()
+                          }}
+                          onCancelEdit={cancelEdit}
+                          onDelete={() => deleteAsset(item.id)}
+                        />
                       ))}
                       {items.length === 0 && !isAddingHere && (
                         <p className="px-4 py-2 text-xs text-gray-500">項目がありません</p>
@@ -311,63 +272,23 @@ export default function BalanceSheetPage() {
                     </div>
                     <div className="divide-y divide-gray-100">
                       {items.map(item => (
-                        <div key={item.id} className="px-4 py-2.5">
-                          {editingId === item.id ? (
-                            <div className="space-y-2">
-                              <div className="flex gap-2">
-                                <input
-                                  type="number"
-                                  value={editAmount}
-                                  onChange={e => setEditAmount(e.target.value)}
-                                  className="flex-1 px-2 py-1.5 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
-                                  placeholder="残高（円）"
-                                  autoFocus
-                                />
-                                <button
-                                  onClick={async () => {
-                                    await updateLiability(item.id, { amount: parseFloat(editAmount) || 0, ...(editNote !== undefined ? { note: editNote || undefined } : {}) })
-                                    cancelEdit()
-                                  }}
-                                  className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                                >保存</button>
-                                <button onClick={cancelEdit} className="px-3 py-1.5 text-xs text-gray-500">戻る</button>
-                              </div>
-                              <input
-                                type="text"
-                                value={editNote}
-                                onChange={e => setEditNote(e.target.value)}
-                                className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-300"
-                                placeholder="メモ（任意）"
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 min-w-0">
-                                <span className="text-sm text-gray-800">{item.name}</span>
-                                {item.note && <p className="text-xs text-gray-500 truncate">{item.note}</p>}
-                              </div>
-                              <span className="text-sm font-medium text-gray-900 shrink-0">{fmt(item.amount)}円</span>
-                              <button
-                                onClick={() => startEdit(item.id, item.amount, item.note)}
-                                className="text-gray-300 hover:text-gray-500 shrink-0"
-                              >
-                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={() => deleteLiability(item.id)}
-                                className="text-red-200 hover:text-red-400 shrink-0"
-                              >
-                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <line x1="18" y1="6" x2="6" y2="18" />
-                                  <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                        <BalanceSheetItemRow
+                          key={item.id}
+                          item={item}
+                          isEditing={editingId === item.id}
+                          editAmount={editAmount}
+                          editNote={editNote}
+                          amountPlaceholder="残高（円）"
+                          onChangeAmount={setEditAmount}
+                          onChangeNote={setEditNote}
+                          onStartEdit={() => startEdit(item.id, item.amount, item.note)}
+                          onSaveEdit={async () => {
+                            await updateLiability(item.id, { amount: parseFloat(editAmount) || 0, ...(editNote !== undefined ? { note: editNote || undefined } : {}) })
+                            cancelEdit()
+                          }}
+                          onCancelEdit={cancelEdit}
+                          onDelete={() => deleteLiability(item.id)}
+                        />
                       ))}
                       {items.length === 0 && !isAddingHere && (
                         <p className="px-4 py-2 text-xs text-gray-500">項目がありません</p>
