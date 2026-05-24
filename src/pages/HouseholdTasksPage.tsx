@@ -267,8 +267,8 @@ export default function HouseholdTasksPage() {
 
       {/* 追加モーダル */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={closeModal}>
-          <div className="bg-white rounded-2xl w-full max-w-md max-h-[85svh] flex flex-col shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" role="presentation" onClick={closeModal}>
+          <div className="bg-white rounded-2xl w-full max-w-md max-h-[85svh] flex flex-col shadow-xl" role="presentation" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 shrink-0">
               <h3 className="text-base font-bold text-gray-800">タスクを追加</h3>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-600">
@@ -282,8 +282,9 @@ export default function HouseholdTasksPage() {
             <form onSubmit={handleSubmit} className="overflow-y-auto px-5 py-4 space-y-4">
               {/* タスク名 */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">タスク名 <span className="text-red-400">*</span></label>
+                <label htmlFor="task-name" className="block text-xs font-medium text-gray-600 mb-1">タスク名 <span className="text-red-400">*</span></label>
                 <input
+                  id="task-name"
                   type="text"
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -295,6 +296,7 @@ export default function HouseholdTasksPage() {
 
               {/* 担当者 */}
               <div>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- 担当者ボタングループのラベルはhtmlForで関連付け不可 */}
                 <label className="block text-xs font-medium text-gray-600 mb-2">担当者（任意）</label>
                 <div className="flex flex-wrap gap-1.5 items-center">
                   {assignees.map(name => (
@@ -371,8 +373,9 @@ export default function HouseholdTasksPage() {
 
               {/* 期日 */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">期日（任意）</label>
+                <label htmlFor="task-due-date" className="block text-xs font-medium text-gray-600 mb-1">期日（任意）</label>
                 <input
+                  id="task-due-date"
                   type="date"
                   value={form.dueDate}
                   onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))}

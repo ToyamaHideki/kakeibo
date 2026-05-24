@@ -75,9 +75,9 @@
 
 ### Phase D：長期対応（時間がある時）
 
-- [~] **D-1【低】tsconfig の strict オプション追加** → §9.1
+- [x] **D-1【低】tsconfig の strict オプション追加** → §9.1
   - `noImplicitReturns` / `exactOptionalPropertyTypes` 適用済み（2026-05-20 commit 616499c）
-  - `noUncheckedIndexedAccess` は ~30ファイル80件超のエラーが発生するため別途対応
+  - `noUncheckedIndexedAccess` 適用済み（2026-05-24）— エラー0件で追加完了
   - 型定義修正: `types/index.ts`・`householdFirestore.ts`（optional prop に `| undefined` 追加）
   - Props 修正: `TransactionModal`・`CategoryAddModal`・`PaymentMethodAddModal`
 - [x] **D-2【低】ESLint 強化** → §9.2
@@ -98,12 +98,11 @@
   - `FixedCostsPage.tsx`（521→372行）: `utils/fixedCost.ts`・`features/FixedCostCalendar.tsx`・`features/FixedCostDayModal.tsx` を抽出
   - `SavingsGoalsPage.tsx`（526→228行）: `features/SavingsGoalModal.tsx`（form state をモーダル内に閉じる設計）・`utils/savingsGoal.ts` を抽出。`GoalCard` は過度な分割を避けページに残置
   - `BalanceSheetPage.tsx`（495→416行）: `features/BalanceSheetItemRow.tsx`（資産/負債で重複する項目行）を抽出。セクション丸ごとの共通化は型ユニオンによる props 複雑化を避けて見送り
-- [~] **D-7【低】lint 警告の段階的解消**
+- [x] **D-7【低】lint 警告の段階的解消**
   - D-2 で `warn` 設定とした警告が当初152件（`npm run lint` 実測 2026-05-20）。エラーは0件
-  - `import/order` 34件を解消済み（2026-05-20）: `eslint --fix` で26件を自動修正。残り8件はテストファイルで `vi.mock` を import 群に挟む慣用パターンのため、`eslint.config.js` でテストファイルのみ `import/order` を off に設定
-  - 残り118件（未対応）: `jsx-a11y/label-has-associated-control` 54件 / `jsx-a11y/no-static-element-interactions` 31件 / `jsx-a11y/click-events-have-key-events` 31件 / `react-hooks/exhaustive-deps` 2件
-  - jsx-a11y はフォームの id/htmlFor 付与・モーダル背景の扱い方針決定が必要
-  - 全解消後は該当ルールを `error` に格上げして CI ゲート化する
+  - `import/order` 34件を解消済み（2026-05-20）
+  - 残り118件を解消済み（2026-05-24）: `jsx-a11y/label-has-associated-control` 54件（htmlFor/id 対応）/ `jsx-a11y/no-static-element-interactions` + `click-events-have-key-events` 62件（モーダル背景に role="presentation"・操作要素に role="button"+onKeyDown）/ `react-hooks/exhaustive-deps` 2件（依存追加・useEffect 内移動）
+  - 警告0件・エラー0件（CI ゲート化可能な状態）
 
 ### Phase E：監査後に追加対応した事項
 
@@ -366,12 +365,14 @@ export function formatYen(amount: number): string {
 - ✅ ESLint 強化（jsx-a11y / import / no-explicit-any）（D-2）
 - ✅ AppCheck 初期化を try/catch で保護（D-3）
 - ✅ `formatYen` / `currentYearMonth` を utils/ に集約（D-4）
-- ✅ tsconfig `noImplicitReturns` / `exactOptionalPropertyTypes` 追加（D-1 一部）
+- ✅ tsconfig `noImplicitReturns` / `exactOptionalPropertyTypes` / `noUncheckedIndexedAccess` 追加（D-1 完了）
 - ✅ ConfirmDialog z-index バグ修正（z-50 → z-[200]）（E-1）
 - ✅ 収支カード金額の2行化バグ修正（文字数連動フォントサイズ）（E-2）
 - ✅ 7画面にドラッグ＆ドロップ並び替え追加（E-3）
 - ✅ 認証フロー周辺テスト追加（HouseholdSetupPage 14件・useHousehold 9件）（D-5）
 - ✅ 大規模ページ3件を分割（FixedCostsPage / SavingsGoalsPage / BalanceSheetPage）（D-6）
+- ✅ lint 警告118件を全解消（警告0件・エラー0件）（D-7）
+- ✅ tsconfig `noUncheckedIndexedAccess` 追加（D-1 完了）
 
 ---
 

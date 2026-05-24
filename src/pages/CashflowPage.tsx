@@ -34,7 +34,7 @@ export default function CashflowPage() {
 
   useEffect(() => {
     if (!loading) setDecadeStart(plan.startYear)
-  }, [loading])
+  }, [loading, plan.startYear])
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768)

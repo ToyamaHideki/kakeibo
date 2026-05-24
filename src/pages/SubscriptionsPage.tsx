@@ -267,10 +267,12 @@ export default function SubscriptionsPage() {
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4"
+          role="presentation"
           onClick={closeModal}
         >
           <div
             className="bg-white rounded-2xl w-full max-w-md max-h-[90svh] flex flex-col shadow-xl"
+            role="presentation"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 shrink-0">
@@ -288,8 +290,9 @@ export default function SubscriptionsPage() {
             <div className="overflow-y-auto px-5 py-4 space-y-4">
               {/* 名前 */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">サービス名 <span className="text-red-400">*</span></label>
+                <label htmlFor="subscription-name" className="block text-xs font-medium text-gray-600 mb-1">サービス名 <span className="text-red-400">*</span></label>
                 <input
+                  id="subscription-name"
                   type="text"
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -301,6 +304,7 @@ export default function SubscriptionsPage() {
 
               {/* 金額・周期 */}
               <div>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- 金額入力と支払い周期ボタンの複合コントロールのラベル */}
                 <label className="block text-xs font-medium text-gray-600 mb-1">料金</label>
                 <div className="flex gap-2">
                   <div className="flex-1 relative">
@@ -336,8 +340,9 @@ export default function SubscriptionsPage() {
 
               {/* 次回更新日 */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">次回更新日（任意）</label>
+                <label htmlFor="subscription-renewal-date" className="block text-xs font-medium text-gray-600 mb-1">次回更新日（任意）</label>
                 <input
+                  id="subscription-renewal-date"
                   type="date"
                   value={form.renewalDate}
                   onChange={e => setForm(f => ({ ...f, renewalDate: e.target.value }))}
@@ -347,8 +352,9 @@ export default function SubscriptionsPage() {
 
               {/* 支払い方法 */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">支払い方法（任意）</label>
+                <label htmlFor="subscription-payment-method" className="block text-xs font-medium text-gray-600 mb-1">支払い方法（任意）</label>
                 <input
+                  id="subscription-payment-method"
                   type="text"
                   value={form.paymentMethod}
                   onChange={e => setForm(f => ({ ...f, paymentMethod: e.target.value }))}
@@ -359,8 +365,9 @@ export default function SubscriptionsPage() {
 
               {/* 契約開始日 */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">契約開始日（任意）</label>
+                <label htmlFor="subscription-start-date" className="block text-xs font-medium text-gray-600 mb-1">契約開始日（任意）</label>
                 <input
+                  id="subscription-start-date"
                   type="date"
                   value={form.startDate}
                   onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
@@ -383,8 +390,9 @@ export default function SubscriptionsPage() {
 
               {/* メモ */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">メモ（任意）</label>
+                <label htmlFor="subscription-memo" className="block text-xs font-medium text-gray-600 mb-1">メモ（任意）</label>
                 <textarea
+                  id="subscription-memo"
                   value={form.memo}
                   onChange={e => setForm(f => ({ ...f, memo: e.target.value }))}
                   placeholder="例：スタンダードプラン、家族で利用"

@@ -18,12 +18,11 @@ const FREQ_OPTIONS: { value: FixedCostFrequency; label: string }[] = [
 ]
 
 export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props) {
-  const today = new Date()
   const [name, setName] = useState('')
   const [frequency, setFrequency] = useState<FixedCostFrequency>('monthly')
   const [dayOfMonth, setDayOfMonth] = useState(1)
-  const [month, setMonth] = useState(today.getMonth() + 1)
-  const [baseYear, setBaseYear] = useState(today.getFullYear())
+  const [month, setMonth] = useState(() => new Date().getMonth() + 1)
+  const [baseYear, setBaseYear] = useState(() => new Date().getFullYear())
   const [amount, setAmount] = useState(0)
   const [isVariable, setIsVariable] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('')
@@ -32,6 +31,7 @@ export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props)
 
   useEffect(() => {
     if (isOpen) {
+      const today = new Date()
       if (cost) {
         setName(cost.name)
         setFrequency(cost.frequency ?? 'monthly')
@@ -89,10 +89,12 @@ export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props)
   return createPortal(
     <div
       className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center"
+      role="presentation"
       onClick={onClose}
     >
       <div
         className="bg-white w-full md:max-w-md md:rounded-xl rounded-t-2xl shadow-xl max-h-[90vh] flex flex-col"
+        role="presentation"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex justify-center pt-3 pb-1 md:hidden">
@@ -116,8 +118,9 @@ export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props)
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           {/* 費目吁E*/}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">費目名</label>
+            <label htmlFor="fixed-cost-name" className="block text-xs font-medium text-gray-500 mb-1.5">費目名</label>
             <input
+              id="fixed-cost-name"
               type="text"
               placeholder="例：自動車税、車検、家賃"
               value={name}
@@ -128,6 +131,7 @@ export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props)
 
           {/* 頻度 */}
           <div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- ボタングループのラベルはhtmlForで関連付け不可 */}
             <label className="block text-xs font-medium text-gray-500 mb-1.5">頻度</label>
             <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
               {FREQ_OPTIONS.map(opt => (
@@ -183,9 +187,10 @@ export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props)
           {/* 基準年�E�隔年・3年毎�Eみ�E�E*/}
           {(frequency === 'every2years' || frequency === 'every3years') && (
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">基準年</label>
+              <label htmlFor="fixed-cost-base-year" className="block text-xs font-medium text-gray-500 mb-1.5">基準年</label>
               <div className="flex items-center gap-2">
                 <input
+                  id="fixed-cost-base-year"
                   type="number"
                   min={2000}
                   max={2100}
@@ -204,6 +209,7 @@ export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props)
           {/* 金顁E*/}
           <div>
             <div className="flex items-center justify-between mb-1.5">
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- 固定/変動ボタンと入力フィールドの複合コントロールのラベル */}
               <label className="text-xs font-medium text-gray-500">金額（円）</label>
               <div className="flex rounded-md border border-gray-200 overflow-hidden text-xs">
                 <button
@@ -247,8 +253,9 @@ export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props)
 
           {/* 支払い方況E*/}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">支払い方法／口座</label>
+            <label htmlFor="fixed-cost-payment-method" className="block text-xs font-medium text-gray-500 mb-1.5">支払い方法／口座</label>
             <input
+              id="fixed-cost-payment-method"
               type="text"
               placeholder="例：○○銀行、△△カード"
               value={paymentMethod}
@@ -259,8 +266,9 @@ export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props)
 
           {/* メモ */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">メモ</label>
+            <label htmlFor="fixed-cost-memo" className="block text-xs font-medium text-gray-500 mb-1.5">メモ</label>
             <input
+              id="fixed-cost-memo"
               type="text"
               placeholder="備考など"
               value={memo}

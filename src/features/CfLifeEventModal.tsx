@@ -17,8 +17,8 @@ export function CfLifeEventModal({ lifeEventModal, lifeEvents, setLifeEventModal
   if (!lifeEventModal) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setLifeEventModal(null)}>
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="presentation" onClick={() => setLifeEventModal(null)}>
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden" role="presentation" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100">
           <h3 className="font-bold text-gray-800 text-base">
             {lifeEventModal.year}年 ライフイベント

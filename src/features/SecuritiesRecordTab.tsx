@@ -34,8 +34,9 @@ export function SecuritiesRecordTab({
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">記録する月</label>
+        <label htmlFor="securities-record-month" className="block text-xs font-medium text-gray-600 mb-1">記録する月</label>
         <input
+          id="securities-record-month"
           type="month"
           value={recordMonth}
           onChange={e => onMonthChange(e.target.value)}

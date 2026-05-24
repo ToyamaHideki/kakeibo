@@ -80,8 +80,11 @@ export function SortableCfRow({
             />
           ) : (
             <span
+              role="button"
+              tabIndex={0}
               className="flex-1 text-xs text-gray-700 truncate cursor-pointer hover:text-sage-600 transition-colors min-w-0"
               onClick={() => onStartEdit(nameKey, item.name)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onStartEdit(nameKey, item.name) }}
               title={item.name}
             >
               {item.name}
@@ -119,8 +122,11 @@ export function SortableCfRow({
           />
         ) : (
           <span
+            role="button"
+            tabIndex={0}
             className="text-xs text-gray-500 cursor-pointer hover:text-sage-600 transition-colors"
             onClick={() => onStartEdit(rateKey, String(item.rate))}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onStartEdit(rateKey, String(item.rate)) }}
           >
             {item.rate}%
           </span>

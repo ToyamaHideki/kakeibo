@@ -171,9 +171,10 @@ export default function HouseholdSettingsPage() {
 
           {/* ニックネーム */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">ニックネーム（任意）</label>
+            <label htmlFor="household-nickname" className="block text-xs font-medium text-gray-600 mb-1">ニックネーム（任意）</label>
             <div className="flex items-center gap-2">
               <input
+                id="household-nickname"
                 type="text"
                 value={nickname}
                 onChange={e => setNickname(e.target.value)}

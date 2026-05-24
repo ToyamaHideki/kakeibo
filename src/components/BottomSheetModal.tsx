@@ -58,11 +58,13 @@ export default function BottomSheetModal({
   return (
     <div
       className={`fixed inset-0 bg-black/50 ${zClass} flex items-end md:items-center justify-center`}
+      role="presentation"
       onClick={onClose}
     >
       <div
         ref={panelRef}
         className={`bg-white w-full md:max-w-md md:rounded-xl rounded-t-2xl shadow-xl flex flex-col ${maxHeightClass}`}
+        role="presentation"
         onClick={e => e.stopPropagation()}
       >
         {/* ヘッダー */}

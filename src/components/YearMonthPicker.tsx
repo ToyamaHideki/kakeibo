@@ -40,10 +40,12 @@ export default function YearMonthPicker({ yearMonth, isOpen, onClose, onChange }
   return (
     <div
       className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center"
+      role="presentation"
       onClick={onClose}
     >
       <div
         className="bg-white rounded-2xl shadow-xl p-5 w-72 mx-4"
+        role="presentation"
         onClick={e => e.stopPropagation()}
       >
         {/* 年選択 */}

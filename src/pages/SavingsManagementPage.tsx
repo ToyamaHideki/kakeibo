@@ -272,10 +272,12 @@ export default function SavingsManagementPage() {
       {modalOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center"
+          role="presentation"
           onClick={() => setModalOpen(false)}
         >
           <div
             className="bg-white w-full md:max-w-md md:rounded-xl rounded-t-2xl shadow-xl flex flex-col max-h-[92vh] md:max-h-[85vh]"
+            role="presentation"
             onClick={e => e.stopPropagation()}
           >
             {/* ヘッダー */}
@@ -298,8 +300,9 @@ export default function SavingsManagementPage() {
             <form onSubmit={handleSubmit} className="px-5 py-5 overflow-y-auto space-y-4">
               {/* 口座名 */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">口座名</label>
+                <label htmlFor="savings-account-name" className="block text-xs font-medium text-gray-500 mb-1.5">口座名</label>
                 <input
+                  id="savings-account-name"
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
@@ -311,8 +314,9 @@ export default function SavingsManagementPage() {
 
               {/* 名義人 */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">名義人（任意）</label>
+                <label htmlFor="savings-account-owner" className="block text-xs font-medium text-gray-500 mb-1.5">名義人（任意）</label>
                 <input
+                  id="savings-account-owner"
                   type="text"
                   value={owner}
                   onChange={e => setOwner(e.target.value)}
@@ -324,10 +328,11 @@ export default function SavingsManagementPage() {
 
               {/* 残高 */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">残高</label>
+                <label htmlFor="savings-account-amount" className="block text-xs font-medium text-gray-500 mb-1.5">残高</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">¥</span>
                   <input
+                    id="savings-account-amount"
                     type="number"
                     inputMode="numeric"
                     min="0"
@@ -342,8 +347,9 @@ export default function SavingsManagementPage() {
 
               {/* 更新日 */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">残高確認日</label>
+                <label htmlFor="savings-account-last-updated" className="block text-xs font-medium text-gray-500 mb-1.5">残高確認日</label>
                 <input
+                  id="savings-account-last-updated"
                   type="date"
                   value={lastUpdated}
                   onChange={e => setLastUpdated(e.target.value)}
@@ -354,6 +360,7 @@ export default function SavingsManagementPage() {
 
               {/* カラー */}
               <div>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- カラーピッカーボタングループのラベルはhtmlForで関連付け不可 */}
                 <label className="block text-xs font-medium text-gray-500 mb-2">カラー</label>
                 <div className="flex flex-wrap gap-2">
                   {PRESET_COLORS.map(c => (
@@ -370,8 +377,9 @@ export default function SavingsManagementPage() {
 
               {/* メモ */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">メモ（任意）</label>
+                <label htmlFor="savings-account-memo" className="block text-xs font-medium text-gray-500 mb-1.5">メモ（任意）</label>
                 <input
+                  id="savings-account-memo"
                   type="text"
                   value={memo}
                   onChange={e => setMemo(e.target.value)}

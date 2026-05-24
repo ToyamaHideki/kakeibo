@@ -14,7 +14,7 @@ interface Props {
 export default function FixedCostDayModal({ day, month, year, costs, onEdit, onDelete, onClose }: Props) {
   return (
     <div className="md:hidden fixed inset-0 z-50 flex items-end">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40" role="presentation" onClick={onClose} />
       <div className="relative w-full bg-white rounded-t-2xl shadow-xl">
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100">
           <h3 className="text-base font-bold text-gray-800">

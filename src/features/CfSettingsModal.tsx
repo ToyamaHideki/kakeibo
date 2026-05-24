@@ -68,10 +68,12 @@ export default function CfSettingsModal({ isOpen, onClose, plan, onSave }: Props
   return createPortal(
     <div
       className="fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center"
+      role="presentation"
       onClick={onClose}
     >
       <div
         className="bg-white w-full md:max-w-md md:rounded-xl rounded-t-2xl shadow-xl max-h-[90vh] flex flex-col"
+        role="presentation"
         onClick={e => e.stopPropagation()}
       >
         {/* Pull indicator (mobile) */}
@@ -114,8 +116,9 @@ export default function CfSettingsModal({ isOpen, onClose, plan, onSave }: Props
           {tab === 'basic' ? (
             <>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">計画開始年</label>
+                <label htmlFor="cf-start-year" className="block text-xs font-medium text-gray-500 mb-1.5">計画開始年</label>
                 <input
+                  id="cf-start-year"
                   type="number"
                   value={startYear}
                   onChange={e => setStartYear(Number(e.target.value))}
@@ -123,10 +126,11 @@ export default function CfSettingsModal({ isOpen, onClose, plan, onSave }: Props
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                <label htmlFor="cf-initial-savings" className="block text-xs font-medium text-gray-500 mb-1.5">
                   初期貯蓄残高（万円）
                 </label>
                 <input
+                  id="cf-initial-savings"
                   type="number"
                   value={initialSavings}
                   onChange={e => setInitialSavings(Number(e.target.value))}

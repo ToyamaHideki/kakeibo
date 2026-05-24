@@ -181,12 +181,13 @@ export default function TransactionModal({
 
               {/* 金額 */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">金額</label>
+                <label htmlFor="transaction-amount" className="block text-xs font-medium text-gray-500 mb-1.5">金額</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
                     ¥
                   </span>
                   <input
+                    id="transaction-amount"
                     type="number"
                     inputMode="numeric"
                     min="1"
@@ -201,8 +202,9 @@ export default function TransactionModal({
 
               {/* カテゴリ */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">カテゴリ</label>
+                <label htmlFor="transaction-category" className="block text-xs font-medium text-gray-500 mb-1.5">カテゴリ</label>
                 <select
+                  id="transaction-category"
                   value={categoryId}
                   onChange={e => setCategoryId(e.target.value)}
                   required
@@ -230,8 +232,9 @@ export default function TransactionModal({
 
               {/* 支払い方法 */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">支払い方法</label>
+                <label htmlFor="transaction-payment-method" className="block text-xs font-medium text-gray-500 mb-1.5">支払い方法</label>
                 <select
+                  id="transaction-payment-method"
                   value={paymentMethodId}
                   onChange={e => setPaymentMethodId(e.target.value)}
                   required
@@ -259,8 +262,9 @@ export default function TransactionModal({
 
               {/* 日付 */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">日付</label>
+                <label htmlFor="transaction-date" className="block text-xs font-medium text-gray-500 mb-1.5">日付</label>
                 <input
+                  id="transaction-date"
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
@@ -271,10 +275,11 @@ export default function TransactionModal({
 
               {/* メモ */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                <label htmlFor="transaction-memo" className="block text-xs font-medium text-gray-500 mb-1.5">
                   メモ（任意）
                 </label>
                 <input
+                  id="transaction-memo"
                   type="text"
                   value={memo}
                   onChange={e => setMemo(e.target.value)}

@@ -89,10 +89,12 @@ export default function CategoryAddModal({
     {createPortal(
     <div
       className="fixed inset-0 bg-black/60 z-[60] flex items-end md:items-center justify-center"
+      role="presentation"
       onClick={handleClose}
     >
       <div
         className="bg-white w-full md:max-w-sm md:rounded-xl rounded-t-2xl shadow-xl flex flex-col max-h-[85svh]"
+        role="presentation"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex justify-center pt-3 pb-1 md:hidden shrink-0">
@@ -137,8 +139,9 @@ export default function CategoryAddModal({
           <p className="text-xs font-medium text-gray-500 mb-3">新しいカテゴリを追加</p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">カテゴリ名</label>
+              <label htmlFor="category-name" className="block text-xs font-medium text-gray-500 mb-1.5">カテゴリ名</label>
               <input
+                id="category-name"
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
@@ -151,6 +154,7 @@ export default function CategoryAddModal({
 
             {type === 'expense' && (
               <div>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- ボタングループのラベルはhtmlForで関連付け不可 */}
                 <label className="block text-xs font-medium text-gray-500 mb-1.5">費目種別</label>
                 <div className="flex rounded-lg overflow-hidden border border-gray-200">
                   <button
@@ -176,6 +180,7 @@ export default function CategoryAddModal({
             )}
 
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- カラーピッカーボタングループのラベルはhtmlForで関連付け不可 */}
               <label className="block text-xs font-medium text-gray-500 mb-2">カラー</label>
               <div className="grid grid-cols-7 gap-2 mb-3">
                 {PRESET_COLORS.map(c => (

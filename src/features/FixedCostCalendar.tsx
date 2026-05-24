@@ -48,7 +48,10 @@ export default function FixedCostCalendar({ viewYear, viewMonth, costsByDay, tod
           return (
             <div
               key={idx}
+              role={isValid && hasCosts ? 'button' : undefined}
+              tabIndex={isValid && hasCosts ? 0 : undefined}
               onClick={() => { if (isValid && hasCosts) onDayClick(day) }}
+              onKeyDown={isValid && hasCosts ? (e) => { if (e.key === 'Enter' || e.key === ' ') onDayClick(day) } : undefined}
               className={`h-[50px] md:h-auto md:min-h-[90px] p-1 border-t border-r border-gray-100 last:border-r-0 ${
                 !isValid ? 'bg-gray-50' : ''
               } ${isValid && hasCosts ? 'cursor-pointer active:bg-sage-50/60 md:cursor-default md:active:bg-transparent' : ''}`}

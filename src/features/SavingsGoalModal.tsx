@@ -100,8 +100,8 @@ export default function SavingsGoalModal({ isOpen, goal, onSave, onDelete, onLog
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90svh] flex flex-col shadow-xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" role="presentation" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90svh] flex flex-col shadow-xl" role="presentation" onClick={e => e.stopPropagation()}>
         {/* ヘッダー */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 shrink-0">
           <h3 className="text-base font-bold text-gray-800">{goal ? '目標を編集' : '目標を追加'}</h3>
@@ -132,8 +132,9 @@ export default function SavingsGoalModal({ isOpen, goal, onSave, onDelete, onLog
           <div className="overflow-y-auto px-5 py-4 space-y-4">
             {/* 名前 */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">目標名 <span className="text-red-400">*</span></label>
+              <label htmlFor="savings-goal-name" className="block text-xs font-medium text-gray-600 mb-1">目標名 <span className="text-red-400">*</span></label>
               <input
+                id="savings-goal-name"
                 type="text"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -145,10 +146,11 @@ export default function SavingsGoalModal({ isOpen, goal, onSave, onDelete, onLog
 
             {/* 目標金額 */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">目標金額 <span className="text-red-400">*</span></label>
+              <label htmlFor="savings-goal-target-amount" className="block text-xs font-medium text-gray-600 mb-1">目標金額 <span className="text-red-400">*</span></label>
               <div className="flex items-center gap-1">
                 <span className="text-sm text-gray-500">¥</span>
                 <input
+                  id="savings-goal-target-amount"
                   type="number"
                   min="0"
                   inputMode="numeric"
@@ -163,10 +165,11 @@ export default function SavingsGoalModal({ isOpen, goal, onSave, onDelete, onLog
 
             {/* 現在の残高 */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">現在の残高</label>
+              <label htmlFor="savings-goal-current-amount" className="block text-xs font-medium text-gray-600 mb-1">現在の残高</label>
               <div className="flex items-center gap-1">
                 <span className="text-sm text-gray-500">¥</span>
                 <input
+                  id="savings-goal-current-amount"
                   type="number"
                   min="0"
                   inputMode="numeric"
@@ -180,8 +183,9 @@ export default function SavingsGoalModal({ isOpen, goal, onSave, onDelete, onLog
 
             {/* 目標年 */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">目標達成年（任意）</label>
+              <label htmlFor="savings-goal-target-year" className="block text-xs font-medium text-gray-600 mb-1">目標達成年（任意）</label>
               <input
+                id="savings-goal-target-year"
                 type="number"
                 min={new Date().getFullYear()}
                 max="2100"
@@ -211,6 +215,7 @@ export default function SavingsGoalModal({ isOpen, goal, onSave, onDelete, onLog
 
             {/* カラー */}
             <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- カラーピッカーボタングループのラベルはhtmlForで関連付け不可 */}
               <label className="block text-xs font-medium text-gray-600 mb-2">カラー</label>
               <div className="flex gap-2 flex-wrap">
                 {GOAL_COLORS.map(c => (
@@ -227,8 +232,9 @@ export default function SavingsGoalModal({ isOpen, goal, onSave, onDelete, onLog
 
             {/* メモ */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">メモ（任意）</label>
+              <label htmlFor="savings-goal-memo" className="block text-xs font-medium text-gray-600 mb-1">メモ（任意）</label>
               <textarea
+                id="savings-goal-memo"
                 value={form.memo}
                 onChange={e => setForm(f => ({ ...f, memo: e.target.value }))}
                 rows={2}

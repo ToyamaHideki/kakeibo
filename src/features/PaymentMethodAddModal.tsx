@@ -63,10 +63,12 @@ export default function PaymentMethodAddModal({
     {createPortal(
     <div
       className="fixed inset-0 bg-black/60 z-[70] flex items-end md:items-center justify-center"
+      role="presentation"
       onClick={handleClose}
     >
       <div
         className="bg-white w-full md:max-w-sm md:rounded-xl rounded-t-2xl shadow-xl flex flex-col max-h-[85svh]"
+        role="presentation"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex justify-center pt-3 pb-1 md:hidden shrink-0">
@@ -106,8 +108,9 @@ export default function PaymentMethodAddModal({
           <p className="text-xs font-medium text-gray-500 mb-3">新しい支払い方法を追加</p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">支払い方法名</label>
+              <label htmlFor="payment-method-name" className="block text-xs font-medium text-gray-500 mb-1.5">支払い方法名</label>
               <input
+                id="payment-method-name"
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
