@@ -90,7 +90,7 @@ describe('FixedCostModal', () => {
     await userEvent.click(screen.getByRole('button', { name: '保存する' }))
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
-    expect(onSave.mock.calls[0][0]).toMatchObject({ name: '家賃', frequency: 'monthly' })
+    expect(onSave.mock.calls[0]![0]).toMatchObject({ name: '家賃', frequency: 'monthly' })
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
   })
 

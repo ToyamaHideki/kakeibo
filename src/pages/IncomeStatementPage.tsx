@@ -97,7 +97,7 @@ export default function IncomeStatementPage() {
                         />
                         <button
                           onClick={async () => {
-                            const val = parseFloat(editingIncome[cat.id])
+                            const val = parseFloat(editingIncome[cat.id] ?? '')
                             await setIncomeOverride(cat.id, isNaN(val) ? null : val)
                             setEditingIncome(p => { const n = { ...p }; delete n[cat.id]; return n })
                           }}
@@ -171,7 +171,7 @@ export default function IncomeStatementPage() {
                         />
                         <button
                           onClick={async () => {
-                            await updateDeduction(ded.id, { amount: parseFloat(editingDeduction[ded.id]) || 0 })
+                            await updateDeduction(ded.id, { amount: parseFloat(editingDeduction[ded.id] ?? '') || 0 })
                             setEditingDeduction(p => { const n = { ...p }; delete n[ded.id]; return n })
                           }}
                           className="text-xs px-2 py-1 bg-blue-500 text-white rounded"
@@ -307,7 +307,7 @@ export default function IncomeStatementPage() {
                         />
                         <button
                           onClick={async () => {
-                            const val = parseFloat(editingExpense[cat.id])
+                            const val = parseFloat(editingExpense[cat.id] ?? '')
                             await setExpenseOverride(cat.id, isNaN(val) ? null : val)
                             setEditingExpense(p => { const n = { ...p }; delete n[cat.id]; return n })
                           }}

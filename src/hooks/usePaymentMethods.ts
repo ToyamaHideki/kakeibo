@@ -17,7 +17,7 @@ async function initPaymentMethods(householdId: string): Promise<PaymentMethod[]>
     return existing.sort((a, b) => a.order - b.order)
   }
   const ids = await Promise.all(DEFAULT_PAYMENT_METHODS.map(pm => addPaymentMethod(householdId, pm)))
-  return DEFAULT_PAYMENT_METHODS.map((pm, i) => ({ ...pm, id: ids[i] }))
+  return DEFAULT_PAYMENT_METHODS.map((pm, i) => ({ ...pm, id: ids[i]! }))
 }
 
 export function usePaymentMethods() {

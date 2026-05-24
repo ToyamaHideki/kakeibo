@@ -75,13 +75,19 @@
 
 ### Phase D：長期対応（時間がある時）
 
-- [~] **D-1【低】tsconfig の strict オプション追加** → §9.1
+- [x] **D-1【低】tsconfig の strict オプション追加** → §9.1
   - `noImplicitReturns` / `exactOptionalPropertyTypes` 適用済み（2026-05-20 commit 616499c）
-  - `noUncheckedIndexedAccess`: 2026-05-24 に commit 1aa5fbf で追加したが、**本番ビルド（`tsc -b`）で96エラー発生のため同日 revert**（ルート `tsconfig.json` は references のみで `tsc --noEmit` 引数なしではチェックが走らず、誤って「エラー0件」と判定したのが原因）
-  - 型定義修正: `types/index.ts`・`householdFirestore.ts`（optional prop に `| undefined` 追加）
-  - Props 修正: `TransactionModal`・`CategoryAddModal`・`PaymentMethodAddModal`
-  - 残対応: `noUncheckedIndexedAccess` を再導入するには `utils/date.ts`・`firebase/householdFirestore.ts` 等30ファイル96件の型ガード追加が必要。別タスクで段階適用予定
-  - 検証コマンド注意: 必ず `npx tsc -b` か `npx tsc --noEmit -p tsconfig.app.json` で確認すること（`tsc --noEmit` 単体ではチェックが走らない）
+  - `noUncheckedIndexedAccess`: 一度 commit 1aa5fbf で追加 → 本番ビルド96エラーで commit afdbc76 で revert → 27ファイル96件の型ガード追加で再導入完了（2026-05-24）
+  - 主な対応パターン:
+    - `utils/date.ts`: `parseYearMonth` ヘルパー新設（`"yyyy-MM"` 分解の重複解消）
+    - `Object.keys(map).sort().pop()` 等の存在保証ロケーション: `!` で表現＋コメント
+    - `snapshot.empty` チェック後の `snapshot.docs[0]`: `!`
+    - `toISOString().split('T')[0]` → `toISOString().slice(0, 10)` に置換（より型安全）
+    - 削除後の最後要素参照: `?? 0` フォールバック
+    - `ResizeObserver` callback の `entries[0]` / `borderBoxSize[0]`: null guard 追加（ランタイム安全性も向上）
+    - テストファイル: 前提済み要素アクセスに `!`
+  - 検証コマンド注意: 必ず `npx tsc -b` か `npx tsc --noEmit -p tsconfig.app.json` で確認すること（`tsc --noEmit` 単体ではルート `tsconfig.json` が `files:[]` のためチェックが走らない）
+  - 結果: tsc -b エラー0件 / lint 0件 / テスト 129 passing / 本番ビルド成功
 - [x] **D-2【低】ESLint 強化** → §9.2
   - `eslint-plugin-jsx-a11y` / `eslint-plugin-import` / `no-explicit-any: 'error'` 導入済み（2026-05-20）
   - `eslint.config.js` に3プラグイン追加、既存の any 8箇所を型安全に置換
@@ -367,7 +373,7 @@ export function formatYen(amount: number): string {
 - ✅ ESLint 強化（jsx-a11y / import / no-explicit-any）（D-2）
 - ✅ AppCheck 初期化を try/catch で保護（D-3）
 - ✅ `formatYen` / `currentYearMonth` を utils/ に集約（D-4）
-- ✅ tsconfig `noImplicitReturns` / `exactOptionalPropertyTypes` 追加（D-1 一部完了。`noUncheckedIndexedAccess` は別タスク）
+- ✅ tsconfig `noImplicitReturns` / `exactOptionalPropertyTypes` / `noUncheckedIndexedAccess` 追加（D-1 完了。27ファイル96件の型ガード追加で再導入）
 - ✅ ConfirmDialog z-index バグ修正（z-50 → z-[200]）（E-1）
 - ✅ 収支カード金額の2行化バグ修正（文字数連動フォントサイズ）（E-2）
 - ✅ 7画面にドラッグ＆ドロップ並び替え追加（E-3）

@@ -2,14 +2,17 @@ import type { CfItem } from '../types'
 
 export function getCfValue(item: CfItem, year: number): number {
   const yearStr = String(year)
-  if (item.values[yearStr] !== undefined) return item.values[yearStr]
+  const directVal = item.values[yearStr]
+  if (directVal !== undefined) return directVal
   const explicitYears = Object.keys(item.values)
     .map(Number)
     .filter(y => y < year)
     .sort((a, b) => a - b)
   if (explicitYears.length === 0) return 0
-  const baseYear = explicitYears[explicitYears.length - 1]
+  // filter で要素を絞り込んでいるため最後の要素は必ず存在する
+  const baseYear = explicitYears[explicitYears.length - 1]!
   const baseVal = item.values[String(baseYear)]
+  if (baseVal === undefined) return 0
   const elapsed = year - baseYear
   return Math.round(baseVal * Math.pow(1 + item.rate / 100, elapsed))
 }

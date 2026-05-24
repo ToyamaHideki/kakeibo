@@ -78,7 +78,7 @@ export default function TransactionModal({
       setMemo('')
       const now = new Date()
       const todayYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-      setDate(todayYM === yearMonth ? now.toISOString().split('T')[0] : `${yearMonth}-01`)
+      setDate(todayYM === yearMonth ? now.toISOString().slice(0, 10) : `${yearMonth}-01`)
     }
   }, [isOpen, editTarget, yearMonth])
 

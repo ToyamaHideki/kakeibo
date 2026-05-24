@@ -72,8 +72,8 @@ describe('BudgetPage', () => {
     render(<BudgetPage />)
 
     const inputs = screen.getAllByRole('spinbutton')
-    await userEvent.type(inputs[0], '20000')
-    fireEvent.blur(inputs[0])
+    await userEvent.type(inputs[0]!, '20000')
+    fireEvent.blur(inputs[0]!)
 
     await waitFor(() => expect(saveBudgetAmount).toHaveBeenCalledWith('c1', 20000))
   })
@@ -81,7 +81,7 @@ describe('BudgetPage', () => {
   it('前月ボタンクリックで前月にナビゲートする', async () => {
     render(<BudgetPage />)
     // 前月方向の矢印ボタン（最初のボタン）
-    const prevButton = screen.getAllByRole('button')[0]
+    const prevButton = screen.getAllByRole('button')[0]!
     await userEvent.click(prevButton)
     expect(mockNavigate).toHaveBeenCalledWith('/budget/2025-02')
   })
@@ -89,7 +89,7 @@ describe('BudgetPage', () => {
   it('次月ボタンクリックで次月にナビゲートする', async () => {
     render(<BudgetPage />)
     const buttons = screen.getAllByRole('button')
-    const nextButton = buttons[1]
+    const nextButton = buttons[1]!
     await userEvent.click(nextButton)
     expect(mockNavigate).toHaveBeenCalledWith('/budget/2025-04')
   })

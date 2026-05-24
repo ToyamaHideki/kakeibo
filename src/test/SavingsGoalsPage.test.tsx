@@ -59,7 +59,7 @@ describe('SavingsGoalsPage', () => {
     render(<SavingsGoalsPage />)
     // FABは固定位置のボタン（aria-label なし・SVGのみ）
     const buttons = screen.getAllByRole('button')
-    const fab = buttons[buttons.length - 1]  // ページ内の最後のボタンがFAB
+    const fab = buttons[buttons.length - 1]!  // ページ内の最後のボタンがFAB
     await userEvent.click(fab)
     expect(screen.getByText('目標を追加')).toBeInTheDocument()
   })
@@ -71,25 +71,25 @@ describe('SavingsGoalsPage', () => {
 
     // FAB クリック
     const buttons = screen.getAllByRole('button')
-    await userEvent.click(buttons[buttons.length - 1])
+    await userEvent.click(buttons[buttons.length - 1]!)
 
     // フォーム入力
     const nameInput = screen.getByPlaceholderText('例：マイホーム頭金')
     await userEvent.type(nameInput, '車の購入')
     const amountInputs = screen.getAllByRole('spinbutton')
-    await userEvent.type(amountInputs[0], '1000000')
+    await userEvent.type(amountInputs[0]!, '1000000')
 
     // 保存
     await userEvent.click(screen.getByRole('button', { name: '追加する' }))
 
     await waitFor(() => expect(addGoal).toHaveBeenCalledOnce())
-    expect(addGoal.mock.calls[0][0]).toMatchObject({ name: '車の購入', targetAmount: 1000000 })
+    expect(addGoal.mock.calls[0]![0]).toMatchObject({ name: '車の購入', targetAmount: 1000000 })
   })
 
   it('目標名が空のとき保存ボタンは disabled', async () => {
     render(<SavingsGoalsPage />)
     const buttons = screen.getAllByRole('button')
-    await userEvent.click(buttons[buttons.length - 1])
+    await userEvent.click(buttons[buttons.length - 1]!)
     expect(screen.getByRole('button', { name: '追加する' })).toBeDisabled()
   })
 

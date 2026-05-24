@@ -5,8 +5,8 @@ export function SecuritiesAccountCard({ account, onEdit }: { account: Securities
   const months = Object.keys(account.monthlyValues).sort()
   const latestYm = months[months.length - 1]
   const prevYm = months[months.length - 2]
-  const latest = latestYm ? account.monthlyValues[latestYm] : account.currentValue
-  const prev = prevYm ? account.monthlyValues[prevYm] : null
+  const latest = latestYm ? (account.monthlyValues[latestYm] ?? account.currentValue) : account.currentValue
+  const prev = prevYm ? (account.monthlyValues[prevYm] ?? null) : null
   const diff = prev !== null ? latest - prev : null
   const diffPct = prev && prev > 0 ? (diff! / prev) * 100 : null
   const typeLabel = account.accountType

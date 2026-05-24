@@ -107,7 +107,8 @@ export default function SecuritiesAccountsPage() {
       if (!prev) return null
       const monthlyValues = { ...prev.monthlyValues, [recordMonth]: value }
       const latestYm = Object.keys(monthlyValues).sort().pop()!
-      return { ...prev, monthlyValues, currentValue: monthlyValues[latestYm] }
+      // [recordMonth]: value を追加したので必ず値が存在する
+      return { ...prev, monthlyValues, currentValue: monthlyValues[latestYm]! }
     })
     setRecordInput('')
   }
@@ -121,7 +122,7 @@ export default function SecuritiesAccountsPage() {
       const monthlyValues = { ...prev.monthlyValues }
       delete monthlyValues[ym]
       const latestYm = Object.keys(monthlyValues).sort().pop()
-      const currentValue = latestYm ? monthlyValues[latestYm] : 0
+      const currentValue = latestYm ? (monthlyValues[latestYm] ?? 0) : 0
       return { ...prev, monthlyValues, currentValue }
     })
   }

@@ -123,7 +123,7 @@ export const GUEST_SAVINGS_ACCOUNTS: SavingsAccount[] = [
     memo: 'メインバンク',
     order: 1,
     currentAmount: 1850000,
-    lastUpdated: (() => { const d = new Date(); return d.toISOString().split('T')[0] })(),
+    lastUpdated: new Date().toISOString().slice(0, 10),
   },
   {
     id: 'sa-2',
@@ -133,7 +133,7 @@ export const GUEST_SAVINGS_ACCOUNTS: SavingsAccount[] = [
     memo: '1年定期',
     order: 2,
     currentAmount: 500000,
-    lastUpdated: (() => { const d = new Date(); return d.toISOString().split('T')[0] })(),
+    lastUpdated: new Date().toISOString().slice(0, 10),
   },
 ]
 
@@ -232,7 +232,7 @@ export const GUEST_SHOPPING_ITEMS: ShoppingItem[] = [
 function daysFromToday(days: number): string {
   const d = new Date()
   d.setDate(d.getDate() + days)
-  return d.toISOString().split('T')[0]
+  return d.toISOString().slice(0, 10)
 }
 
 export const GUEST_HOUSEHOLD_TASKS: HouseholdTask[] = [
@@ -411,7 +411,9 @@ function tx(
 
 function buildMonthlyData(monthOffset: number): MonthDocument {
   const yearMonth = ym(monthOffset)
-  const [y, m] = yearMonth.split('-').map(Number)
+  const parts = yearMonth.split('-')
+  const y = Number(parts[0])
+  const m = Number(parts[1])
 
   const base: Transaction[] = [
     tx(1,  monthOffset, 25, 'income',  300000, 'cat-salary',    'pm-bank',   `${m}月分給与`),
@@ -472,7 +474,9 @@ function personalTx(
 
 function buildPersonalMonthlyData(monthOffset: number): MonthDocument {
   const yearMonth = ym(monthOffset)
-  const [y, m] = yearMonth.split('-').map(Number)
+  const parts = yearMonth.split('-')
+  const y = Number(parts[0])
+  const m = Number(parts[1])
   const transactions: Transaction[] = [
     personalTx(1, monthOffset, 25, 'income',  250000, 'pcat-salary', 'ppm-credit', '給与（手取り）'),
     personalTx(2, monthOffset,  4, 'expense',   850,  'pcat-lunch',  'ppm-qr',    '弁当'),

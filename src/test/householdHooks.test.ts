@@ -51,8 +51,8 @@ describe('useSavingsAccounts', () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    expect(result.current.accounts[0].id).toBe('a1')
-    expect(result.current.accounts[1].id).toBe('a2')
+    expect(result.current.accounts[0]!.id).toBe('a1')
+    expect(result.current.accounts[1]!.id).toBe('a2')
   })
 
   it('householdId が null の場合、フェッチしない', async () => {
@@ -77,7 +77,7 @@ describe('useSavingsAccounts', () => {
 
     expect(savingsAccountApi.addSavingsAccount).toHaveBeenCalledWith('hh-test', newAccount)
     expect(result.current.accounts).toHaveLength(1)
-    expect(result.current.accounts[0].id).toBe('new-id')
+    expect(result.current.accounts[0]!.id).toBe('new-id')
   })
 
   it('updateAccount: Firestore を更新しローカル状態に反映する', async () => {
@@ -93,7 +93,7 @@ describe('useSavingsAccounts', () => {
     await act(async () => { await result.current.updateAccount('a1', { currentAmount: 150000 }) })
 
     expect(savingsAccountApi.updateSavingsAccount).toHaveBeenCalledWith('hh-test', 'a1', { currentAmount: 150000 })
-    expect(result.current.accounts[0].currentAmount).toBe(150000)
+    expect(result.current.accounts[0]!.currentAmount).toBe(150000)
   })
 
   it('deleteAccount: Firestore から削除しローカル状態から除外する', async () => {
@@ -132,7 +132,7 @@ describe('useSavingsGoals', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     expect(result.current.goals).toHaveLength(1)
-    expect(result.current.goals[0].name).toBe('旅行')
+    expect(result.current.goals[0]!.name).toBe('旅行')
   })
 
   it('logContribution: 積立額と currentAmount を更新する', async () => {
@@ -149,7 +149,7 @@ describe('useSavingsGoals', () => {
       contributions: { '2025-01': 10000, '2025-02': 5000 },
       currentAmount: 15000,
     })
-    expect(result.current.goals[0].currentAmount).toBe(15000)
+    expect(result.current.goals[0]!.currentAmount).toBe(15000)
   })
 
   it('logContribution: amount <= 0 の場合は何もしない', async () => {
@@ -196,7 +196,7 @@ describe('useSecuritiesAccounts', () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    expect(result.current.accounts[0].name).toBe('NISA')
+    expect(result.current.accounts[0]!.name).toBe('NISA')
   })
 
   it('recordMonthlyValue: monthlyValues を追加し最新月の値を currentValue にする', async () => {
@@ -213,7 +213,7 @@ describe('useSecuritiesAccounts', () => {
       monthlyValues: { '2025-01': 500000, '2025-02': 600000, '2025-03': 700000 },
       currentValue: 700000,
     })
-    expect(result.current.accounts[0].currentValue).toBe(700000)
+    expect(result.current.accounts[0]!.currentValue).toBe(700000)
   })
 
   it('recordMonthlyValue: value < 0 の場合は何もしない', async () => {
@@ -280,7 +280,7 @@ describe('useContracts', () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    expect(result.current.contracts[0].name).toBe('Netflix')
+    expect(result.current.contracts[0]!.name).toBe('Netflix')
   })
 
   it('addContract: 追加してローカル状態を更新する', async () => {
@@ -295,7 +295,7 @@ describe('useContracts', () => {
     await act(async () => { await result.current.addContract(data) })
 
     expect(result.current.contracts).toHaveLength(1)
-    expect(result.current.contracts[0].id).toBe('c-new')
+    expect(result.current.contracts[0]!.id).toBe('c-new')
   })
 
   it('updateContract: 更新してローカル状態に反映する', async () => {
@@ -309,7 +309,7 @@ describe('useContracts', () => {
     await act(async () => { await result.current.updateContract('c1', { amount: 1980 }) })
 
     expect(contractApi.updateContract).toHaveBeenCalledWith('hh-test', 'c1', { amount: 1980 })
-    expect(result.current.contracts[0].amount).toBe(1980)
+    expect(result.current.contracts[0]!.amount).toBe(1980)
   })
 
   it('deleteContract: 削除してローカル状態から除外する', async () => {

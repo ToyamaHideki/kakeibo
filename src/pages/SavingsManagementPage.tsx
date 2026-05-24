@@ -18,13 +18,13 @@ const PRESET_COLORS = [
 ]
 
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0]
+  return new Date().toISOString().slice(0, 10)
 }
 
 function formatLastUpdated(dateStr: string): string {
   const parts = dateStr.split('-')
   if (parts.length < 3) return dateStr
-  return `${parseInt(parts[1])}月${parseInt(parts[2])}日更新`
+  return `${parseInt(parts[1]!)}月${parseInt(parts[2]!)}日更新`
 }
 
 export default function SavingsManagementPage() {
@@ -40,7 +40,7 @@ export default function SavingsManagementPage() {
   const [owner, setOwner] = useState('')
   const [amount, setAmount] = useState('')
   const [lastUpdated, setLastUpdated] = useState(todayStr())
-  const [color, setColor] = useState(PRESET_COLORS[0])
+  const [color, setColor] = useState(PRESET_COLORS[0]!)
   const [memo, setMemo] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -61,7 +61,7 @@ export default function SavingsManagementPage() {
     setOwner('')
     setAmount('')
     setLastUpdated(todayStr())
-    setColor(PRESET_COLORS[0])
+    setColor(PRESET_COLORS[0]!)
     setMemo('')
     setModalOpen(true)
   }

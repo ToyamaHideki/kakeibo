@@ -36,7 +36,9 @@ export function guestGetMonthData(yearMonth: string): MonthDocument | null {
 
 export function guestSaveTransaction(yearMonth: string, tx: Transaction): void {
   const g = s()
-  const [year, month] = yearMonth.split('-').map(Number)
+  const parts = yearMonth.split('-')
+  const year = Number(parts[0])
+  const month = Number(parts[1])
   const existing = g.monthlyData[yearMonth] ?? { year, month, transactions: [] }
   g.monthlyData[yearMonth] = { ...existing, transactions: [...existing.transactions, tx] }
 }

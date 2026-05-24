@@ -95,8 +95,8 @@ describe('savingsFirestore', () => {
     const result = await fetchSavingsGoals(HID)
 
     expect(mockCollection).toHaveBeenCalledWith({}, 'households', HID, 'savingsGoals')
-    expect(result[0].id).toBe('g1')
-    expect(result[0].name).toBe('旅行')
+    expect(result[0]!.id).toBe('g1')
+    expect(result[0]!.name).toBe('旅行')
   })
 
   it('addSavingsGoal: addDoc を呼び新しい ID を返す', async () => {
@@ -145,7 +145,7 @@ describe('securitiesFirestore', () => {
     const result = await fetchSecuritiesAccounts(HID)
 
     expect(mockCollection).toHaveBeenCalledWith({}, 'households', HID, 'securitiesAccounts')
-    expect(result[0].id).toBe('s1')
+    expect(result[0]!.id).toBe('s1')
   })
 
   it('addSecuritiesAccount: addDoc を呼ぶ', async () => {
@@ -194,7 +194,7 @@ describe('contractFirestore', () => {
     const result = await fetchContracts(HID)
 
     expect(mockCollection).toHaveBeenCalledWith({}, 'households', HID, 'contracts')
-    expect(result[0].name).toBe('Netflix')
+    expect(result[0]!.name).toBe('Netflix')
   })
 
   it('addContract: addDoc を呼ぶ', async () => {

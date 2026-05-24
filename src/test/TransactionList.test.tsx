@@ -60,8 +60,8 @@ describe('TransactionList', () => {
     )
     // 3/25 が先に表示され、3/15 が後に表示される
     const dateLabels = screen.getAllByText(/月\d+日/)
-    expect(dateLabels[0].textContent).toContain('3月25日')
-    expect(dateLabels[1].textContent).toContain('3月15日')
+    expect(dateLabels[0]!.textContent).toContain('3月25日')
+    expect(dateLabels[1]!.textContent).toContain('3月15日')
   })
 
   it('カテゴリ名と金額を表示する', () => {
@@ -105,7 +105,7 @@ describe('TransactionList', () => {
       />
     )
     const editButtons = screen.getAllByRole('button', { name: '編集' })
-    await userEvent.click(editButtons[0])
+    await userEvent.click(editButtons[0]!)
     expect(onEdit).toHaveBeenCalledOnce()
   })
 
@@ -119,7 +119,7 @@ describe('TransactionList', () => {
         onDeleted={noop}
       />
     )
-    await userEvent.click(screen.getAllByRole('button', { name: '削除' })[0])
+    await userEvent.click(screen.getAllByRole('button', { name: '削除' })[0]!)
     await userEvent.click(screen.getByRole('button', { name: 'キャンセル' }))
     expect(deleteTransaction).not.toHaveBeenCalled()
   })
@@ -135,7 +135,7 @@ describe('TransactionList', () => {
         onDeleted={onDeleted}
       />
     )
-    await userEvent.click(screen.getAllByRole('button', { name: '削除' })[0])
+    await userEvent.click(screen.getAllByRole('button', { name: '削除' })[0]!)
     await userEvent.click(screen.getByRole('button', { name: '削除する' }))
     await waitFor(() => expect(onDeleted).toHaveBeenCalledOnce())
   })
@@ -144,7 +144,7 @@ describe('TransactionList', () => {
     const onDelete = vi.fn().mockResolvedValue(undefined)
     render(
       <TransactionList
-        transactions={[TRANSACTIONS[0]]}
+        transactions={[TRANSACTIONS[0]!]}
         categories={CATEGORIES}
         paymentMethods={PAYMENT_METHODS}
         onEdit={noop}

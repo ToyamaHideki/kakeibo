@@ -110,18 +110,18 @@ export default function CashflowPage() {
 
     if (kind === 'v') {
       const type = parts[1] as 'income' | 'expense'
-      const id = parts[2]
+      const id = parts[2]!
       const year = Number(parts[3])
       const amount = Number(editValue) || 0
       await updateItemValue(type, id, year, amount)
     } else if (kind === 'n') {
       const type = parts[1] as 'income' | 'expense'
-      const id = parts[2]
+      const id = parts[2]!
       const trimmed = editValue.trim()
       if (trimmed) await updateItemName(type, id, trimmed)
     } else if (kind === 'r') {
       const type = parts[1] as 'income' | 'expense'
-      const id = parts[2]
+      const id = parts[2]!
       const rate = parseFloat(editValue) || 0
       await updateItemRate(type, id, rate)
     } else if (kind === 'le') {

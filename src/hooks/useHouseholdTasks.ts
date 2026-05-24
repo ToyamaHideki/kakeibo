@@ -13,7 +13,10 @@ export type TaskFilter = 'active' | 'done'
 
 function calcNextDueDate(task: HouseholdTask): string | undefined {
   if (!task.dueDate || !task.recurrenceType) return undefined
-  const [y, m, d] = task.dueDate.split('-').map(Number)
+  const parts = task.dueDate.split('-').map(Number)
+  const y = parts[0]!
+  const m = parts[1]!
+  const d = parts[2]!
   const date = new Date(y, m - 1, d)
   if (task.recurrenceType === 'daily') date.setDate(date.getDate() + 1)
   else if (task.recurrenceType === 'weekly') date.setDate(date.getDate() + 7)
@@ -38,7 +41,7 @@ export function useHouseholdTasks() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<TaskFilter>('active')
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toISOString().slice(0, 10)
 
   useEffect(() => {
     if (!householdId) return

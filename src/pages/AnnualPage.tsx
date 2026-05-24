@@ -85,10 +85,11 @@ export default function AnnualPage() {
   const incomeTotals = months.map(m => getSectionMonthTotal(m, incomeCategories))
   const fixedTotals = months.map(m => getSectionMonthTotal(m, fixedCategories))
   const variableTotals = months.map(m => getSectionMonthTotal(m, variableCategories))
-  const expenseTotals = months.map((_, i) => fixedTotals[i] + variableTotals[i])
-  const disposables = months.map((_, i) => incomeTotals[i] - fixedTotals[i])
-  const remainings = months.map((_, i) => disposables[i] - variableTotals[i])
-  const balances = months.map((_, i) => incomeTotals[i] - expenseTotals[i])
+  // months と同じ長さで map しているため、同一 index の要素は必ず存在する
+  const expenseTotals = months.map((_, i) => fixedTotals[i]! + variableTotals[i]!)
+  const disposables = months.map((_, i) => incomeTotals[i]! - fixedTotals[i]!)
+  const remainings = months.map((_, i) => disposables[i]! - variableTotals[i]!)
+  const balances = months.map((_, i) => incomeTotals[i]! - expenseTotals[i]!)
 
   const annualIncome = getSectionAnnualTotal(incomeCategories)
   const annualFixed = getSectionAnnualTotal(fixedCategories)

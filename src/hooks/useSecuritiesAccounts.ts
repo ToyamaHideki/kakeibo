@@ -28,7 +28,8 @@ export function useSecuritiesAccounts() {
     if (!acc || value < 0) return
     const monthlyValues = { ...acc.monthlyValues, [yearMonth]: value }
     const latestYm = Object.keys(monthlyValues).sort().pop()!
-    const currentValue = monthlyValues[latestYm]
+    // monthlyValues に [yearMonth]: value を追加しているので必ず値が存在する
+    const currentValue = monthlyValues[latestYm]!
     await updateSecuritiesAccount(householdId, id, { monthlyValues, currentValue })
     setAccounts(prev => prev.map(a => a.id === id ? { ...a, monthlyValues, currentValue } : a))
   }
@@ -40,7 +41,7 @@ export function useSecuritiesAccounts() {
     const monthlyValues = { ...acc.monthlyValues }
     delete monthlyValues[yearMonth]
     const latestYm = Object.keys(monthlyValues).sort().pop()
-    const currentValue = latestYm ? monthlyValues[latestYm] : 0
+    const currentValue = latestYm ? (monthlyValues[latestYm] ?? 0) : 0
     await updateSecuritiesAccount(householdId, id, { monthlyValues, currentValue })
     setAccounts(prev => prev.map(a => a.id === id ? { ...a, monthlyValues, currentValue } : a))
   }

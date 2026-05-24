@@ -16,7 +16,10 @@ interface Props {
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
 
 function formatDateLabel(dateStr: string): string {
-  const [year, month, day] = dateStr.split('-').map(Number)
+  const parts = dateStr.split('-').map(Number)
+  const year = parts[0]!
+  const month = parts[1]!
+  const day = parts[2]!
   const date = new Date(year, month - 1, day)
   return `${month}月${day}日（${WEEKDAYS[date.getDay()]}）`
 }
@@ -37,8 +40,9 @@ export default function TransactionList({
   const grouped = [...transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
     .reduce<Record<string, Transaction[]>>((acc, t) => {
-      if (!acc[t.date]) acc[t.date] = []
-      acc[t.date].push(t)
+      const list = acc[t.date] ?? []
+      list.push(t)
+      acc[t.date] = list
       return acc
     }, {})
 

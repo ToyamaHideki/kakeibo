@@ -25,7 +25,7 @@ const defaultForm: FormState = {
   targetAmount: '',
   targetYear: '',
   currentAmount: '0',
-  color: GOAL_COLORS[0],
+  color: GOAL_COLORS[0]!,
   memo: '',
   syncToCf: false,
 }

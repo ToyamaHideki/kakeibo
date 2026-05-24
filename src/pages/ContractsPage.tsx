@@ -30,7 +30,7 @@ const FREQUENCY_LABEL: Record<PaymentFrequency, string> = {
   yearly: '年',
 }
 
-const today = new Date().toISOString().split('T')[0]
+const today = new Date().toISOString().slice(0, 10)
 
 function daysUntil(dateStr: string): number {
   const diff = new Date(dateStr).getTime() - new Date(today).getTime()

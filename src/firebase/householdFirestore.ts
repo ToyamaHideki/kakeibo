@@ -78,7 +78,8 @@ export async function joinHousehold(
   const snapshot = await getDocs(q)
   if (snapshot.empty) return { status: 'not_found' }
 
-  const householdDoc = snapshot.docs[0]
+  // snapshot.empty チェック後なので必ず存在する
+  const householdDoc = snapshot.docs[0]!
   const householdId = householdDoc.id
   const data = householdDoc.data() as Household
 

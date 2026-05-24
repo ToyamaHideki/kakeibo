@@ -38,14 +38,14 @@ export default function CategoryAddModal({
   const { householdId } = useHousehold()
   const { confirm, dialogProps } = useConfirm()
   const [name, setName] = useState('')
-  const [color, setColor] = useState(PRESET_COLORS[0])
+  const [color, setColor] = useState(PRESET_COLORS[0]!)
   const [expenseType, setExpenseType] = useState<'fixed' | 'variable'>('variable')
   const [saving, setSaving] = useState(false)
   const colorInputRef = useRef<HTMLInputElement>(null)
 
   const handleClose = useCallback(() => {
     setName('')
-    setColor(PRESET_COLORS[0])
+    setColor(PRESET_COLORS[0]!)
     setExpenseType('variable')
     onClose()
   }, [onClose])
@@ -74,7 +74,7 @@ export default function CategoryAddModal({
       const id = await (addCategoryFn ?? ((cat: Omit<Category, 'id'>) => addCategory(householdId!, cat)))(newCat)
       onAdded({ ...newCat, id })
       setName('')
-      setColor(PRESET_COLORS[0])
+      setColor(PRESET_COLORS[0]!)
       setExpenseType('variable')
     } finally {
       setSaving(false)

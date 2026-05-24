@@ -45,7 +45,7 @@ export const defaultForm: FormState = {
   owner: '',
   broker: '',
   accountType: '',
-  color: ACCOUNT_COLORS[0],
+  color: ACCOUNT_COLORS[0]!,
   memo: '',
   initialValue: '',
 }

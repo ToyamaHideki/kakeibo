@@ -40,7 +40,7 @@ async function initCategories(householdId: string): Promise<Category[]> {
 
   if (existing.length === 0) {
     const ids = await Promise.all(DEFAULT_CATEGORIES.map(cat => addCategory(householdId, cat)))
-    return DEFAULT_CATEGORIES.map((cat, i) => ({ ...cat, id: ids[i] }))
+    return DEFAULT_CATEGORIES.map((cat, i) => ({ ...cat, id: ids[i]! }))
   }
 
   let cats = existing

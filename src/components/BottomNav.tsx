@@ -95,7 +95,12 @@ export default function BottomNav() {
     const update = (h: number) =>
       document.documentElement.style.setProperty('--bn-height', `${h}px`)
     update(el.getBoundingClientRect().height)
-    const observer = new ResizeObserver(([entry]) => update(entry.borderBoxSize[0].blockSize))
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return
+      const box = entry.borderBoxSize[0]
+      if (!box) return
+      update(box.blockSize)
+    })
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
