@@ -34,7 +34,7 @@ export default function MonthlyPage() {
   const incomeStr = `¥${income.toLocaleString()}`
   const expenseStr = `¥${expense.toLocaleString()}`
   const balanceStr = `${balance >= 0 ? '+' : ''}¥${balance.toLocaleString()}`
-  const amtSize = (s: string) => s.length <= 9 ? 'text-lg' : s.length <= 12 ? 'text-base' : 'text-sm'
+  const amtSize = (s: string) => s.length <= 6 ? 'text-lg' : s.length <= 9 ? 'text-sm' : 'text-xs'
 
   function handleEdit(transaction: Transaction) {
     setEditTarget(transaction)

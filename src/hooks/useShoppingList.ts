@@ -29,7 +29,8 @@ export function useShoppingList() {
 
   async function addItem(name: string) {
     if (!householdId) return
-    const order = Date.now()
+    const uncheckedOrders = items.filter(i => !i.checked).map(i => i.order)
+    const order = uncheckedOrders.length > 0 ? Math.min(...uncheckedOrders) - 1 : 0
     const id = await addShoppingItem(householdId, { name, checked: false, order })
     setItems(prev => sorted([...prev, { id, name, checked: false, order }]))
   }
