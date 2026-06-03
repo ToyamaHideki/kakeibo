@@ -198,11 +198,15 @@ export default function Sidebar() {
 
       </nav>
 
+      {/* アプリバージョン */}
+      <div className="px-4 pt-2 text-[10px] text-gray-400 text-right">
+        {APP_VERSION_LABEL}
+      </div>
+
       {/* ログインユーザー情報 */}
       {user && (
         <div className="px-4 py-3 border-t border-gray-100">
           <p className="text-xs font-medium text-gray-600 truncate mb-1">{user.displayName ?? user.email}</p>
-          <p className="text-[10px] text-gray-400 text-right mb-1">{APP_VERSION_LABEL}</p>
           <button
             onClick={() => signOut()}
             className="text-xs text-gray-500 hover:text-gray-600 transition-colors"
