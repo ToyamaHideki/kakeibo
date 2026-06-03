@@ -76,9 +76,7 @@ export default function TransactionModal({
       setCategoryId('')
       setPaymentMethodId('')
       setMemo('')
-      const now = new Date()
-      const todayYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-      setDate(todayYM === yearMonth ? now.toISOString().slice(0, 10) : `${yearMonth}-01`)
+      setDate(new Date().toISOString().slice(0, 10))
     }
   }, [isOpen, editTarget, yearMonth])
 

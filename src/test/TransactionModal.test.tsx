@@ -42,7 +42,10 @@ const DEFAULT_PROPS = {
 function getCategorySelect() { return screen.getAllByRole('combobox')[0] as HTMLSelectElement }
 function getPaymentSelect() { return screen.getAllByRole('combobox')[1] as HTMLSelectElement }
 
-beforeEach(() => { vi.clearAllMocks() })
+beforeEach(() => {
+  vi.clearAllMocks()
+  vi.useRealTimers()
+})
 
 describe('TransactionModal', () => {
   it('isOpen=false のとき何もレンダリングしない', () => {
@@ -62,6 +65,15 @@ describe('TransactionModal', () => {
     expect(getCategorySelect().value).toBe('ce1')
     expect(getPaymentSelect().value).toBe('pm1')
     expect(screen.getByDisplayValue('2025-03-10')).toBeInTheDocument()
+  })
+
+  it('新規登録モードで日付欄に当日の日付が初期値としてセットされる（yearMonth と月が異なる場合も）', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-03T10:00:00'))
+    // DEFAULT_PROPS.yearMonth は '2025-03'（当日と異なる月）
+    render(<TransactionModal {...DEFAULT_PROPS} isOpen />)
+    expect(screen.getByDisplayValue('2026-06-03')).toBeInTheDocument()
+    vi.useRealTimers()
   })
 
   it('「収入」ボタンをクリックすると収入カテゴリが表示される', async () => {
