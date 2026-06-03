@@ -211,3 +211,15 @@ export interface CfPlan {
   expenseItems: CfItem[]
   lifeEvents?: Record<string, string>
 }
+
+// ─── Announcements ────────────────────────────────────────────────────────────
+
+// Firestore: announcements/{docId}（全ユーザー共通リリースノート、読み取り専用）
+export interface Announcement {
+  id: string
+  version: string         // 例: "1.0000"
+  title: string           // 例: "Ver 1.0000 リリース"
+  content: string         // 本文（改行を whitespace-pre-line で保持）
+  releasedAt: number      // タイムスタンプ（ミリ秒）
+  order: number           // 同日複数件の表示順
+}

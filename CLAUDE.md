@@ -61,23 +61,25 @@ firestore:
 │   ├── paymentMethods/               ← 個人支払い方法
 │   └── months/{yearMonth}            ← 個人支出トランザクション
 │
-└── households/{householdId}          ← 世帯データ（メンバー全員がアクセス可）
-    ├── memberIds: string[]
-    ├── inviteCode: string
-    ├── createdAt: number
-    ├── payDay?: number               ← 給与日（2〜28, 未設定=カレンダー月）
-    ├── categories/
-    ├── paymentMethods/
-    ├── months/{yearMonth}            ← 世帯支出トランザクション
-    ├── fixedCosts/
-    ├── cfPlan/main                   ← キャッシュフロープラン
-    ├── budgets/{yearMonth}
-    ├── contracts/
-    ├── savingsGoals/
-    ├── shoppingItems/
-    ├── householdTasks/
-    ├── balanceSheets/{year}
-    └── incomeStatements/{year}
+├── households/{householdId}          ← 世帯データ（メンバー全員がアクセス可）
+│   ├── memberIds: string[]
+│   ├── inviteCode: string
+│   ├── createdAt: number
+│   ├── payDay?: number               ← 給与日（2〜28, 未設定=カレンダー月）
+│   ├── categories/
+│   ├── paymentMethods/
+│   ├── months/{yearMonth}            ← 世帯支出トランザクション
+│   ├── fixedCosts/
+│   ├── cfPlan/main                   ← キャッシュフロープラン
+│   ├── budgets/{yearMonth}
+│   ├── contracts/
+│   ├── savingsGoals/
+│   ├── shoppingItems/
+│   ├── householdTasks/
+│   ├── balanceSheets/{year}
+│   └── incomeStatements/{year}
+│
+└── announcements/{announcementId}    ← 全ユーザー共通リリースノート（読み取り専用）
 ```
 
 yearMonth の形式: `"yyyy-MM"`（例: `"2025-01"`）

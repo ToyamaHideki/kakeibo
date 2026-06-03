@@ -52,15 +52,20 @@ const categories: Category[] = [
   },
   {
     id: 'personal',
-    label: '個人',
+    label: '個人管理',
     firstPath: `/personal/months/${currentYearMonth()}`,
-    subPages: [],
+    subPages: [
+      { label: '個人支出', path: `/personal/months/${currentYearMonth()}` },
+    ],
   },
   {
     id: 'settings',
     label: '設定',
     firstPath: '/household-settings',
-    subPages: [],
+    subPages: [
+      { label: '世帯設定', path: '/household-settings' },
+      { label: 'お知らせ', path: '/announcements' },
+    ],
   },
 ]
 
@@ -69,7 +74,7 @@ function activeCategory(pathname: string): string {
   if (pathname === '/shopping' || pathname === '/tasks' || pathname === '/contracts' || pathname === '/subscriptions') return 'lifestyle'
   if (pathname === '/cashflow' || pathname.startsWith('/income-statement') || pathname.startsWith('/balance-sheet')) return 'lifeplan'
   if (pathname === '/goals' || pathname === '/securities' || pathname === '/savings-management') return 'assets'
-  if (pathname === '/household-settings') return 'settings'
+  if (pathname === '/household-settings' || pathname === '/announcements') return 'settings'
   return 'kakeibo'
 }
 

@@ -22,6 +22,7 @@ const BalanceSheetPage = lazyWithReload(() => import('./pages/BalanceSheetPage')
 const SecuritiesAccountsPage = lazyWithReload(() => import('./pages/SecuritiesAccountsPage'))
 const SavingsManagementPage = lazyWithReload(() => import('./pages/SavingsManagementPage'))
 const HouseholdSettingsPage = lazyWithReload(() => import('./pages/HouseholdSettingsPage'))
+const AnnouncementsPage = lazyWithReload(() => import('./pages/AnnouncementsPage'))
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
                 <Route path="securities" element={<SecuritiesAccountsPage />} />
                 <Route path="savings-management" element={<SavingsManagementPage />} />
                 <Route path="household-settings" element={<HouseholdSettingsPage />} />
+                <Route path="announcements" element={<AnnouncementsPage />} />
               </Route>
             </Routes>
           </Suspense>

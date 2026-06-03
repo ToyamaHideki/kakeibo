@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { currentYearMonth } from '../utils/date'
 import { useAuth } from '../hooks/useAuth'
 import { signOut } from '../firebase/auth'
+import { APP_VERSION_LABEL } from '../constants/version'
 
 export default function Sidebar() {
   const location = useLocation()
@@ -22,6 +23,7 @@ export default function Sidebar() {
   const isBalanceSheetActive = location.pathname.startsWith('/balance-sheet')
   const isSecuritiesActive = location.pathname === '/securities'
   const isHouseholdSettingsActive = location.pathname === '/household-settings'
+  const isAnnouncementsActive = location.pathname === '/announcements'
 
   const navItemClass = (active: boolean) =>
     `flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -71,14 +73,6 @@ export default function Sidebar() {
           固定費一覧
         </Link>
 
-        <Link to={`/personal/months/${currentYearMonth()}`} className={navItemClass(isPersonalActive)}>
-          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-          個人支出
-        </Link>
-
         <Link to={`/budget/${currentYearMonth()}`} className={navItemClass(isBudgetActive)}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
@@ -86,6 +80,15 @@ export default function Sidebar() {
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           予算管理
+        </Link>
+
+        <li className="pt-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">個人管理</li>
+        <Link to={`/personal/months/${currentYearMonth()}`} className={navItemClass(isPersonalActive)}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          個人支出
         </Link>
 
         <li className="pt-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">生活管理</li>
@@ -185,6 +188,14 @@ export default function Sidebar() {
           世帯設定
         </Link>
 
+        <Link to="/announcements" className={navItemClass(isAnnouncementsActive)}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M11 5L6 9H2v6h4l5 4V5z" />
+            <path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" />
+          </svg>
+          お知らせ
+        </Link>
+
       </nav>
 
       {/* ログインユーザー情報 */}
@@ -199,6 +210,11 @@ export default function Sidebar() {
           </button>
         </div>
       )}
+
+      {/* アプリバージョン */}
+      <div className="px-4 py-2 text-[10px] text-gray-400 border-t border-gray-100 text-center">
+        {APP_VERSION_LABEL}
+      </div>
     </aside>
   )
 }
