@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import TransactionList from '../features/TransactionList'
 import TransactionModal from '../features/TransactionModal'
 import MonthlyChart from '../features/MonthlyChart'
 import { useMonthlyData } from '../hooks/useMonthlyData'
 import { useHousehold } from '../hooks/useHousehold'
-import type { Transaction } from '../types'
+import { updateHouseholdSettings } from '../firebase/householdFirestore'
+import type { Transaction, TransactionListDisplayMode } from '../types'
 import { adjacentMonth, currentYearMonth, formatYearMonth, formatPayPeriodLabel } from '../utils/date'
 import type { OutletContext } from '../components/Layout'
 import YearMonthPicker from '../components/YearMonthPicker'
@@ -14,7 +15,7 @@ export default function MonthlyPage() {
   const { yearMonth = currentYearMonth() } = useParams<{ yearMonth: string }>()
   const navigate = useNavigate()
   const { categories, paymentMethods, onCategoryAdded, onPaymentMethodAdded, onCategoryDeleted, onPaymentMethodDeleted } = useOutletContext<OutletContext>()
-  const { payDay } = useHousehold()
+  const { payDay, transactionListDisplayMode, householdId, isGuest, reloadHousehold } = useHousehold()
   const { transactions, loading, reload } = useMonthlyData(yearMonth, payDay ?? undefined)
   const periodLabel = payDay ? formatPayPeriodLabel(yearMonth, payDay) : formatYearMonth(yearMonth)
   const [editTarget, setEditTarget] = useState<Transaction | undefined>()
@@ -22,6 +23,23 @@ export default function MonthlyPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'list' | 'chart'>('list')
+  const [displayMode, setDisplayMode] = useState<TransactionListDisplayMode>(transactionListDisplayMode)
+
+  useEffect(() => {
+    setDisplayMode(transactionListDisplayMode)
+  }, [transactionListDisplayMode])
+
+  async function handleToggleDisplayMode() {
+    const next: TransactionListDisplayMode = displayMode === 'date' ? 'category' : 'date'
+    setDisplayMode(next)
+    if (!householdId || isGuest) return
+    try {
+      await updateHouseholdSettings(householdId, { transactionListDisplayMode: next })
+      await reloadHousehold()
+    } catch (err) {
+      console.warn('[MonthlyPage] toggleDisplayMode failed:', err)
+    }
+  }
 
   const income = transactions
     .filter(t => t.type === 'income')
@@ -149,6 +167,8 @@ export default function MonthlyPage() {
                   paymentMethods={paymentMethods}
                   onEdit={handleEdit}
                   onDeleted={reload}
+                  displayMode={displayMode}
+                  onToggleDisplayMode={handleToggleDisplayMode}
                 />
               </div>
             ) : (
@@ -186,6 +206,8 @@ export default function MonthlyPage() {
                 paymentMethods={paymentMethods}
                 onEdit={handleEdit}
                 onDeleted={reload}
+                displayMode={displayMode}
+                onToggleDisplayMode={handleToggleDisplayMode}
               />
             </div>
           </div>

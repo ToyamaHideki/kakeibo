@@ -11,6 +11,7 @@ import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { signOut } from '../firebase/auth'
 import type { Household, MemberProfile } from '../firebase/householdFirestore'
+import type { TransactionListDisplayMode } from '../types'
 
 export default function HouseholdSettingsPage() {
   const { householdId, user, reloadHousehold } = useHousehold()
@@ -26,6 +27,9 @@ export default function HouseholdSettingsPage() {
   const [nickname, setNickname] = useState('')
   const [savingNickname, setSavingNickname] = useState(false)
   const [nicknameSaved, setNicknameSaved] = useState(false)
+  const [selectedDisplayMode, setSelectedDisplayMode] = useState<TransactionListDisplayMode>('date')
+  const [savingDisplayMode, setSavingDisplayMode] = useState(false)
+  const [displayModeSaved, setDisplayModeSaved] = useState(false)
 
   useEffect(() => {
     if (!householdId || !user) return
@@ -33,6 +37,7 @@ export default function HouseholdSettingsPage() {
       .then(async ([householdData, profiles]) => {
         setHousehold(householdData)
         setSelectedPayDay(householdData?.payDay ?? null)
+        setSelectedDisplayMode(householdData?.transactionListDisplayMode ?? 'date')
         setMemberProfiles(profiles)
 
         // 現在ユーザーのメール・ニックネームを同期
@@ -81,6 +86,19 @@ export default function HouseholdSettingsPage() {
       setTimeout(() => setPayDaySaved(false), 2000)
     } finally {
       setSavingPayDay(false)
+    }
+  }
+
+  async function handleSaveDisplayMode() {
+    if (!householdId) return
+    setSavingDisplayMode(true)
+    try {
+      await updateHouseholdSettings(householdId, { transactionListDisplayMode: selectedDisplayMode })
+      await reloadHousehold()
+      setDisplayModeSaved(true)
+      setTimeout(() => setDisplayModeSaved(false), 2000)
+    } finally {
+      setSavingDisplayMode(false)
     }
   }
 
@@ -263,6 +281,49 @@ export default function HouseholdSettingsPage() {
               例：5月の {selectedPayDay}日〜翌{selectedPayDay - 1}日として集計されます
             </p>
           )}
+        </div>
+
+        {/* リスト表示モード */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6">
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            月別収支リストの表示モード
+          </h2>
+          <p className="text-gray-500 text-xs mb-3">
+            月別収支・個人支出のリスト表示を、日付別とカテゴリ別のどちらをデフォルトにするか設定します。
+          </p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="displayMode"
+                  value="date"
+                  checked={selectedDisplayMode === 'date'}
+                  onChange={() => setSelectedDisplayMode('date')}
+                  className="accent-sage-600"
+                />
+                <span className="text-sm text-gray-700">日付別</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="displayMode"
+                  value="category"
+                  checked={selectedDisplayMode === 'category'}
+                  onChange={() => setSelectedDisplayMode('category')}
+                  className="accent-sage-600"
+                />
+                <span className="text-sm text-gray-700">カテゴリ別</span>
+              </label>
+            </div>
+            <button
+              onClick={handleSaveDisplayMode}
+              disabled={savingDisplayMode}
+              className="px-4 py-2.5 bg-sage-600 hover:bg-sage-700 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50 shrink-0"
+            >
+              {displayModeSaved ? '保存済み' : savingDisplayMode ? '保存中...' : '保存'}
+            </button>
+          </div>
         </div>
       </div>
       <ConfirmDialog {...dialogProps} confirmLabel="再生成する" />

@@ -38,6 +38,7 @@ const DEFAULT_HH = {
   householdId: null,
   state: 'needs_setup' as const,
   payDay: null,
+  transactionListDisplayMode: 'date' as const,
   isGuest: false,
   reloadHousehold: mockReloadHousehold,
 }

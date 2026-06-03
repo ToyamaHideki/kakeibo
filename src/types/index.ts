@@ -212,6 +212,10 @@ export interface CfPlan {
   lifeEvents?: Record<string, string>
 }
 
+// ─── Transaction List Display Mode ───────────────────────────────────────────
+
+export type TransactionListDisplayMode = 'date' | 'category'
+
 // ─── Announcements ────────────────────────────────────────────────────────────
 
 // Firestore: announcements/{docId}（全ユーザー共通リリースノート、読み取り専用）

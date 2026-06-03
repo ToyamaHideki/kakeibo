@@ -118,6 +118,30 @@ describe('useHousehold 状態遷移', () => {
     expect(result.current.payDay).toBe(25)
   })
 
+  it('household の transactionListDisplayMode が反映される', async () => {
+    vi.mocked(householdFirestore.fetchUserProfile).mockResolvedValue({ householdId: 'hh1', displayName: null })
+    vi.mocked(householdFirestore.fetchHousehold).mockResolvedValue({
+      id: 'hh1', memberIds: [], inviteCode: 'ABCD12XY7K', createdAt: 0, transactionListDisplayMode: 'category',
+    })
+
+    const { result } = renderHook(() => useHousehold(), { wrapper })
+    await act(async () => { await capturedAuthCallback!(MOCK_USER) })
+
+    expect(result.current.transactionListDisplayMode).toBe('category')
+  })
+
+  it('household の transactionListDisplayMode 未設定時はデフォルト date', async () => {
+    vi.mocked(householdFirestore.fetchUserProfile).mockResolvedValue({ householdId: 'hh1', displayName: null })
+    vi.mocked(householdFirestore.fetchHousehold).mockResolvedValue({
+      id: 'hh1', memberIds: [], inviteCode: 'ABCD12XY7K', createdAt: 0,
+    })
+
+    const { result } = renderHook(() => useHousehold(), { wrapper })
+    await act(async () => { await capturedAuthCallback!(MOCK_USER) })
+
+    expect(result.current.transactionListDisplayMode).toBe('date')
+  })
+
   it('kakeibo:guest-mode イベント → isGuest=true, state=ready', async () => {
     const { result } = renderHook(() => useHousehold(), { wrapper })
 

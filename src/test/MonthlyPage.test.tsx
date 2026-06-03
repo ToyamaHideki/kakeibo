@@ -13,7 +13,13 @@ vi.mock('react-router-dom', () => ({
   useOutletContext: vi.fn(),
 }))
 vi.mock('../hooks/useHousehold', () => ({
-  useHousehold: vi.fn(() => ({ payDay: null })),
+  useHousehold: vi.fn(() => ({
+    payDay: null,
+    transactionListDisplayMode: 'date',
+    householdId: 'hh-test',
+    isGuest: false,
+    reloadHousehold: vi.fn(),
+  })),
 }))
 vi.mock('../hooks/useMonthlyData', () => ({
   useMonthlyData: vi.fn(),

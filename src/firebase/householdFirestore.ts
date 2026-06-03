@@ -11,6 +11,7 @@ import {
   arrayUnion,
   arrayRemove,
 } from 'firebase/firestore'
+import type { TransactionListDisplayMode } from '../types'
 import { db } from './firebase'
 
 export interface UserProfile {
@@ -29,6 +30,7 @@ export interface Household {
   createdAt: number
   payDay?: number
   extraAssignees?: string[]
+  transactionListDisplayMode?: TransactionListDisplayMode
 }
 
 function generateInviteCode(): string {
@@ -113,9 +115,17 @@ export async function refreshInviteCode(householdId: string): Promise<string> {
 
 export async function updateHouseholdSettings(
   householdId: string,
-  settings: { payDay: number | null }
+  settings: {
+    payDay?: number | null
+    transactionListDisplayMode?: TransactionListDisplayMode
+  }
 ): Promise<void> {
-  await updateDoc(doc(db, 'households', householdId), { payDay: settings.payDay })
+  const data: { payDay?: number | null; transactionListDisplayMode?: TransactionListDisplayMode } = {}
+  if ('payDay' in settings) data.payDay = settings.payDay
+  if ('transactionListDisplayMode' in settings) {
+    data.transactionListDisplayMode = settings.transactionListDisplayMode
+  }
+  await updateDoc(doc(db, 'households', householdId), data)
 }
 
 export async function addExtraAssignee(householdId: string, name: string): Promise<void> {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { User } from 'firebase/auth'
 import TransactionList from '../features/TransactionList'
@@ -18,8 +18,9 @@ import {
   addPersonalPaymentMethod,
   deletePersonalPaymentMethod,
 } from '../firebase/personalFirestore'
+import { updateHouseholdSettings } from '../firebase/householdFirestore'
 import YearMonthPicker from '../components/YearMonthPicker'
-import type { Transaction } from '../types'
+import type { Transaction, TransactionListDisplayMode } from '../types'
 import { adjacentMonth, currentYearMonth, formatYearMonth, formatPayPeriodLabel } from '../utils/date'
 
 export default function PersonalPage() {
@@ -58,7 +59,7 @@ function PersonalExpenseView({ user }: { user: User }) {
   const { yearMonth = currentYearMonth() } = useParams<{ yearMonth: string }>()
   const navigate = useNavigate()
 
-  const { payDay } = useHousehold()
+  const { payDay, transactionListDisplayMode, householdId, isGuest, reloadHousehold } = useHousehold()
   const { categories, loading: catLoading, addCategoryLocally, removeCategoryLocally } = usePersonalCategories(user.uid)
   const { paymentMethods, loading: pmLoading, addPaymentMethodLocally, removePaymentMethodLocally } = usePersonalPaymentMethods(user.uid)
   const { transactions, loading: dataLoading, reload } = usePersonalMonthlyData(yearMonth, user.uid, payDay ?? undefined)
@@ -69,6 +70,23 @@ function PersonalExpenseView({ user }: { user: User }) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'list' | 'chart'>('list')
+  const [displayMode, setDisplayMode] = useState<TransactionListDisplayMode>(transactionListDisplayMode)
+
+  useEffect(() => {
+    setDisplayMode(transactionListDisplayMode)
+  }, [transactionListDisplayMode])
+
+  async function handleToggleDisplayMode() {
+    const next: TransactionListDisplayMode = displayMode === 'date' ? 'category' : 'date'
+    setDisplayMode(next)
+    if (!householdId || isGuest) return
+    try {
+      await updateHouseholdSettings(householdId, { transactionListDisplayMode: next })
+      await reloadHousehold()
+    } catch (err) {
+      console.warn('[PersonalPage] toggleDisplayMode failed:', err)
+    }
+  }
 
   const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0)
   const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0)
@@ -187,6 +205,8 @@ function PersonalExpenseView({ user }: { user: User }) {
                   onEdit={handleEdit}
                   onDeleted={reload}
                   onDelete={(ym, id) => deletePersonalTransaction(user.uid, ym, id)}
+                  displayMode={displayMode}
+                  onToggleDisplayMode={handleToggleDisplayMode}
                 />
               </div>
             ) : (
@@ -225,6 +245,8 @@ function PersonalExpenseView({ user }: { user: User }) {
                 onEdit={handleEdit}
                 onDeleted={reload}
                 onDelete={(ym, id) => deletePersonalTransaction(user.uid, ym, id)}
+                displayMode={displayMode}
+                onToggleDisplayMode={handleToggleDisplayMode}
               />
             </div>
           </div>

@@ -23,6 +23,7 @@ const DEFAULT_HH = {
   user: null,
   state: 'ready' as const,
   payDay: null,
+  transactionListDisplayMode: 'date' as const,
   isGuest: false,
   reloadHousehold: async () => {},
 }
