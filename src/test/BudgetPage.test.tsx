@@ -48,6 +48,7 @@ beforeEach(() => {
     loading: false,
     addCategoryLocally: vi.fn(),
     removeCategoryLocally: vi.fn(),
+    updateCategoryLocally: vi.fn(),
     reload: vi.fn().mockResolvedValue(undefined),
   })
   vi.mocked(useMonthlyData).mockReturnValue({ transactions: TRANSACTIONS, loading: false, reload: vi.fn() })

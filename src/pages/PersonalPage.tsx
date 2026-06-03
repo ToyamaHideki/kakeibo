@@ -15,6 +15,7 @@ import {
   movePersonalTransaction,
   addPersonalCategory,
   deletePersonalCategory,
+  updatePersonalCategory,
   addPersonalPaymentMethod,
   deletePersonalPaymentMethod,
 } from '../firebase/personalFirestore'
@@ -60,7 +61,7 @@ function PersonalExpenseView({ user }: { user: User }) {
   const navigate = useNavigate()
 
   const { payDay, transactionListDisplayMode, householdId, isGuest, reloadHousehold } = useHousehold()
-  const { categories, loading: catLoading, addCategoryLocally, removeCategoryLocally } = usePersonalCategories(user.uid)
+  const { categories, loading: catLoading, addCategoryLocally, removeCategoryLocally, updateCategoryLocally } = usePersonalCategories(user.uid)
   const { paymentMethods, loading: pmLoading, addPaymentMethodLocally, removePaymentMethodLocally } = usePersonalPaymentMethods(user.uid)
   const { transactions, loading: dataLoading, reload } = usePersonalMonthlyData(yearMonth, user.uid, payDay ?? undefined)
   const periodLabel = payDay ? formatPayPeriodLabel(yearMonth, payDay) : formatYearMonth(yearMonth)
@@ -275,6 +276,7 @@ function PersonalExpenseView({ user }: { user: User }) {
         onPaymentMethodAdded={addPaymentMethodLocally}
         onCategoryDeleted={removeCategoryLocally}
         onPaymentMethodDeleted={removePaymentMethodLocally}
+        onCategoryUpdated={updateCategoryLocally}
         categories={categories}
         paymentMethods={paymentMethods}
         yearMonth={yearMonth}
@@ -283,6 +285,7 @@ function PersonalExpenseView({ user }: { user: User }) {
         moveFn={(from, to, tx) => movePersonalTransaction(user.uid, from, to, tx)}
         addCategoryFn={cat => addPersonalCategory(user.uid, cat)}
         deleteCategoryFn={id => deletePersonalCategory(user.uid, id)}
+        updateCategoryFn={(id, data) => updatePersonalCategory(user.uid, id, data)}
         addPaymentMethodFn={pm => addPersonalPaymentMethod(user.uid, pm)}
         deletePaymentMethodFn={id => deletePersonalPaymentMethod(user.uid, id)}
       />
@@ -297,6 +300,7 @@ function PersonalExpenseView({ user }: { user: User }) {
         onPaymentMethodAdded={addPaymentMethodLocally}
         onCategoryDeleted={removeCategoryLocally}
         onPaymentMethodDeleted={removePaymentMethodLocally}
+        onCategoryUpdated={updateCategoryLocally}
         categories={categories}
         paymentMethods={paymentMethods}
         yearMonth={editTarget?.date.slice(0, 7) ?? yearMonth}
@@ -306,6 +310,7 @@ function PersonalExpenseView({ user }: { user: User }) {
         moveFn={(from, to, tx) => movePersonalTransaction(user.uid, from, to, tx)}
         addCategoryFn={cat => addPersonalCategory(user.uid, cat)}
         deleteCategoryFn={id => deletePersonalCategory(user.uid, id)}
+        updateCategoryFn={(id, data) => updatePersonalCategory(user.uid, id, data)}
         addPaymentMethodFn={pm => addPersonalPaymentMethod(user.uid, pm)}
         deletePaymentMethodFn={id => deletePersonalPaymentMethod(user.uid, id)}
       />

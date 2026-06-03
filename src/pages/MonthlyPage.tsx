@@ -14,7 +14,7 @@ import YearMonthPicker from '../components/YearMonthPicker'
 export default function MonthlyPage() {
   const { yearMonth = currentYearMonth() } = useParams<{ yearMonth: string }>()
   const navigate = useNavigate()
-  const { categories, paymentMethods, onCategoryAdded, onPaymentMethodAdded, onCategoryDeleted, onPaymentMethodDeleted } = useOutletContext<OutletContext>()
+  const { categories, paymentMethods, onCategoryAdded, onPaymentMethodAdded, onCategoryDeleted, onPaymentMethodDeleted, onCategoryUpdated } = useOutletContext<OutletContext>()
   const { payDay, transactionListDisplayMode, householdId, isGuest, reloadHousehold } = useHousehold()
   const { transactions, loading, reload } = useMonthlyData(yearMonth, payDay ?? undefined)
   const periodLabel = payDay ? formatPayPeriodLabel(yearMonth, payDay) : formatYearMonth(yearMonth)
@@ -235,12 +235,13 @@ export default function MonthlyPage() {
         onPaymentMethodAdded={onPaymentMethodAdded}
         onCategoryDeleted={onCategoryDeleted}
         onPaymentMethodDeleted={onPaymentMethodDeleted}
+        onCategoryUpdated={onCategoryUpdated}
         categories={categories}
         paymentMethods={paymentMethods}
         yearMonth={yearMonth}
       />
 
-      {/* 編雁E��ーダル */}
+      {/* 編集モーダル */}
       <TransactionModal
         isOpen={isEditModalOpen}
         onClose={handleEditClose}
@@ -249,6 +250,7 @@ export default function MonthlyPage() {
         onPaymentMethodAdded={onPaymentMethodAdded}
         onCategoryDeleted={onCategoryDeleted}
         onPaymentMethodDeleted={onPaymentMethodDeleted}
+        onCategoryUpdated={onCategoryUpdated}
         categories={categories}
         paymentMethods={paymentMethods}
         yearMonth={editTarget?.date.slice(0, 7) ?? yearMonth}

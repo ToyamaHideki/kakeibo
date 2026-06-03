@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { addCategory, deleteCategory } from '../firebase/firestore'
+import { addCategory, deleteCategory, updateCategory } from '../firebase/firestore'
 import { useHousehold } from '../hooks/useHousehold'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
@@ -12,11 +12,13 @@ interface Props {
   onClose: () => void
   onAdded: (category: Category) => void
   onDeleted: (id: string) => void
+  onUpdated: (category: Category) => void
   type: TransactionType
   nextOrder: number
   categories: Category[]
   addCategoryFn?: ((category: Omit<Category, 'id'>) => Promise<string>) | undefined
   deleteCategoryFn?: ((id: string) => Promise<void>) | undefined
+  updateCategoryFn?: ((id: string, data: Partial<Omit<Category, 'id'>>) => Promise<void>) | undefined
 }
 
 const PRESET_COLORS = [
@@ -32,8 +34,8 @@ const TYPE_LABEL: Record<TransactionType, string> = {
 }
 
 export default function CategoryAddModal({
-  isOpen, onClose, onAdded, onDeleted, type, nextOrder, categories,
-  addCategoryFn, deleteCategoryFn,
+  isOpen, onClose, onAdded, onDeleted, onUpdated, type, nextOrder, categories,
+  addCategoryFn, deleteCategoryFn, updateCategoryFn,
 }: Props) {
   const { householdId } = useHousehold()
   const { confirm, dialogProps } = useConfirm()
@@ -41,12 +43,29 @@ export default function CategoryAddModal({
   const [color, setColor] = useState(PRESET_COLORS[0]!)
   const [expenseType, setExpenseType] = useState<'fixed' | 'variable'>('variable')
   const [saving, setSaving] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const isEditing = editingId !== null
   const colorInputRef = useRef<HTMLInputElement>(null)
+
+  function startEdit(cat: Category) {
+    setEditingId(cat.id)
+    setName(cat.name)
+    setColor(cat.color)
+    setExpenseType(cat.expenseType ?? 'variable')
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setName('')
+    setColor(PRESET_COLORS[0]!)
+    setExpenseType('variable')
+  }
 
   const handleClose = useCallback(() => {
     setName('')
     setColor(PRESET_COLORS[0]!)
     setExpenseType('variable')
+    setEditingId(null)
     onClose()
   }, [onClose])
 
@@ -56,6 +75,7 @@ export default function CategoryAddModal({
     if (!await confirm(`「${cat.name}」を削除しますか？\nこのカテゴリで登録済みの取引は残りますが、カテゴリとの紐付けが失われます。`)) return
     await (deleteCategoryFn ?? ((id: string) => deleteCategory(householdId!, id)))(cat.id)
     onDeleted(cat.id)
+    if (editingId === cat.id) cancelEdit()
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -64,18 +84,30 @@ export default function CategoryAddModal({
 
     setSaving(true)
     try {
-      const newCat = {
-        name: name.trim(),
-        type,
-        color,
-        order: nextOrder,
-        ...(type === 'expense' ? { expenseType } : {}),
+      if (isEditing && editingId) {
+        const patch: Partial<Omit<Category, 'id'>> = {
+          name: name.trim(),
+          color,
+          ...(type === 'expense' ? { expenseType } : {}),
+        }
+        await (updateCategoryFn ?? ((id: string, data: Partial<Omit<Category, 'id'>>) => updateCategory(householdId!, id, data)))(editingId, patch)
+        const original = categories.find(c => c.id === editingId)
+        if (original) onUpdated({ ...original, ...patch })
+        cancelEdit()
+      } else {
+        const newCat = {
+          name: name.trim(),
+          type,
+          color,
+          order: nextOrder,
+          ...(type === 'expense' ? { expenseType } : {}),
+        }
+        const id = await (addCategoryFn ?? ((cat: Omit<Category, 'id'>) => addCategory(householdId!, cat)))(newCat)
+        onAdded({ ...newCat, id })
+        setName('')
+        setColor(PRESET_COLORS[0]!)
+        setExpenseType('variable')
       }
-      const id = await (addCategoryFn ?? ((cat: Omit<Category, 'id'>) => addCategory(householdId!, cat)))(newCat)
-      onAdded({ ...newCat, id })
-      setName('')
-      setColor(PRESET_COLORS[0]!)
-      setExpenseType('variable')
     } finally {
       setSaving(false)
     }
@@ -112,22 +144,45 @@ export default function CategoryAddModal({
               <p className="text-xs font-medium text-gray-500 mb-2">登録済み</p>
               <div className="space-y-1">
                 {categories.map(cat => (
-                  <div key={cat.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50">
+                  <div
+                    key={cat.id}
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
+                      editingId === cat.id ? 'bg-sage-50 border border-sage-200' : 'bg-gray-50'
+                    }`}
+                  >
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
                       <span className="text-sm text-gray-700 truncate">{cat.name}</span>
+                      {editingId === cat.id && (
+                        <span className="text-[10px] text-sage-600 font-semibold shrink-0">編集中</span>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(cat)}
-                      className="text-gray-300 hover:text-red-400 transition-colors shrink-0 ml-2 p-1"
-                      title="削除"
-                    >
-                      <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
-                        <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/>
-                        <path fillRule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 01-1-1V2a1 1 0 011-1H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1v1zM4.118 4L4 4.059V13a1 1 0 001 1h6a1 1 0 001-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(cat)}
+                        className="text-gray-300 hover:text-sage-500 transition-colors p-1"
+                        title="修正"
+                        aria-label="修正"
+                      >
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(cat)}
+                        className="text-gray-300 hover:text-red-400 transition-colors shrink-0 p-1"
+                        title="削除"
+                        aria-label="削除"
+                      >
+                        <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                          <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/>
+                          <path fillRule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 01-1-1V2a1 1 0 011-1H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1v1zM4.118 4L4 4.059V13a1 1 0 001 1h6a1 1 0 001-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -135,8 +190,21 @@ export default function CategoryAddModal({
             </div>
           )}
 
-          {/* 新規追加フォーム */}
-          <p className="text-xs font-medium text-gray-500 mb-3">新しいカテゴリを追加</p>
+          {/* 新規追加 / 編集フォーム */}
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-medium text-gray-500">
+              {isEditing ? 'カテゴリを編集' : '新しいカテゴリを追加'}
+            </p>
+            {isEditing && (
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-0.5"
+              >
+                ✕ キャンセル
+              </button>
+            )}
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="category-name" className="block text-xs font-medium text-gray-500 mb-1.5">カテゴリ名</label>
@@ -229,7 +297,7 @@ export default function CategoryAddModal({
               disabled={saving || !name.trim()}
               className="w-full py-2.5 bg-sage-600 hover:bg-sage-700 disabled:bg-sage-300 text-white text-sm font-semibold rounded-lg transition-colors"
             >
-              {saving ? '追加中...' : '追加する'}
+              {saving ? (isEditing ? '更新中...' : '追加中...') : (isEditing ? '更新する' : '追加する')}
             </button>
           </form>
         </div>

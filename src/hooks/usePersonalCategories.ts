@@ -34,7 +34,11 @@ export function usePersonalCategories(uid: string) {
     setCategories(prev => prev.filter(c => c.id !== id))
   }
 
-  return { categories, loading, addCategoryLocally, removeCategoryLocally }
+  function updateCategoryLocally(category: Category) {
+    setCategories(prev => sortCategories(prev.map(c => c.id === category.id ? category : c)))
+  }
+
+  return { categories, loading, addCategoryLocally, removeCategoryLocally, updateCategoryLocally }
 }
 
 function sortCategories(cats: Category[]): Category[] {

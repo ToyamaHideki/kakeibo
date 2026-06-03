@@ -15,11 +15,12 @@ export interface OutletContext {
   onPaymentMethodAdded: (paymentMethod: PaymentMethod) => void
   onCategoryDeleted: (id: string) => void
   onPaymentMethodDeleted: (id: string) => void
+  onCategoryUpdated: (category: Category) => void
 }
 
 export default function Layout() {
   const { state, user, isGuest, reloadHousehold } = useHousehold()
-  const { categories, addCategoryLocally, removeCategoryLocally } = useCategories()
+  const { categories, addCategoryLocally, removeCategoryLocally, updateCategoryLocally } = useCategories()
   const { paymentMethods, addPaymentMethodLocally, removePaymentMethodLocally } = usePaymentMethods()
 
   if (state === 'loading') {
@@ -115,6 +116,7 @@ export default function Layout() {
     onPaymentMethodAdded: addPaymentMethodLocally,
     onCategoryDeleted: removeCategoryLocally,
     onPaymentMethodDeleted: removePaymentMethodLocally,
+    onCategoryUpdated: updateCategoryLocally,
   }
 
   void user

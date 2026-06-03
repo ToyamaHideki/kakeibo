@@ -61,6 +61,7 @@ const OUTLET_CONTEXT = {
   onPaymentMethodAdded: vi.fn(),
   onCategoryDeleted: vi.fn(),
   onPaymentMethodDeleted: vi.fn(),
+  onCategoryUpdated: vi.fn(),
 }
 
 beforeEach(() => {

@@ -98,11 +98,18 @@ export function useCategories() {
     )
   }
 
+  function updateCategoryLocally(category: Category) {
+    queryClient.setQueryData<Category[]>(
+      ['categories', householdId],
+      prev => sortCategories((prev ?? []).map(c => c.id === category.id ? category : c)),
+    )
+  }
+
   async function reload() {
     await queryClient.invalidateQueries({ queryKey: ['categories', householdId] })
   }
 
-  return { categories, loading, addCategoryLocally, removeCategoryLocally, reload }
+  return { categories, loading, addCategoryLocally, removeCategoryLocally, updateCategoryLocally, reload }
 }
 
 function sortCategories(cats: Category[]): Category[] {

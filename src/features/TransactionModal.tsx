@@ -25,6 +25,8 @@ interface Props {
   moveFn?: ((fromYM: string, toYM: string, tx: Transaction) => Promise<void>) | undefined
   addCategoryFn?: ((cat: Omit<Category, 'id'>) => Promise<string>) | undefined
   deleteCategoryFn?: ((id: string) => Promise<void>) | undefined
+  updateCategoryFn?: ((id: string, data: Partial<Omit<Category, 'id'>>) => Promise<void>) | undefined
+  onCategoryUpdated?: ((category: Category) => void) | undefined
   addPaymentMethodFn?: ((pm: Omit<PaymentMethod, 'id'>) => Promise<string>) | undefined
   deletePaymentMethodFn?: ((id: string) => Promise<void>) | undefined
 }
@@ -47,6 +49,8 @@ export default function TransactionModal({
   moveFn,
   addCategoryFn,
   deleteCategoryFn,
+  updateCategoryFn,
+  onCategoryUpdated,
   addPaymentMethodFn,
   deletePaymentMethodFn,
 }: Props) {
@@ -303,11 +307,13 @@ export default function TransactionModal({
         onClose={() => setIsCategoryModalOpen(false)}
         onAdded={handleCategoryAdded}
         onDeleted={handleCategoryDeleted}
+        onUpdated={onCategoryUpdated ?? (() => {})}
         type={type}
         nextOrder={nextCategoryOrder}
         categories={filteredCategories}
         addCategoryFn={addCategoryFn}
         deleteCategoryFn={deleteCategoryFn}
+        updateCategoryFn={updateCategoryFn}
       />
 
       <PaymentMethodAddModal
