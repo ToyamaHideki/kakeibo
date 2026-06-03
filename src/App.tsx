@@ -1,26 +1,27 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { HouseholdProvider } from './hooks/useHousehold'
 import Layout from './components/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { currentYear, currentYearMonth } from './utils/date'
+import { lazyWithReload } from './utils/lazyWithReload'
 
-const MonthlyPage = lazy(() => import('./pages/MonthlyPage'))
-const AnnualPage = lazy(() => import('./pages/AnnualPage'))
-const CashflowPage = lazy(() => import('./pages/CashflowPage'))
-const FixedCostsPage = lazy(() => import('./pages/FixedCostsPage'))
-const PersonalPage = lazy(() => import('./pages/PersonalPage'))
-const ShoppingListPage = lazy(() => import('./pages/ShoppingListPage'))
-const HouseholdTasksPage = lazy(() => import('./pages/HouseholdTasksPage'))
-const BudgetPage = lazy(() => import('./pages/BudgetPage'))
-const ContractsPage = lazy(() => import('./pages/ContractsPage'))
-const SubscriptionsPage = lazy(() => import('./pages/SubscriptionsPage'))
-const SavingsGoalsPage = lazy(() => import('./pages/SavingsGoalsPage'))
-const IncomeStatementPage = lazy(() => import('./pages/IncomeStatementPage'))
-const BalanceSheetPage = lazy(() => import('./pages/BalanceSheetPage'))
-const SecuritiesAccountsPage = lazy(() => import('./pages/SecuritiesAccountsPage'))
-const SavingsManagementPage = lazy(() => import('./pages/SavingsManagementPage'))
-const HouseholdSettingsPage = lazy(() => import('./pages/HouseholdSettingsPage'))
+const MonthlyPage = lazyWithReload(() => import('./pages/MonthlyPage'))
+const AnnualPage = lazyWithReload(() => import('./pages/AnnualPage'))
+const CashflowPage = lazyWithReload(() => import('./pages/CashflowPage'))
+const FixedCostsPage = lazyWithReload(() => import('./pages/FixedCostsPage'))
+const PersonalPage = lazyWithReload(() => import('./pages/PersonalPage'))
+const ShoppingListPage = lazyWithReload(() => import('./pages/ShoppingListPage'))
+const HouseholdTasksPage = lazyWithReload(() => import('./pages/HouseholdTasksPage'))
+const BudgetPage = lazyWithReload(() => import('./pages/BudgetPage'))
+const ContractsPage = lazyWithReload(() => import('./pages/ContractsPage'))
+const SubscriptionsPage = lazyWithReload(() => import('./pages/SubscriptionsPage'))
+const SavingsGoalsPage = lazyWithReload(() => import('./pages/SavingsGoalsPage'))
+const IncomeStatementPage = lazyWithReload(() => import('./pages/IncomeStatementPage'))
+const BalanceSheetPage = lazyWithReload(() => import('./pages/BalanceSheetPage'))
+const SecuritiesAccountsPage = lazyWithReload(() => import('./pages/SecuritiesAccountsPage'))
+const SavingsManagementPage = lazyWithReload(() => import('./pages/SavingsManagementPage'))
+const HouseholdSettingsPage = lazyWithReload(() => import('./pages/HouseholdSettingsPage'))
 
 function App() {
   return (
