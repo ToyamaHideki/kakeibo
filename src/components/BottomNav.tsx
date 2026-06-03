@@ -63,7 +63,7 @@ const categories: Category[] = [
     label: '設定',
     firstPath: '/household-settings',
     subPages: [
-      { label: '世帯設定', path: '/household-settings' },
+      { label: '設定', path: '/household-settings' },
       { label: 'お知らせ', path: '/announcements' },
     ],
   },

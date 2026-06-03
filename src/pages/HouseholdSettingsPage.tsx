@@ -133,9 +133,12 @@ export default function HouseholdSettingsPage() {
   return (
     <div className="h-full overflow-y-auto">
     <div className="max-w-2xl mx-auto px-4 py-4 md:py-8">
-      <h1 className="text-xl font-bold text-gray-800 mb-4 md:mb-6">世帯設定</h1>
+      <h1 className="text-xl font-bold text-gray-800 mb-4 md:mb-6">設定</h1>
 
       <div className="space-y-3 md:space-y-4">
+        {/* 世帯設定セクション */}
+        <h2 className="text-sm font-bold text-gray-700 pt-1 px-1">世帯設定</h2>
+
         {/* 招待コード */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6">
           <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">招待コード</h2>
@@ -251,37 +254,8 @@ export default function HouseholdSettingsPage() {
           </div>
         )}
 
-        {/* 給与日設定 */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6">
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">給与日設定</h2>
-          <p className="text-gray-500 text-xs mb-3">
-            設定すると月別収支・個人支出・予算管理が給与日起算で表示されます。
-          </p>
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedPayDay ?? 0}
-              onChange={e => setSelectedPayDay(Number(e.target.value) || null)}
-              className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-sage-300 bg-white min-w-0"
-            >
-              <option value={0}>カレンダー月（1日〜末日）</option>
-              {Array.from({ length: 27 }, (_, i) => i + 2).map(d => (
-                <option key={d} value={d}>毎月{d}日</option>
-              ))}
-            </select>
-            <button
-              onClick={handleSavePayDay}
-              disabled={savingPayDay}
-              className="px-4 py-2.5 bg-sage-600 hover:bg-sage-700 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50 shrink-0"
-            >
-              {payDaySaved ? '保存済み' : savingPayDay ? '保存中...' : '保存'}
-            </button>
-          </div>
-          {selectedPayDay && selectedPayDay >= 2 && (
-            <p className="mt-2 text-xs text-sage-600">
-              例：5月の {selectedPayDay}日〜翌{selectedPayDay - 1}日として集計されます
-            </p>
-          )}
-        </div>
+        {/* 月別収支セクション */}
+        <h2 className="text-sm font-bold text-gray-700 pt-3 md:pt-4 px-1">月別収支</h2>
 
         {/* リスト表示モード */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6">
@@ -324,6 +298,38 @@ export default function HouseholdSettingsPage() {
               {displayModeSaved ? '保存済み' : savingDisplayMode ? '保存中...' : '保存'}
             </button>
           </div>
+        </div>
+
+        {/* 給与日設定 */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6">
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">給与日設定</h2>
+          <p className="text-gray-500 text-xs mb-3">
+            設定すると月別収支・個人支出・予算管理が給与日起算で表示されます。
+          </p>
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedPayDay ?? 0}
+              onChange={e => setSelectedPayDay(Number(e.target.value) || null)}
+              className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-sage-300 bg-white min-w-0"
+            >
+              <option value={0}>カレンダー月（1日〜末日）</option>
+              {Array.from({ length: 27 }, (_, i) => i + 2).map(d => (
+                <option key={d} value={d}>毎月{d}日</option>
+              ))}
+            </select>
+            <button
+              onClick={handleSavePayDay}
+              disabled={savingPayDay}
+              className="px-4 py-2.5 bg-sage-600 hover:bg-sage-700 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50 shrink-0"
+            >
+              {payDaySaved ? '保存済み' : savingPayDay ? '保存中...' : '保存'}
+            </button>
+          </div>
+          {selectedPayDay && selectedPayDay >= 2 && (
+            <p className="mt-2 text-xs text-sage-600">
+              例：5月の {selectedPayDay}日〜翌{selectedPayDay - 1}日として集計されます
+            </p>
+          )}
         </div>
       </div>
       <ConfirmDialog {...dialogProps} confirmLabel="再生成する" />

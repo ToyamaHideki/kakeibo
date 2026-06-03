@@ -185,7 +185,7 @@ export default function Sidebar() {
             <path d="M23 21v-2a4 4 0 00-3-3.87" />
             <path d="M16 3.13a4 4 0 010 7.75" />
           </svg>
-          世帯設定
+          設定
         </Link>
 
         <Link to="/announcements" className={navItemClass(isAnnouncementsActive)}>
