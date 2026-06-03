@@ -176,7 +176,7 @@ describe('TransactionList', () => {
 })
 
 describe('TransactionList - 表示モード切替', () => {
-  it('日付別モード時、ヘッダーカードに「日付別」ラベルが表示される', () => {
+  it('日付順タブと カテゴリ順タブが常時表示される', () => {
     render(
       <TransactionList
         transactions={TRANSACTIONS}
@@ -188,10 +188,27 @@ describe('TransactionList - 表示モード切替', () => {
         onToggleDisplayMode={noop}
       />
     )
-    expect(screen.getByText('日付別')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '日付順' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'カテゴリ順' })).toBeInTheDocument()
   })
 
-  it('カテゴリ別モード時、ヘッダーカードに「カテゴリ別」ラベルが表示される', () => {
+  it('日付別モード時、日付順タブが aria-selected=true', () => {
+    render(
+      <TransactionList
+        transactions={TRANSACTIONS}
+        categories={CATEGORIES}
+        paymentMethods={PAYMENT_METHODS}
+        onEdit={noop}
+        onDeleted={noop}
+        displayMode="date"
+        onToggleDisplayMode={noop}
+      />
+    )
+    expect(screen.getByRole('tab', { name: '日付順' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'カテゴリ順' })).toHaveAttribute('aria-selected', 'false')
+  })
+
+  it('カテゴリ別モード時、カテゴリ順タブが aria-selected=true', () => {
     render(
       <TransactionList
         transactions={TRANSACTIONS}
@@ -203,10 +220,11 @@ describe('TransactionList - 表示モード切替', () => {
         onToggleDisplayMode={noop}
       />
     )
-    expect(screen.getByText('カテゴリ別')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'カテゴリ順' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: '日付順' })).toHaveAttribute('aria-selected', 'false')
   })
 
-  it('歯車押下で onToggleDisplayMode が呼ばれる', async () => {
+  it('非アクティブタブ押下で onToggleDisplayMode が呼ばれる', async () => {
     const onToggle = vi.fn()
     render(
       <TransactionList
@@ -219,11 +237,28 @@ describe('TransactionList - 表示モード切替', () => {
         onToggleDisplayMode={onToggle}
       />
     )
-    await userEvent.click(screen.getByRole('button', { name: /表示モード切替/ }))
+    await userEvent.click(screen.getByRole('tab', { name: 'カテゴリ順' }))
     expect(onToggle).toHaveBeenCalledOnce()
   })
 
-  it('データが0件でもヘッダーカードと歯車は表示される', () => {
+  it('アクティブタブ押下では onToggleDisplayMode が呼ばれない', async () => {
+    const onToggle = vi.fn()
+    render(
+      <TransactionList
+        transactions={TRANSACTIONS}
+        categories={CATEGORIES}
+        paymentMethods={PAYMENT_METHODS}
+        onEdit={noop}
+        onDeleted={noop}
+        displayMode="date"
+        onToggleDisplayMode={onToggle}
+      />
+    )
+    await userEvent.click(screen.getByRole('tab', { name: '日付順' }))
+    expect(onToggle).not.toHaveBeenCalled()
+  })
+
+  it('データが0件でもタブは表示される', () => {
     render(
       <TransactionList
         transactions={[]}
@@ -235,8 +270,8 @@ describe('TransactionList - 表示モード切替', () => {
         onToggleDisplayMode={noop}
       />
     )
-    expect(screen.getByText('日付別')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /表示モード切替/ })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '日付順' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'カテゴリ順' })).toBeInTheDocument()
   })
 
   it('カテゴリ別モード時、カテゴリ単位でグループ化され合計絶対値降順で並ぶ', () => {

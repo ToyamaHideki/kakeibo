@@ -158,25 +158,36 @@ export default function TransactionList({
     onDeleted()
   }
 
-  const modeLabel = displayMode === 'date' ? '日付別' : 'カテゴリ別'
-  const nextModeLabel = displayMode === 'date' ? 'カテゴリ別' : '日付別'
-
   return (
     <div className="space-y-3">
-      {/* ヘッダーカード（表示モード切替） */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-2 flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-600">{modeLabel}</span>
-        <button
-          onClick={onToggleDisplayMode}
-          aria-label={`表示モード切替（${nextModeLabel}へ）`}
-          title={`${nextModeLabel}に切り替え`}
-          className="p-1 text-gray-400 hover:text-sage-600 rounded transition-colors"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
-          </svg>
-        </button>
+      {/* ヘッダーカード（表示モード切替セグメントタブ） */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="grid grid-cols-2" role="tablist" aria-label="リスト表示モード">
+          <button
+            role="tab"
+            aria-selected={displayMode === 'date'}
+            onClick={() => { if (displayMode !== 'date') onToggleDisplayMode() }}
+            className={`py-2 text-xs font-semibold transition-colors ${
+              displayMode === 'date'
+                ? 'text-sage-600 bg-sage-50/60 border-b-2 border-sage-500'
+                : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
+            }`}
+          >
+            日付順
+          </button>
+          <button
+            role="tab"
+            aria-selected={displayMode === 'category'}
+            onClick={() => { if (displayMode !== 'category') onToggleDisplayMode() }}
+            className={`py-2 text-xs font-semibold transition-colors ${
+              displayMode === 'category'
+                ? 'text-sage-600 bg-sage-50/60 border-b-2 border-sage-500'
+                : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
+            }`}
+          >
+            カテゴリ順
+          </button>
+        </div>
       </div>
 
       {transactions.length === 0 ? (
