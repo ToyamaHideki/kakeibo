@@ -28,7 +28,7 @@ describe('AnnouncementsPage', () => {
     render(<AnnouncementsPage />)
     expect(screen.getByRole('heading', { name: 'お知らせ' })).toBeInTheDocument()
     expect(screen.getByText(/現在のバージョン/)).toBeInTheDocument()
-    expect(screen.getByText(/Ver 1\.0100/)).toBeInTheDocument()
+    expect(screen.getByText(/Ver 1\.0200/)).toBeInTheDocument()
   })
 
   it('読み込み中はローディング表示', () => {

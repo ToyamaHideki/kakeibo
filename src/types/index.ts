@@ -216,6 +216,10 @@ export interface CfPlan {
 
 export type TransactionListDisplayMode = 'date' | 'category'
 
+// ─── Budget ───────────────────────────────────────────────────────────────────
+
+export type BudgetMap = Record<string, number>  // categoryId → amount
+
 // ─── Announcements ────────────────────────────────────────────────────────────
 
 // Firestore: announcements/{docId}（全ユーザー共通リリースノート、読み取り専用）

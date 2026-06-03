@@ -8,7 +8,7 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore'
-import type { Category, CfPlan, FixedCost, MonthDocument, PaymentMethod, Transaction } from '../types'
+import type { BudgetMap, Category, CfPlan, FixedCost, MonthDocument, PaymentMethod, Transaction } from '../types'
 import { db } from './firebase'
 import {
   GUEST_HOUSEHOLD_ID,
@@ -182,4 +182,43 @@ export async function fetchBudget(householdId: string, yearMonth: string): Promi
 export async function updateBudgetAmount(householdId: string, yearMonth: string, categoryId: string, amount: number): Promise<void> {
   if (householdId === GUEST_HOUSEHOLD_ID) { guestUpdateBudget(yearMonth, categoryId, amount); return }
   await setDoc(doc(db, 'households', householdId, 'budgets', yearMonth), { [categoryId]: amount }, { merge: true })
+}
+
+/**
+ * 前月の予算を当月へ「空欄補完」で引き継ぐ。
+ * - prev[id] > 0 かつ current[id] が 0/undefined のキーだけコピー
+ * - 戻り値：補完件数
+ */
+export async function copyBudgetFromPrevious(
+  householdId: string,
+  currentYearMonth: string,
+  previousYearMonth: string,
+): Promise<number> {
+  const [prev, current] = await Promise.all([
+    fetchBudget(householdId, previousYearMonth),
+    fetchBudget(householdId, currentYearMonth),
+  ])
+
+  const patch: BudgetMap = {}
+  for (const [categoryId, amount] of Object.entries(prev)) {
+    const currentAmount = current[categoryId] ?? 0
+    if (amount > 0 && !(currentAmount > 0)) {
+      patch[categoryId] = amount
+    }
+  }
+  const count = Object.keys(patch).length
+  if (count === 0) return 0
+
+  if (householdId === GUEST_HOUSEHOLD_ID) {
+    for (const [cid, amount] of Object.entries(patch)) {
+      guestUpdateBudget(currentYearMonth, cid, amount)
+    }
+  } else {
+    await setDoc(
+      doc(db, 'households', householdId, 'budgets', currentYearMonth),
+      patch,
+      { merge: true },
+    )
+  }
+  return count
 }

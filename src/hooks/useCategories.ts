@@ -98,7 +98,11 @@ export function useCategories() {
     )
   }
 
-  return { categories, loading, addCategoryLocally, removeCategoryLocally }
+  async function reload() {
+    await queryClient.invalidateQueries({ queryKey: ['categories', householdId] })
+  }
+
+  return { categories, loading, addCategoryLocally, removeCategoryLocally, reload }
 }
 
 function sortCategories(cats: Category[]): Category[] {

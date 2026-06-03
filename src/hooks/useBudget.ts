@@ -1,19 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import type { BudgetMap } from '../types'
 import { fetchBudget, updateBudgetAmount } from '../firebase/firestore'
 import { useHousehold } from './useHousehold'
 
 export function useBudget(yearMonth: string) {
   const { householdId } = useHousehold()
-  const [budgets, setBudgets] = useState<Record<string, number>>({})
+  const [budgets, setBudgets] = useState<BudgetMap>({})
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const reload = useCallback(async () => {
     if (!householdId) return
     setLoading(true)
-    fetchBudget(householdId, yearMonth)
-      .then(data => setBudgets(data))
-      .finally(() => setLoading(false))
-  }, [yearMonth, householdId])
+    try {
+      const data = await fetchBudget(householdId, yearMonth)
+      setBudgets(data)
+    } finally {
+      setLoading(false)
+    }
+  }, [householdId, yearMonth])
+
+  useEffect(() => {
+    void reload()
+  }, [reload])
 
   async function saveBudgetAmount(categoryId: string, amount: number) {
     if (!householdId) return
@@ -21,5 +29,5 @@ export function useBudget(yearMonth: string) {
     setBudgets(prev => ({ ...prev, [categoryId]: amount }))
   }
 
-  return { budgets, loading, saveBudgetAmount }
+  return { budgets, loading, saveBudgetAmount, reload }
 }
