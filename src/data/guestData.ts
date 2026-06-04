@@ -220,9 +220,11 @@ export const GUEST_CONTRACTS: Contract[] = [
 // ─── 買い物リスト ─────────────────────────────────────────────────────────────
 
 export const GUEST_SHOPPING_ITEMS: ShoppingItem[] = [
-  { id: 'si-1', name: '牛乳',               checked: false, order: 1 },
-  { id: 'si-2', name: 'トイレットペーパー', checked: false, order: 2 },
-  { id: 'si-3', name: '卵',                 checked: false, order: 3 },
+  { id: 'si-1', name: '牛乳',               checked: false, order: 1, category: 'dairy' },
+  { id: 'si-2', name: 'トイレットペーパー', checked: false, order: 2, category: 'daily' },
+  { id: 'si-3', name: '卵',                 checked: false, order: 3, category: 'dairy' },
+  { id: 'si-6', name: 'にんじん',           checked: false, order: 6, category: 'veg'   },
+  { id: 'si-7', name: '鶏むね肉',           checked: false, order: 7, category: 'meat'  },
   { id: 'si-4', name: '洗剤（食器用）',     checked: true,  order: 4 },
   { id: 'si-5', name: 'シャンプー',         checked: true,  order: 5 },
 ]
