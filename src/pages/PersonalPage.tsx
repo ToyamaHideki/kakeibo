@@ -21,6 +21,7 @@ import {
 } from '../firebase/personalFirestore'
 import { updateHouseholdSettings } from '../firebase/householdFirestore'
 import YearMonthPicker from '../components/YearMonthPicker'
+import SegmentedToggle from '../components/SegmentedToggle'
 import type { Transaction, TransactionListDisplayMode } from '../types'
 import { adjacentMonth, currentYearMonth, formatYearMonth, formatPayPeriodLabel } from '../utils/date'
 
@@ -172,23 +173,16 @@ function PersonalExpenseView({ user }: { user: User }) {
       </div>
 
       {/* タブバー�E�モバイルのみ�E�E*/}
-      <div className="flex border-b border-gray-200 mb-4 md:hidden">
-        <button
-          onClick={() => setActiveTab('list')}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-            activeTab === 'list' ? 'text-sage-600 border-b-2 border-sage-600' : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          リスト
-        </button>
-        <button
-          onClick={() => setActiveTab('chart')}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-            activeTab === 'chart' ? 'text-sage-600 border-b-2 border-sage-600' : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          グラフ
-        </button>
+      <div className="mb-4 md:hidden">
+        <SegmentedToggle
+          ariaLabel="リスト・グラフ表示切替"
+          value={activeTab}
+          onChange={setActiveTab}
+          options={[
+            { value: 'list', label: 'リスト' },
+            { value: 'chart', label: 'グラフ' },
+          ]}
+        />
       </div>
 
       {loading ? (

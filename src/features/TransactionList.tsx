@@ -3,6 +3,7 @@ import { deleteTransaction } from '../firebase/firestore'
 import { useHousehold } from '../hooks/useHousehold'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
+import SegmentedToggle from '../components/SegmentedToggle'
 import type { Category, PaymentMethod, Transaction, TransactionListDisplayMode } from '../types'
 
 interface Props {
@@ -161,35 +162,15 @@ export default function TransactionList({
   return (
     <div className="space-y-3">
       {/* ヘッダーカード（表示モード切替トグル：ピルがスライドアニメーション） */}
-      <div className="bg-gray-100 rounded-xl p-1">
-        <div className="relative grid grid-cols-2" role="tablist" aria-label="リスト表示モード">
-          <span
-            aria-hidden="true"
-            className="absolute top-0 left-0 h-full w-1/2 rounded-lg bg-white shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
-            style={{ transform: displayMode === 'date' ? 'translateX(0%)' : 'translateX(100%)' }}
-          />
-          <button
-            role="tab"
-            aria-selected={displayMode === 'date'}
-            onClick={() => { if (displayMode !== 'date') onToggleDisplayMode() }}
-            className={`relative z-10 py-2 text-xs font-semibold transition-colors duration-200 ${
-              displayMode === 'date' ? 'text-sage-700' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            日付順
-          </button>
-          <button
-            role="tab"
-            aria-selected={displayMode === 'category'}
-            onClick={() => { if (displayMode !== 'category') onToggleDisplayMode() }}
-            className={`relative z-10 py-2 text-xs font-semibold transition-colors duration-200 ${
-              displayMode === 'category' ? 'text-sage-700' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            カテゴリ順
-          </button>
-        </div>
-      </div>
+      <SegmentedToggle
+        ariaLabel="リスト表示モード"
+        value={displayMode}
+        onChange={() => onToggleDisplayMode()}
+        options={[
+          { value: 'date', label: '日付順' },
+          { value: 'category', label: 'カテゴリ順' },
+        ]}
+      />
 
       {transactions.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center">
