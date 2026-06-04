@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "test": "vitest",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "announce": "node scripts/addAnnouncements.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -36,6 +37,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
+    "firebase-admin": "^13.10.0",
     "globals": "^15.14.0",
     "jsdom": "^29.1.1",
     "postcss": "^8.4.49",
