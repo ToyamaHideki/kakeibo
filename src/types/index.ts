@@ -59,6 +59,7 @@ export interface ShoppingItem {
   name: string
   checked: boolean
   order: number
+  category?: string  // 売り場カテゴリ（未設定=未分類）
 }
 
 export interface HouseholdTask {
