@@ -3,6 +3,7 @@ import {
   currentYear,
   currentYearMonth,
   currentPayPeriodMonth,
+  monthFromPath,
   formatYearMonth,
   adjacentMonth,
   getPayPeriodRange,
@@ -65,6 +66,25 @@ describe('currentPayPeriodMonth', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-01-05'))
     expect(currentPayPeriodMonth(20)).toBe('2025-12')
+  })
+})
+
+describe('monthFromPath', () => {
+  it('/months/yyyy-MM から月を取り出す', () => {
+    expect(monthFromPath('/months/2026-03')).toBe('2026-03')
+  })
+
+  it('/personal/months/yyyy-MM から月を取り出す', () => {
+    expect(monthFromPath('/personal/months/2026-03')).toBe('2026-03')
+  })
+
+  it('/budget/yyyy-MM から月を取り出す', () => {
+    expect(monthFromPath('/budget/2026-03')).toBe('2026-03')
+  })
+
+  it('月を持たない画面では null を返す', () => {
+    expect(monthFromPath('/annual')).toBeNull()
+    expect(monthFromPath('/shopping')).toBeNull()
   })
 })
 

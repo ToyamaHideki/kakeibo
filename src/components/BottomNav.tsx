@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { currentPayPeriodMonth } from '../utils/date'
+import { currentPayPeriodMonth, monthFromPath } from '../utils/date'
 import { useHousehold } from '../hooks/useHousehold'
 
 type SubPage = { label: string; path: string }
@@ -96,7 +96,9 @@ export default function BottomNav() {
   const location = useLocation()
   const navigate = useNavigate()
   const { payDay } = useHousehold()
-  const categories = buildCategories(currentPayPeriodMonth(payDay))
+  // 月を持つ画面を閲覧中はその月を、それ以外は給与日起算の当月分を引き継ぐ
+  const linkMonth = monthFromPath(location.pathname) ?? currentPayPeriodMonth(payDay)
+  const categories = buildCategories(linkMonth)
   const activeCatId = activeCategory(location.pathname)
   const activeCat = categories.find(c => c.id === activeCatId)!
 

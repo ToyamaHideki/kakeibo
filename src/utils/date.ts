@@ -20,6 +20,14 @@ export function currentPayPeriodMonth(payDay: number | null): string {
   return calendarMonth
 }
 
+// 月を持つ画面 (/months, /personal/months, /budget) の pathname から
+// 閲覧中の月 (yyyy-MM) を取り出す。該当しなければ null。
+// ナビゲーション時に閲覧中の月を他画面へ引き継ぐために使う。
+export function monthFromPath(pathname: string): string | null {
+  const match = pathname.match(/\/(?:months|budget)\/(\d{4}-\d{2})/)
+  return match ? match[1]! : null
+}
+
 // "yyyy-MM" 形式の文字列を year/month の数値に分解する内部ヘルパー
 // 入力形式が保証されているため、分割結果が undefined になることはない
 function parseYearMonth(yearMonth: string): { year: number; month: number } {

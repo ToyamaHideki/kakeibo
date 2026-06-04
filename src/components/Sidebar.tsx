@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { currentPayPeriodMonth } from '../utils/date'
+import { currentPayPeriodMonth, monthFromPath } from '../utils/date'
 import { useAuth } from '../hooks/useAuth'
 import { useHousehold } from '../hooks/useHousehold'
 import { signOut } from '../firebase/auth'
@@ -9,7 +9,8 @@ export default function Sidebar() {
   const location = useLocation()
   const { user } = useAuth()
   const { payDay } = useHousehold()
-  const periodMonth = currentPayPeriodMonth(payDay)
+  // 月を持つ画面を閲覧中はその月を、それ以外は給与日起算の当月分を引き継ぐ
+  const periodMonth = monthFromPath(location.pathname) ?? currentPayPeriodMonth(payDay)
   const isMonthlyActive = location.pathname.startsWith('/months/')
   const isAnnualActive = location.pathname === '/annual'
   const isCashflowActive = location.pathname === '/cashflow'
