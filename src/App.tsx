@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { HouseholdProvider } from './hooks/useHousehold'
+import { HouseholdProvider, useHousehold } from './hooks/useHousehold'
 import Layout from './components/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { currentYear, currentYearMonth } from './utils/date'
+import { currentYear, currentPayPeriodMonth } from './utils/date'
 import { lazyWithReload } from './utils/lazyWithReload'
 
 const MonthlyPage = lazyWithReload(() => import('./pages/MonthlyPage'))
@@ -24,6 +24,14 @@ const SavingsManagementPage = lazyWithReload(() => import('./pages/SavingsManage
 const HouseholdSettingsPage = lazyWithReload(() => import('./pages/HouseholdSettingsPage'))
 const AnnouncementsPage = lazyWithReload(() => import('./pages/AnnouncementsPage'))
 
+// 給与日を起算とした「当月分」へリダイレクトする。
+// 給与日未設定の場合はカレンダー月。state==='ready'（payDay 読込済み）の
+// Layout 配下でのみ描画されるため、ここで payDay を安全に参照できる。
+function PayPeriodRedirect({ basePath }: { basePath: string }) {
+  const { payDay } = useHousehold()
+  return <Navigate to={`${basePath}/${currentPayPeriodMonth(payDay)}`} replace />
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -32,16 +40,16 @@ function App() {
           <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-gray-500 text-sm">読み込み中...</div>}>
             <Routes>
               <Route path="/" element={<Layout />}>
-                <Route index element={<Navigate to={`/months/${currentYearMonth()}`} replace />} />
+                <Route index element={<PayPeriodRedirect basePath="/months" />} />
                 <Route path="months/:yearMonth" element={<MonthlyPage />} />
                 <Route path="annual" element={<AnnualPage />} />
                 <Route path="cashflow" element={<CashflowPage />} />
                 <Route path="fixed-costs" element={<FixedCostsPage />} />
-                <Route path="personal" element={<Navigate to={`/personal/months/${currentYearMonth()}`} replace />} />
+                <Route path="personal" element={<PayPeriodRedirect basePath="/personal/months" />} />
                 <Route path="personal/months/:yearMonth" element={<PersonalPage />} />
                 <Route path="shopping" element={<ShoppingListPage />} />
                 <Route path="tasks" element={<HouseholdTasksPage />} />
-                <Route path="budget" element={<Navigate to={`/budget/${currentYearMonth()}`} replace />} />
+                <Route path="budget" element={<PayPeriodRedirect basePath="/budget" />} />
                 <Route path="budget/:yearMonth" element={<BudgetPage />} />
                 <Route path="contracts" element={<ContractsPage />} />
                 <Route path="subscriptions" element={<SubscriptionsPage />} />

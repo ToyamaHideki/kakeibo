@@ -7,6 +7,19 @@ export function currentYearMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }
 
+// 給与日を起算とした「当月分」の yyyy-MM を返す。
+// payDay 未設定（null）の場合はカレンダー月をそのまま返す。
+// 例: payDay=20・今日=2026-06-04 → 期間 2026-05(5/20〜6/19) に属するため "2026-05"
+export function currentPayPeriodMonth(payDay: number | null): string {
+  const calendarMonth = currentYearMonth()
+  if (!payDay) return calendarMonth
+  // 給与日より前の日付は前月分の期間に属する
+  if (new Date().getDate() < payDay) {
+    return adjacentMonth(calendarMonth, -1)
+  }
+  return calendarMonth
+}
+
 // "yyyy-MM" 形式の文字列を year/month の数値に分解する内部ヘルパー
 // 入力形式が保証されているため、分割結果が undefined になることはない
 function parseYearMonth(yearMonth: string): { year: number; month: number } {

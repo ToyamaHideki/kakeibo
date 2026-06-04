@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import AnnouncementsPage from '../pages/AnnouncementsPage'
+import { APP_VERSION_LABEL } from '../constants/version'
 import type { Announcement } from '../types'
 
 vi.mock('../hooks/useAnnouncements', () => ({
@@ -28,7 +29,7 @@ describe('AnnouncementsPage', () => {
     render(<AnnouncementsPage />)
     expect(screen.getByRole('heading', { name: 'お知らせ' })).toBeInTheDocument()
     expect(screen.getByText(/現在のバージョン/)).toBeInTheDocument()
-    expect(screen.getByText(/Ver 1\.0300/)).toBeInTheDocument()
+    expect(screen.getByText(new RegExp(APP_VERSION_LABEL))).toBeInTheDocument()
   })
 
   it('読み込み中はローディング表示', () => {

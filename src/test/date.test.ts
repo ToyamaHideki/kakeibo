@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import {
   currentYear,
   currentYearMonth,
+  currentPayPeriodMonth,
   formatYearMonth,
   adjacentMonth,
   getPayPeriodRange,
@@ -31,6 +32,39 @@ describe('currentYearMonth', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-09-01'))
     expect(currentYearMonth()).toBe('2025-09')
+  })
+})
+
+describe('currentPayPeriodMonth', () => {
+  it('給与日未設定（null）はカレンダー月を返す', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-04'))
+    expect(currentPayPeriodMonth(null)).toBe('2026-06')
+  })
+
+  it('給与日より前の日付は前月分を返す', () => {
+    // 給与日20・今日6/4 → 期間 2026-05(5/20〜6/19) に属する
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-04'))
+    expect(currentPayPeriodMonth(20)).toBe('2026-05')
+  })
+
+  it('給与日当日は当月分を返す', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-20'))
+    expect(currentPayPeriodMonth(20)).toBe('2026-06')
+  })
+
+  it('給与日より後の日付は当月分を返す', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-25'))
+    expect(currentPayPeriodMonth(20)).toBe('2026-06')
+  })
+
+  it('年をまたぐ場合: 1月かつ給与日前は前年12月分を返す', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-01-05'))
+    expect(currentPayPeriodMonth(20)).toBe('2025-12')
   })
 })
 
