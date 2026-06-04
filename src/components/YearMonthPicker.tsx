@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { currentYearMonth } from '../utils/date'
+import { currentPayPeriodMonth } from '../utils/date'
+import { useHousehold } from '../hooks/useHousehold'
 
 interface Props {
   yearMonth: string
@@ -16,7 +17,8 @@ export default function YearMonthPicker({ yearMonth, isOpen, onClose, onChange }
   const selectedYear = Number(yearMonth.split('-')[0])
   const selectedMonth = Number(yearMonth.split('-')[1])
 
-  const today = currentYearMonth()
+  const { payDay } = useHousehold()
+  const today = currentPayPeriodMonth(payDay)
   const todayYear = Number(today.split('-')[0])
   const todayMonth = Number(today.split('-')[1])
 

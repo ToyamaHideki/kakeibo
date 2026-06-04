@@ -1,73 +1,77 @@
 import { useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { currentYearMonth } from '../utils/date'
+import { currentPayPeriodMonth } from '../utils/date'
+import { useHousehold } from '../hooks/useHousehold'
 
 type SubPage = { label: string; path: string }
 type Category = { id: string; label: string; subPages: SubPage[]; firstPath: string }
 
-const categories: Category[] = [
-  {
-    id: 'kakeibo',
-    label: '家計',
-    firstPath: `/months/${currentYearMonth()}`,
-    subPages: [
-      { label: '月別収支', path: `/months/${currentYearMonth()}` },
-      { label: '年間収支', path: '/annual' },
-      { label: '固定費', path: '/fixed-costs' },
-      { label: '予算', path: `/budget/${currentYearMonth()}` },
-      { label: '目標', path: '/goals' },
-    ],
-  },
-  {
-    id: 'lifestyle',
-    label: '生活',
-    firstPath: '/shopping',
-    subPages: [
-      { label: '買い物', path: '/shopping' },
-      { label: '家事', path: '/tasks' },
-      { label: 'サブスク', path: '/subscriptions' },
-      { label: '保険・ローン', path: '/contracts' },
-    ],
-  },
-  {
-    id: 'lifeplan',
-    label: 'ライフプラン',
-    firstPath: '/cashflow',
-    subPages: [
-      { label: 'CF表', path: '/cashflow' },
-      { label: '収支確認表', path: '/income-statement' },
-      { label: '証券', path: '/securities' },
-      { label: 'BS', path: '/balance-sheet' },
-    ],
-  },
-  {
-    id: 'assets',
-    label: '資産',
-    firstPath: '/savings-management',
-    subPages: [
-      { label: '貯蓄管理', path: '/savings-management' },
-      { label: '貯蓄目標', path: '/goals' },
-      { label: '証券口座', path: '/securities' },
-    ],
-  },
-  {
-    id: 'personal',
-    label: '個人管理',
-    firstPath: `/personal/months/${currentYearMonth()}`,
-    subPages: [
-      { label: '個人支出', path: `/personal/months/${currentYearMonth()}` },
-    ],
-  },
-  {
-    id: 'settings',
-    label: '設定',
-    firstPath: '/household-settings',
-    subPages: [
-      { label: '設定', path: '/household-settings' },
-      { label: 'お知らせ', path: '/announcements' },
-    ],
-  },
-]
+// 月リンクは給与日起算の「当月分」(ym) を埋め込む。
+function buildCategories(ym: string): Category[] {
+  return [
+    {
+      id: 'kakeibo',
+      label: '家計',
+      firstPath: `/months/${ym}`,
+      subPages: [
+        { label: '月別収支', path: `/months/${ym}` },
+        { label: '年間収支', path: '/annual' },
+        { label: '固定費', path: '/fixed-costs' },
+        { label: '予算', path: `/budget/${ym}` },
+        { label: '目標', path: '/goals' },
+      ],
+    },
+    {
+      id: 'lifestyle',
+      label: '生活',
+      firstPath: '/shopping',
+      subPages: [
+        { label: '買い物', path: '/shopping' },
+        { label: '家事', path: '/tasks' },
+        { label: 'サブスク', path: '/subscriptions' },
+        { label: '保険・ローン', path: '/contracts' },
+      ],
+    },
+    {
+      id: 'lifeplan',
+      label: 'ライフプラン',
+      firstPath: '/cashflow',
+      subPages: [
+        { label: 'CF表', path: '/cashflow' },
+        { label: '収支確認表', path: '/income-statement' },
+        { label: '証券', path: '/securities' },
+        { label: 'BS', path: '/balance-sheet' },
+      ],
+    },
+    {
+      id: 'assets',
+      label: '資産',
+      firstPath: '/savings-management',
+      subPages: [
+        { label: '貯蓄管理', path: '/savings-management' },
+        { label: '貯蓄目標', path: '/goals' },
+        { label: '証券口座', path: '/securities' },
+      ],
+    },
+    {
+      id: 'personal',
+      label: '個人管理',
+      firstPath: `/personal/months/${ym}`,
+      subPages: [
+        { label: '個人支出', path: `/personal/months/${ym}` },
+      ],
+    },
+    {
+      id: 'settings',
+      label: '設定',
+      firstPath: '/household-settings',
+      subPages: [
+        { label: '設定', path: '/household-settings' },
+        { label: 'お知らせ', path: '/announcements' },
+      ],
+    },
+  ]
+}
 
 function activeCategory(pathname: string): string {
   if (pathname.startsWith('/personal')) return 'personal'
@@ -91,6 +95,8 @@ export default function BottomNav() {
   const navRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const navigate = useNavigate()
+  const { payDay } = useHousehold()
+  const categories = buildCategories(currentPayPeriodMonth(payDay))
   const activeCatId = activeCategory(location.pathname)
   const activeCat = categories.find(c => c.id === activeCatId)!
 

@@ -1,12 +1,15 @@
 import { Link, useLocation } from 'react-router-dom'
-import { currentYearMonth } from '../utils/date'
+import { currentPayPeriodMonth } from '../utils/date'
 import { useAuth } from '../hooks/useAuth'
+import { useHousehold } from '../hooks/useHousehold'
 import { signOut } from '../firebase/auth'
 import { APP_VERSION_LABEL } from '../constants/version'
 
 export default function Sidebar() {
   const location = useLocation()
   const { user } = useAuth()
+  const { payDay } = useHousehold()
+  const periodMonth = currentPayPeriodMonth(payDay)
   const isMonthlyActive = location.pathname.startsWith('/months/')
   const isAnnualActive = location.pathname === '/annual'
   const isCashflowActive = location.pathname === '/cashflow'
@@ -40,7 +43,7 @@ export default function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto px-3 space-y-1 py-1">
         <li className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">家計管理</li>
-        <Link to={`/months/${currentYearMonth()}`} className={navItemClass(isMonthlyActive)}>
+        <Link to={`/months/${periodMonth}`} className={navItemClass(isMonthlyActive)}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="4" width="18" height="18" rx="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
@@ -73,7 +76,7 @@ export default function Sidebar() {
           固定費一覧
         </Link>
 
-        <Link to={`/budget/${currentYearMonth()}`} className={navItemClass(isBudgetActive)}>
+        <Link to={`/budget/${periodMonth}`} className={navItemClass(isBudgetActive)}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
@@ -83,7 +86,7 @@ export default function Sidebar() {
         </Link>
 
         <li className="pt-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">個人管理</li>
-        <Link to={`/personal/months/${currentYearMonth()}`} className={navItemClass(isPersonalActive)}>
+        <Link to={`/personal/months/${periodMonth}`} className={navItemClass(isPersonalActive)}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
             <circle cx="12" cy="7" r="4" />
