@@ -4,6 +4,7 @@ import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import { useHousehold } from '../hooks/useHousehold'
 import { signInAsGuest, signInWithGoogle, signOut } from '../firebase/auth'
 import type { Category, PaymentMethod } from '../types'
+import { useNavAutoHide } from '../hooks/useNavAutoHide'
 import HouseholdSetupPage from '../pages/HouseholdSetupPage'
 import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
@@ -22,6 +23,7 @@ export default function Layout() {
   const { state, user, isGuest, reloadHousehold } = useHousehold()
   const { categories, addCategoryLocally, removeCategoryLocally, updateCategoryLocally } = useCategories()
   const { paymentMethods, addPaymentMethodLocally, removePaymentMethodLocally } = usePaymentMethods()
+  const navHidden = useNavAutoHide()
 
   if (state === 'loading') {
     return (
@@ -122,12 +124,15 @@ export default function Layout() {
   void user
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-stone-50">
+    <div
+      className="flex h-dvh overflow-hidden bg-stone-50"
+      style={{ '--nav-shown': navHidden ? 0 : 1 } as React.CSSProperties}
+    >
       <div className="hidden md:flex md:shrink-0">
         <Sidebar />
       </div>
 
-      <main className="flex-1 overflow-hidden pb-16 md:pb-0 flex flex-col">
+      <main className={`flex-1 overflow-hidden md:pb-0 flex flex-col transition-[padding] duration-500 ${navHidden ? 'pb-0' : 'pb-16'}`}>
         {isGuest && (
           <div className="flex items-center justify-between px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs shrink-0">
             <span>ゲストモード：サンプルデータを表示中。変更はリロードでリセットされます。</span>
@@ -144,7 +149,7 @@ export default function Layout() {
         </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden">
+      <nav className={`fixed bottom-0 left-0 right-0 z-40 md:hidden transition-transform duration-500 ${navHidden ? 'translate-y-full' : 'translate-y-0'}`}>
         <BottomNav />
       </nav>
     </div>
