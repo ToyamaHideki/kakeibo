@@ -36,6 +36,22 @@ export function useShoppingList() {
     setItems(prev => sorted([...prev, { id, ...newItem }]))
   }
 
+  async function addItems(entries: { name: string; category?: string }[]) {
+    if (!householdId || entries.length === 0) return
+    const uncheckedOrders = items.filter(i => !i.checked).map(i => i.order)
+    let nextOrder = uncheckedOrders.length > 0 ? Math.min(...uncheckedOrders) - 1 : 0
+    const created: ShoppingItem[] = []
+    for (const entry of entries) {
+      const newItem: Omit<ShoppingItem, 'id'> = {
+        name: entry.name, checked: false, order: nextOrder, ...(entry.category ? { category: entry.category } : {}),
+      }
+      const id = await addShoppingItem(householdId, newItem)
+      created.push({ id, ...newItem })
+      nextOrder -= 1
+    }
+    setItems(prev => sorted([...prev, ...created]))
+  }
+
   async function setCategory(id: string, category: string) {
     if (!householdId) return
     await updateShoppingItem(householdId, id, { category })
@@ -77,7 +93,7 @@ export function useShoppingList() {
   const uncheckedItems = items.filter(i => !i.checked)
   const checkedItems = items.filter(i => i.checked)
 
-  return { uncheckedItems, checkedItems, loading, addItem, toggleItem, setCategory, deleteItem, clearChecked, reorderItems }
+  return { uncheckedItems, checkedItems, loading, addItem, addItems, toggleItem, setCategory, deleteItem, clearChecked, reorderItems }
 }
 
 function sorted(items: ShoppingItem[]): ShoppingItem[] {

@@ -12,6 +12,8 @@ interface Props {
   zClass?: string
   /** 最大高さクラス（デフォルト: max-h-[92vh] md:max-h-[90vh]）*/
   maxHeightClass?: string
+  /** PC幅の最大幅クラス（デフォルト: md:max-w-md）*/
+  widthClass?: string
 }
 
 export default function BottomSheetModal({
@@ -21,6 +23,7 @@ export default function BottomSheetModal({
   children,
   zClass = 'z-50',
   maxHeightClass = 'max-h-[92vh] md:max-h-[90vh]',
+  widthClass = 'md:max-w-md',
 }: Props) {
   useEscapeKey(onClose, isOpen)
 
@@ -63,7 +66,7 @@ export default function BottomSheetModal({
     >
       <div
         ref={panelRef}
-        className={`bg-white w-full md:max-w-md md:rounded-xl rounded-t-2xl shadow-xl flex flex-col ${maxHeightClass}`}
+        className={`bg-white w-full ${widthClass} md:rounded-xl rounded-t-2xl shadow-xl flex flex-col ${maxHeightClass}`}
         role="presentation"
         onClick={e => e.stopPropagation()}
       >
