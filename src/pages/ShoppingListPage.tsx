@@ -4,27 +4,8 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS } from '@dnd-kit/utilities'
 import { useShoppingList } from '../hooks/useShoppingList'
 import type { ShoppingItem } from '../types'
-
-// 売り場カテゴリ（店内を回る順を意識した並び）
-const SHOPPING_CATEGORIES = [
-  { key: 'veg',    label: '野菜・果物',   emoji: '🥬' },
-  { key: 'meat',   label: '肉・魚',       emoji: '🥩' },
-  { key: 'dairy',  label: '乳・卵',       emoji: '🥚' },
-  { key: 'staple', label: 'パン・米',     emoji: '🍞' },
-  { key: 'drink',  label: '飲料',         emoji: '🥤' },
-  { key: 'frozen', label: '冷凍',         emoji: '❄️' },
-  { key: 'deli',   label: '惣菜',         emoji: '🍤' },
-  { key: 'season', label: '調味料・乾物', emoji: '🧂' },
-  { key: 'snack',  label: 'お菓子',       emoji: '🍫' },
-  { key: 'daily',  label: '日用品',       emoji: '🧴' },
-] as const
-
-const UNCATEGORIZED = { key: '', label: '未分類', emoji: '📦' }
-const ORDERED_KEYS = [...SHOPPING_CATEGORIES.map(c => c.key), UNCATEGORIZED.key]
-
-function categoryOf(key?: string) {
-  return SHOPPING_CATEGORIES.find(c => c.key === key) ?? UNCATEGORIZED
-}
+import { SHOPPING_CATEGORIES, UNCATEGORIZED, ORDERED_KEYS, categoryOf } from '../data/shoppingCatalog'
+import BulkAddModal from '../features/BulkAddModal'
 
 function groupUnchecked(items: ShoppingItem[]) {
   return ORDERED_KEYS
@@ -52,9 +33,10 @@ function GripIcon() {
 }
 
 export default function ShoppingListPage() {
-  const { uncheckedItems, checkedItems, loading, addItem, toggleItem, setCategory, deleteItem, clearChecked, reorderItems } = useShoppingList()
+  const { uncheckedItems, checkedItems, loading, addItem, addItems, toggleItem, setCategory, deleteItem, clearChecked, reorderItems } = useShoppingList()
   const [name, setName] = useState('')
   const [targetCat, setTargetCat] = useState('')
+  const [bulkOpen, setBulkOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function handleSubmit(e: FormEvent) {
@@ -131,7 +113,7 @@ export default function ShoppingListPage() {
         </form>
 
         {/* 追加先カテゴリの選択 */}
-        <div className="flex flex-wrap gap-1.5 mb-6">
+        <div className="flex flex-wrap gap-1.5 mb-3">
           {[UNCATEGORIZED, ...SHOPPING_CATEGORIES].map(cat => (
             <button
               key={cat.key || 'none'}
@@ -147,6 +129,19 @@ export default function ShoppingListPage() {
             </button>
           ))}
         </div>
+
+        {/* まとめて追加 */}
+        <button
+          type="button"
+          onClick={() => setBulkOpen(true)}
+          className="flex items-center gap-2 mb-6 px-4 py-2.5 bg-white border border-sage-200 text-sage-700 rounded-xl text-sm font-medium hover:bg-sage-50 transition-colors shadow-sm"
+        >
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <circle cx="8" cy="17" r="1.2" /><circle cx="16" cy="17" r="1.2" />
+            <path d="M2 3h2l1.5 9.5a1 1 0 001 .8h8.5a1 1 0 001-.8L18 6H5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          定番からまとめて追加
+        </button>
 
         {/* 空の状態 */}
         {isEmpty && (
@@ -225,6 +220,13 @@ export default function ShoppingListPage() {
           </>
         )}
       </div>
+
+      <BulkAddModal
+        isOpen={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        existingNames={uncheckedItems.map(i => i.name)}
+        onAdd={entries => addItems(entries)}
+      />
     </div>
   )
 }
