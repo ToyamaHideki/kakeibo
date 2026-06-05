@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 @media (max-width: 767px) {
+  /* --nav-shown: ボトムナビ表示中=1 / 非表示=0。隠れるとナビ高さ分の余白が詰まり FAB も連動して下がる */
   .fab-mobile {
-    bottom: calc(var(--bn-height, 56px) + 24px);
+    bottom: calc(var(--bn-height, 56px) * var(--nav-shown, 1) + 24px);
+    transition: bottom 500ms;
   }
 }
