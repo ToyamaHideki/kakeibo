@@ -1,19 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { addFixedCost, deleteFixedCost, fetchFixedCosts, updateFixedCost } from '../firebase/firestore'
 import { useHousehold } from '../hooks/useHousehold'
+import { useContracts } from '../hooks/useContracts'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
 import FixedCostModal from '../features/FixedCostModal'
 import FixedCostCalendar from '../features/FixedCostCalendar'
 import FixedCostDayModal from '../features/FixedCostDayModal'
 import { getDaysInMonth, getEffectiveDay, isApplicableThisMonth, FREQ_LABEL } from '../utils/fixedCost'
+import { buildFixedItems, CONTRACT_TYPE_SHORT_LABEL, type FixedItem } from '../utils/fixedItem'
+import { getShowPersonalInFixedCosts } from '../utils/fixedCostsPrefs'
 import type { FixedCost } from '../types'
 
 export default function FixedCostsPage() {
-  const { householdId } = useHousehold()
+  const { householdId, user } = useHousehold()
+  const { contracts } = useContracts()
+  const [showPersonal] = useState(getShowPersonalInFixedCosts())
   const today = new Date()
   const [viewYear, setViewYear] = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth() + 1)
@@ -62,6 +67,19 @@ export default function FixedCostsPage() {
     setDayModalOpen(false)
   }
 
+  // 日別モーダルは FixedItem を渡してくるため、固定費のみ元の FixedCost に解決して処理する
+  function handleEditItemFromDay(item: FixedItem) {
+    if (item.source !== 'fixedCost') return
+    const fc = costs.find(c => c.id === item.id)
+    if (fc) openEditFromDay(fc)
+  }
+
+  function handleDeleteItemFromDay(item: FixedItem) {
+    if (item.source !== 'fixedCost') return
+    const fc = costs.find(c => c.id === item.id)
+    if (fc) void handleDeleteFromDay(fc)
+  }
+
   async function handleSave(data: Omit<FixedCost, 'id' | 'order'>) {
     if (!householdId) return
     if (editTarget) {
@@ -99,24 +117,30 @@ export default function FixedCostsPage() {
 
   const daysInMonth = getDaysInMonth(viewYear, viewMonth)
 
-  const costsByDay = new Map<number, FixedCost[]>()
-  for (const cost of costs) {
-    if (!isApplicableThisMonth(cost, viewYear, viewMonth)) continue
-    const { effectiveDay, overflows } = getEffectiveDay(cost.dayOfMonth, viewYear, viewMonth)
+  // 固定費＋契約（共有＋設定ONで自分の個人）を正規化して集約
+  const items = useMemo(
+    () => buildFixedItems(costs, contracts, { includePersonal: showPersonal, currentUid: user?.uid ?? null }),
+    [costs, contracts, showPersonal, user?.uid],
+  )
+  const contractItems = items.filter(i => i.source === 'contract').sort((a, b) => a.dayOfMonth - b.dayOfMonth)
+
+  const costsByDay = new Map<number, FixedItem[]>()
+  for (const item of items) {
+    if (!isApplicableThisMonth(item, viewYear, viewMonth)) continue
+    const { effectiveDay, overflows } = getEffectiveDay(item.dayOfMonth, viewYear, viewMonth)
     if (!overflows) {
       const arr = costsByDay.get(effectiveDay) ?? []
-      arr.push(cost)
+      arr.push(item)
       costsByDay.set(effectiveDay, arr)
     }
   }
 
-  const applicableCosts = costs.filter(c => {
-    const freq = c.frequency ?? 'monthly'
-    if (freq === 'monthly') return c.dayOfMonth <= daysInMonth
-    return isApplicableThisMonth(c, viewYear, viewMonth)
+  const applicableItems = items.filter(it => {
+    if (it.frequency === 'monthly') return it.dayOfMonth <= daysInMonth
+    return isApplicableThisMonth(it, viewYear, viewMonth)
   })
-  const monthlyTotal = applicableCosts.filter(c => !c.isVariable).reduce((sum, c) => sum + c.amount, 0)
-  const variableCount = applicableCosts.filter(c => c.isVariable).length
+  const monthlyTotal = applicableItems.filter(it => !it.isVariable).reduce((sum, it) => sum + it.amount, 0)
+  const variableCount = applicableItems.filter(it => it.isVariable).length
 
   if (loading) {
     return (
@@ -193,7 +217,7 @@ export default function FixedCostsPage() {
         </div>
 
         {/* 右カラム: 固定費リスト（デスクトップのみ・D&D対応）*/}
-        <div className="hidden md:block md:flex-1 md:overflow-y-auto md:min-h-0">
+        <div className="hidden md:block md:flex-1 md:overflow-y-auto md:min-h-0 space-y-4">
           {costs.length === 0 ? (
             <div className="text-center py-10 text-gray-500 text-sm">固定費が登録されていません</div>
           ) : (
@@ -226,6 +250,23 @@ export default function FixedCostsPage() {
               </SortableContext>
             </DndContext>
           )}
+
+          {/* 契約（参照のみ） */}
+          {contractItems.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 mb-2 px-1">契約（参照）</p>
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden divide-y divide-gray-100">
+                {contractItems.map(item => (
+                  <ReadOnlyContractRow
+                    key={item.id}
+                    item={item}
+                    viewYear={viewYear}
+                    viewMonth={viewMonth}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -236,8 +277,8 @@ export default function FixedCostsPage() {
           month={viewMonth}
           year={viewYear}
           costs={dayModalCosts}
-          onEdit={openEditFromDay}
-          onDelete={handleDeleteFromDay}
+          onEdit={handleEditItemFromDay}
+          onDelete={handleDeleteItemFromDay}
           onClose={() => setDayModalOpen(false)}
         />
       )}
@@ -249,6 +290,64 @@ export default function FixedCostsPage() {
         onSave={handleSave}
       />
       <ConfirmDialog {...dialogProps} />
+    </div>
+  )
+}
+
+// 契約の参照専用行（編集・削除・並べ替え不可）
+function ReadOnlyContractRow({
+  item,
+  viewYear,
+  viewMonth,
+}: {
+  item: FixedItem
+  viewYear: number
+  viewMonth: number
+}) {
+  const applicable = isApplicableThisMonth(item, viewYear, viewMonth)
+  const { effectiveDay, isShifted, overflows } = getEffectiveDay(item.dayOfMonth, viewYear, viewMonth)
+  const freqLabel = FREQ_LABEL[item.frequency]
+
+  return (
+    <div className={`flex items-center gap-3 px-4 py-3 ${!applicable ? 'opacity-50' : ''}`}>
+      <div className="w-10 shrink-0 text-center">
+        {!applicable ? (
+          <>
+            <span className="text-xs font-bold text-gray-500 block">{item.month}月</span>
+            <span className="text-xs text-gray-500 block leading-none">{item.dayOfMonth}日</span>
+          </>
+        ) : overflows ? (
+          <>
+            <span className="text-sm font-bold text-gray-500">{item.dayOfMonth}</span>
+            <span className="text-xs text-gray-500 block leading-none">日</span>
+          </>
+        ) : (
+          <>
+            <span className={`text-sm font-bold ${isShifted ? 'text-amber-600' : 'text-blue-500'}`}>
+              {effectiveDay}
+            </span>
+            <span className="text-xs text-gray-500 block leading-none">{isShifted ? '振替' : '日'}</span>
+          </>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+          <span className="text-[10px] shrink-0 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600">
+            {CONTRACT_TYPE_SHORT_LABEL[item.contractType!]}
+          </span>
+          {item.scope === 'personal' && (
+            <span className="text-[10px] shrink-0 px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">個人</span>
+          )}
+          <span className="text-sm font-medium text-gray-800 truncate">{item.name}</span>
+          {freqLabel && (
+            <span className="text-[10px] shrink-0 px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-600">{freqLabel}</span>
+          )}
+        </div>
+        {item.paymentMethod && <div className="text-xs text-gray-500 truncate">{item.paymentMethod}</div>}
+      </div>
+      <div className="shrink-0 text-right">
+        <div className="text-sm font-semibold text-gray-800">¥{item.amount.toLocaleString()}</div>
+      </div>
     </div>
   )
 }

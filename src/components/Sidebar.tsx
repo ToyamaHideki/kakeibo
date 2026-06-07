@@ -44,6 +44,15 @@ export default function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto px-3 space-y-1 py-1">
         <li className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">家計管理</li>
+        <Link to={`/budget/${periodMonth}`} className={navItemClass(isBudgetActive)}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          予算管理
+        </Link>
+
         <Link to={`/months/${periodMonth}`} className={navItemClass(isMonthlyActive)}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -77,13 +86,19 @@ export default function Sidebar() {
           固定費一覧
         </Link>
 
-        <Link to={`/budget/${periodMonth}`} className={navItemClass(isBudgetActive)}>
+        <Link to="/subscriptions" className={navItemClass(isSubscriptionsActive)}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
+            <rect x="2" y="3" width="20" height="14" rx="2" />
+            <path d="M8 21h8M12 17v4" />
           </svg>
-          予算管理
+          サブスク管理
+        </Link>
+
+        <Link to="/contracts" className={navItemClass(isContractsActive)}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          保険・ローン管理
         </Link>
 
         <li className="pt-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">個人管理</li>
@@ -112,21 +127,6 @@ export default function Sidebar() {
             <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
           </svg>
           家事タスク
-        </Link>
-
-        <Link to="/subscriptions" className={navItemClass(isSubscriptionsActive)}>
-          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="2" y="3" width="20" height="14" rx="2" />
-            <path d="M8 21h8M12 17v4" />
-          </svg>
-          サブスク管理
-        </Link>
-
-        <Link to="/contracts" className={navItemClass(isContractsActive)}>
-          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          保険・ローン管理
         </Link>
 
         <li className="pt-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">資産管理</li>

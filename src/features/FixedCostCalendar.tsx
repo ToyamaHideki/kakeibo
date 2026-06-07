@@ -1,15 +1,30 @@
-import { getDaysInMonth, getFirstDayOfWeek, dotColor } from '../utils/fixedCost'
-import type { FixedCost } from '../types'
+import { getDaysInMonth, getFirstDayOfWeek } from '../utils/fixedCost'
+import type { FixedItem } from '../utils/fixedItem'
+import { CONTRACT_TYPE_SHORT_LABEL } from '../utils/fixedItem'
 
 interface Props {
   viewYear: number
   viewMonth: number
-  costsByDay: Map<number, FixedCost[]>
+  costsByDay: Map<number, FixedItem[]>
   today: Date
   onDayClick: (day: number) => void
 }
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
+
+// モバイル用ドット色
+function dotColorFor(item: FixedItem): string {
+  if (item.source === 'contract') return 'bg-blue-400'
+  if (item.isVariable) return 'bg-amber-400'
+  return item.frequency === 'monthly' ? 'bg-sage-400' : 'bg-teal-400'
+}
+
+// デスクトップ用チップ色
+function chipClassFor(item: FixedItem): string {
+  if (item.source === 'contract') return 'bg-blue-50 text-blue-700'
+  if (item.isVariable) return 'bg-amber-50 text-amber-700'
+  return item.frequency === 'monthly' ? 'bg-sage-50 text-sage-700' : 'bg-teal-50 text-teal-700'
+}
 
 export default function FixedCostCalendar({ viewYear, viewMonth, costsByDay, today, onDayClick }: Props) {
   const daysInMonth = getDaysInMonth(viewYear, viewMonth)
@@ -76,7 +91,7 @@ export default function FixedCostCalendar({ viewYear, viewMonth, costsByDay, tod
                   {hasCosts && (
                     <div className="md:hidden flex flex-wrap gap-0.5 justify-center mt-1">
                       {dayCosts.slice(0, 4).map(c => (
-                        <span key={c.id} className={`w-1.5 h-1.5 rounded-full ${dotColor(c)}`} />
+                        <span key={c.id} className={`w-1.5 h-1.5 rounded-full ${dotColorFor(c)}`} />
                       ))}
                       {dayCosts.length > 4 && (
                         <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
@@ -89,15 +104,13 @@ export default function FixedCostCalendar({ viewYear, viewMonth, costsByDay, tod
                     {dayCosts.map(c => (
                       <span
                         key={c.id}
-                        className={`block text-[10px] leading-tight rounded px-1 py-0.5 truncate ${
-                          c.isVariable
-                            ? 'bg-amber-50 text-amber-700'
-                            : (c.frequency ?? 'monthly') === 'monthly'
-                            ? 'bg-sage-50 text-sage-700'
-                            : 'bg-teal-50 text-teal-700'
-                        }`}
+                        className={`block text-[10px] leading-tight rounded px-1 py-0.5 truncate ${chipClassFor(c)}`}
                         title={c.name}
                       >
+                        {c.source === 'contract' && (
+                          <span className="font-semibold">{CONTRACT_TYPE_SHORT_LABEL[c.contractType!]}・</span>
+                        )}
+                        {c.scope === 'personal' && <span className="text-blue-400">[個]</span>}
                         {c.name}
                       </span>
                     ))}

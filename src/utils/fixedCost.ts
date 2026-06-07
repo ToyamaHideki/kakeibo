@@ -1,4 +1,11 @@
-import type { FixedCost } from '../types'
+import type { FixedCost, FixedCostFrequency } from '../types'
+
+// 繰り返し判定に必要な最小フィールド（FixedCost / FixedItem の両方が満たす）
+type RecurringSpec = {
+  frequency?: FixedCostFrequency | undefined
+  month?: number | undefined
+  baseYear?: number | undefined
+}
 
 export function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month, 0).getDate()
@@ -23,7 +30,7 @@ export function getEffectiveDay(
   return { effectiveDay, isShifted: shift > 0, overflows: effectiveDay > daysInMonth }
 }
 
-export function isApplicableThisMonth(cost: FixedCost, year: number, month: number): boolean {
+export function isApplicableThisMonth(cost: RecurringSpec, year: number, month: number): boolean {
   const freq = cost.frequency ?? 'monthly'
   if (freq === 'monthly') return true
   if (cost.month === undefined) return false

@@ -5,8 +5,9 @@ import { CSS } from '@dnd-kit/utilities'
 import { useContracts } from '../hooks/useContracts'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
+import { useHousehold } from '../hooks/useHousehold'
 import ConfirmDialog from '../components/ConfirmDialog'
-import type { Contract, PaymentFrequency } from '../types'
+import type { Contract, ContractScope, PaymentFrequency } from '../types'
 
 // ─── ユーティリティ ────────────────────────────────────────────────────────────
 
@@ -72,6 +73,7 @@ type FormState = {
   startDate: string
   isAutoRenew: boolean
   memo: string
+  scope: ContractScope
 }
 
 const defaultForm: FormState = {
@@ -83,6 +85,7 @@ const defaultForm: FormState = {
   startDate: '',
   isAutoRenew: true,
   memo: '',
+  scope: 'shared',
 }
 
 function contractToForm(c: Contract): FormState {
@@ -95,6 +98,7 @@ function contractToForm(c: Contract): FormState {
     startDate: c.startDate ?? '',
     isAutoRenew: c.isAutoRenew,
     memo: c.memo ?? '',
+    scope: c.scope ?? 'shared',
   }
 }
 
@@ -102,6 +106,7 @@ function contractToForm(c: Contract): FormState {
 
 export default function SubscriptionsPage() {
   const { contracts: allContracts, loading, addContract, updateContract, deleteContract, reorderContracts } = useContracts()
+  const { user } = useHousehold()
   const subscriptions = allContracts.filter(c => c.contractType === 'subscription')
   const nonSubscriptions = allContracts.filter(c => c.contractType !== 'subscription')
   const { confirm, dialogProps } = useConfirm()
@@ -141,7 +146,9 @@ export default function SubscriptionsPage() {
       amount,
       frequency: form.frequency,
       isAutoRenew: form.isAutoRenew,
+      scope: form.scope,
     }
+    if (form.scope === 'personal' && user?.uid) data.owner = user.uid
     if (form.renewalDate) data.renewalDate = form.renewalDate
     if (form.paymentMethod.trim()) data.paymentMethod = form.paymentMethod.trim()
     if (form.startDate) data.startDate = form.startDate
@@ -348,6 +355,10 @@ export default function SubscriptionsPage() {
                   onChange={e => setForm(f => ({ ...f, renewalDate: e.target.value }))}
                   className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
                 />
+                <p className="text-[11px] text-gray-400 mt-1">
+                  区分が「共有」かつ次回更新日を設定すると、<br />
+                  固定費一覧に表示され、月の合計にも反映されます。
+                </p>
               </div>
 
               {/* 支払い方法 */}
@@ -373,6 +384,29 @@ export default function SubscriptionsPage() {
                   onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
                   className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
                 />
+              </div>
+
+              {/* 共有/個人 */}
+              <div>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- 共有/個人の選択ボタン群のラベル */}
+                <label className="block text-xs font-medium text-gray-600 mb-1">区分</label>
+                <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+                  {(['shared', 'personal'] as ContractScope[]).map(s => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, scope: s }))}
+                      className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                        form.scope === s ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {s === 'shared' ? '共有' : '個人'}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  共有は世帯の固定費一覧に表示されます。個人は設定で表示を切り替えできます。
+                </p>
               </div>
 
               {/* 自動更新 */}
