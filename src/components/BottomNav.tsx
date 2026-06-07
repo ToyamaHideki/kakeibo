@@ -59,6 +59,7 @@ function buildCategories(ym: string): Category[] {
       firstPath: `/personal/months/${ym}`,
       subPages: [
         { label: '個人支出', path: `/personal/months/${ym}` },
+        { label: '固定費', path: '/personal/fixed-costs' },
       ],
     },
     {
@@ -85,7 +86,7 @@ function activeCategory(pathname: string): string {
 
 function isSubPageActive(pathname: string, subPath: string): boolean {
   if (subPath.startsWith('/months/')) return pathname.startsWith('/months/')
-  if (subPath.startsWith('/personal/months/')) return pathname.startsWith('/personal/')
+  if (subPath.startsWith('/personal/months/')) return pathname.startsWith('/personal/months') || pathname === '/personal'
   if (subPath.startsWith('/budget/')) return pathname.startsWith('/budget/')
   if (subPath === '/income-statement') return pathname.startsWith('/income-statement')
   if (subPath === '/balance-sheet') return pathname.startsWith('/balance-sheet')

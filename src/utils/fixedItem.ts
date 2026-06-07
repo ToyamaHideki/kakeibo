@@ -79,6 +79,19 @@ export function buildFixedItems(
   return items
 }
 
+// 個人固定費一覧用：指定ユーザーの個人契約（renewalDate あり）のみを FixedItem 化する。
+export function buildPersonalContractItems(contracts: Contract[], uid: string | null): FixedItem[] {
+  if (!uid) return []
+  const items: FixedItem[] = []
+  for (const c of contracts) {
+    if ((c.scope ?? 'shared') !== 'personal') continue
+    if (c.owner !== uid) continue
+    const item = contractToItem(c)
+    if (item) items.push(item)
+  }
+  return items
+}
+
 export const CONTRACT_TYPE_SHORT_LABEL: Record<ContractType, string> = {
   subscription: 'サブスク',
   insurance: '保険',

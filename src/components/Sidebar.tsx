@@ -15,7 +15,8 @@ export default function Sidebar() {
   const isAnnualActive = location.pathname === '/annual'
   const isCashflowActive = location.pathname === '/cashflow'
   const isFixedCostsActive = location.pathname === '/fixed-costs'
-  const isPersonalActive = location.pathname.startsWith('/personal')
+  const isPersonalActive = location.pathname.startsWith('/personal/months') || location.pathname === '/personal'
+  const isPersonalFixedActive = location.pathname === '/personal/fixed-costs'
   const isShoppingActive = location.pathname === '/shopping'
   const isTasksActive = location.pathname === '/tasks'
   const isContractsActive = location.pathname === '/contracts'
@@ -108,6 +109,18 @@ export default function Sidebar() {
             <circle cx="12" cy="7" r="4" />
           </svg>
           個人支出
+        </Link>
+
+        <Link to="/personal/fixed-costs" className={navItemClass(isPersonalFixedActive)}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+            <line x1="8" y1="14" x2="16" y2="14" />
+            <line x1="8" y1="18" x2="13" y2="18" />
+          </svg>
+          個人の固定費
         </Link>
 
         <li className="pt-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">生活管理</li>
