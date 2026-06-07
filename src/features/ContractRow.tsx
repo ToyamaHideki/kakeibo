@@ -43,7 +43,9 @@ export default function ContractRow({
             {CONTRACT_TYPE_SHORT_LABEL[item.contractType!]}
           </span>
           {item.scope === 'personal' && (
-            <span className="text-[10px] shrink-0 px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">個人</span>
+            <span className="text-[10px] shrink-0 px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+              {item.ownerLabel ? `個人・${item.ownerLabel}` : '個人'}
+            </span>
           )}
           <span className="text-sm font-medium text-gray-800 truncate">{item.name}</span>
           {freqLabel && (

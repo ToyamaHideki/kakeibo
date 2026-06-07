@@ -53,7 +53,9 @@ export default function FixedCostDayModal({ day, month, year, costs, onEdit, onD
                       </span>
                     )}
                     {cost.scope === 'personal' && (
-                      <span className="text-[10px] shrink-0 px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">個人</span>
+                      <span className="text-[10px] shrink-0 px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                        {cost.ownerLabel ? `個人・${cost.ownerLabel}` : '個人'}
+                      </span>
                     )}
                     <span className="text-sm font-medium text-gray-800 truncate">{cost.name}</span>
                     {freqLabel && (

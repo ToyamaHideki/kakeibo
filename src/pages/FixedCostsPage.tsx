@@ -5,6 +5,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { addFixedCost, deleteFixedCost, fetchFixedCosts, updateFixedCost } from '../firebase/firestore'
 import { useHousehold } from '../hooks/useHousehold'
 import { useContracts } from '../hooks/useContracts'
+import { useMemberProfiles } from '../hooks/useMemberProfiles'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
 import FixedCostModal from '../features/FixedCostModal'
@@ -17,8 +18,9 @@ import ContractRow from '../features/ContractRow'
 import type { FixedCost } from '../types'
 
 export default function FixedCostsPage() {
-  const { householdId, user } = useHousehold()
+  const { householdId } = useHousehold()
   const { contracts } = useContracts()
+  const memberNames = useMemberProfiles()
   const [showPersonal] = useState(getShowPersonalInFixedCosts())
   const today = new Date()
   const [viewYear, setViewYear] = useState(today.getFullYear())
@@ -120,8 +122,8 @@ export default function FixedCostsPage() {
 
   // 固定費＋契約（共有＋設定ONで自分の個人）を正規化して集約
   const items = useMemo(
-    () => buildFixedItems(costs, contracts, { includePersonal: showPersonal, currentUid: user?.uid ?? null }),
-    [costs, contracts, showPersonal, user?.uid],
+    () => buildFixedItems(costs, contracts, { includePersonal: showPersonal, memberNames }),
+    [costs, contracts, showPersonal, memberNames],
   )
   const contractItems = items.filter(i => i.source === 'contract').sort((a, b) => a.dayOfMonth - b.dayOfMonth)
 
