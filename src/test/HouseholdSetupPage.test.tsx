@@ -41,6 +41,7 @@ const DEFAULT_HH = {
   transactionListDisplayMode: 'date' as const,
   isGuest: false,
   reloadHousehold: mockReloadHousehold,
+  applyGuestSettings: () => {},
 }
 
 beforeEach(() => {

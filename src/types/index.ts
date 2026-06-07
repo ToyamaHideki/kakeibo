@@ -221,6 +221,11 @@ export type TransactionListDisplayMode = 'date' | 'category'
 
 export type BudgetMap = Record<string, number>  // categoryId → amount
 
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
+// PC版ダッシュボードの表示対象の管理。MVP で実装するのは 'household' のみ。
+export type DashboardView = 'household' | 'assets' | 'living' | 'lifeplan'
+
 // ─── Announcements ────────────────────────────────────────────────────────────
 
 // Firestore: announcements/{docId}（全ユーザー共通リリースノート、読み取り専用）

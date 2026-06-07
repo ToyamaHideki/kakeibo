@@ -17,6 +17,7 @@ interface Props {
   categories: Category[]
   paymentMethods: PaymentMethod[]
   yearMonth: string
+  initialDate?: string | undefined  // 新規登録時の初期日付（"yyyy-MM-dd"）。省略時は当日
   editTarget?: Transaction | undefined
   // personal モード用オーバーライド（省略時は household 動作）
   title?: string | undefined
@@ -42,6 +43,7 @@ export default function TransactionModal({
   categories,
   paymentMethods,
   yearMonth,
+  initialDate,
   editTarget,
   title = '収支',
   saveFn,
@@ -80,9 +82,9 @@ export default function TransactionModal({
       setCategoryId('')
       setPaymentMethodId('')
       setMemo('')
-      setDate(new Date().toISOString().slice(0, 10))
+      setDate(initialDate ?? new Date().toISOString().slice(0, 10))
     }
-  }, [isOpen, editTarget, yearMonth])
+  }, [isOpen, editTarget, yearMonth, initialDate])
 
   // タイプ切替時にカテゴリをリセット（編集時は維持）
   useEffect(() => {

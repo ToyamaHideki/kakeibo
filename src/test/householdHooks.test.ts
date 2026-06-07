@@ -26,6 +26,7 @@ const DEFAULT_HH = {
   transactionListDisplayMode: 'date' as const,
   isGuest: false,
   reloadHousehold: async () => {},
+  applyGuestSettings: () => {},
 }
 
 beforeEach(() => {
