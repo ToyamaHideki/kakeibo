@@ -342,7 +342,7 @@ export default function HouseholdSettingsPage() {
           <label className="flex items-center justify-between gap-3">
             <span className="text-sm text-gray-700">
               個人の契約も固定費一覧に表示する
-              <span className="block text-xs text-gray-400 mt-0.5">オフのときは共有の契約のみ表示します</span>
+              <span className="block text-xs text-gray-400 mt-0.5">世帯メンバー全員の個人契約を持ち主つきで表示します（オフは共有のみ）</span>
             </span>
             <input
               type="checkbox"

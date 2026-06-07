@@ -13,6 +13,8 @@ export interface FixedItem {
   baseYear?: number | undefined        // fixedCost の every2/3years 用
   scope: ContractScope                 // fixedCost は常に 'shared'
   contractType?: ContractType | undefined  // contract のときのみ
+  owner?: string | undefined           // personal 契約の持ち主 uid
+  ownerLabel?: string | undefined      // 表示用の持ち主名（解決済み）
   paymentMethod?: string | undefined
   memo?: string | undefined
   order: number
@@ -52,29 +54,32 @@ export function contractToItem(c: Contract): FixedItem | null {
     month: c.frequency === 'yearly' ? m : undefined,
     scope: c.scope ?? 'shared',
     contractType: c.contractType,
+    owner: c.owner,
     paymentMethod: c.paymentMethod,
     memo: c.memo,
     order: c.order,
   }
 }
 
-// 固定費一覧に表示する FixedItem を組み立てる。
+// 世帯の固定費一覧に表示する FixedItem を組み立てる。
 // - 固定費：全件
-// - 契約：共有（＋ includePersonal かつ owner===currentUid の個人）かつ renewalDate あり
+// - 契約：共有（＋ includePersonal のとき世帯メンバー全員の個人）かつ renewalDate あり
+// 個人契約には memberNames から持ち主表示名(ownerLabel)を解決して付与する。
 export function buildFixedItems(
   fixedCosts: FixedCost[],
   contracts: Contract[],
-  opts: { includePersonal: boolean; currentUid: string | null },
+  opts: { includePersonal: boolean; memberNames?: Record<string, string> },
 ): FixedItem[] {
   const items: FixedItem[] = fixedCosts.map(fixedCostToItem)
   for (const c of contracts) {
     const scope = c.scope ?? 'shared'
-    if (scope === 'personal') {
-      if (!opts.includePersonal) continue
-      if (!opts.currentUid || c.owner !== opts.currentUid) continue
-    }
+    if (scope === 'personal' && !opts.includePersonal) continue
     const item = contractToItem(c)
-    if (item) items.push(item)
+    if (!item) continue
+    if (scope === 'personal' && item.owner) {
+      item.ownerLabel = opts.memberNames?.[item.owner] ?? 'メンバー'
+    }
+    items.push(item)
   }
   return items
 }

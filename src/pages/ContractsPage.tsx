@@ -6,6 +6,7 @@ import { useContracts } from '../hooks/useContracts'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
 import { useHousehold } from '../hooks/useHousehold'
+import { useMemberProfiles } from '../hooks/useMemberProfiles'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { formatYen } from '../utils/format'
 import type { Contract, ContractScope, ContractType, PaymentFrequency } from '../types'
@@ -108,6 +109,7 @@ function contractToForm(c: Contract): FormState {
 export default function ContractsPage() {
   const { contracts: allContracts, loading, addContract, updateContract, deleteContract, reorderContracts } = useContracts()
   const { user } = useHousehold()
+  const memberNames = useMemberProfiles()
   const contracts = allContracts.filter(c => c.contractType !== 'subscription')
   const subscriptions = allContracts.filter(c => c.contractType === 'subscription')
   const { confirm, dialogProps } = useConfirm()
@@ -150,7 +152,9 @@ export default function ContractsPage() {
       isAutoRenew: form.isAutoRenew,
       scope: form.scope,
     }
-    if (form.scope === 'personal' && user?.uid) data.owner = user.uid
+    // 個人の持ち主は「既存は元のownerを維持／新規は作成者」。編集で他人のものを奪わない
+    const resolvedOwner = editTarget?.owner ?? user?.uid
+    if (form.scope === 'personal' && resolvedOwner) data.owner = resolvedOwner
     if (form.renewalDate) data.renewalDate = form.renewalDate
     if (form.paymentMethod.trim()) data.paymentMethod = form.paymentMethod.trim()
     if (form.startDate) data.startDate = form.startDate
@@ -232,7 +236,7 @@ export default function ContractsPage() {
               まもなく更新
             </p>
             <div className="space-y-2">
-              {upcoming.map(c => <ContractCard key={c.id} contract={c} onEdit={openEdit} />)}
+              {upcoming.map(c => <ContractCard key={c.id} contract={c} onEdit={openEdit} memberNames={memberNames} />)}
             </div>
           </div>
         )}
@@ -247,7 +251,7 @@ export default function ContractsPage() {
               <SortableContext items={rest.map(c => c.id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
                   {rest.map(c => (
-                    <SortableContractCard key={c.id} contract={c} onEdit={openEdit} />
+                    <SortableContractCard key={c.id} contract={c} onEdit={openEdit} memberNames={memberNames} />
                   ))}
                 </div>
               </SortableContext>
@@ -479,8 +483,9 @@ export default function ContractsPage() {
 
 // ─── ContractCard ─────────────────────────────────────────────────────────────
 
-function ContractCard({ contract: c, onEdit }: { contract: Contract; onEdit: (c: Contract) => void }) {
+function ContractCard({ contract: c, onEdit, memberNames }: { contract: Contract; onEdit: (c: Contract) => void; memberNames: Record<string, string> }) {
   const badge = c.renewalDate ? renewalBadge(c.renewalDate) : null
+  const ownerLabel = c.scope === 'personal' ? (c.owner ? memberNames[c.owner] ?? 'メンバー' : '個人') : null
 
   return (
     <button
@@ -494,6 +499,9 @@ function ContractCard({ contract: c, onEdit }: { contract: Contract; onEdit: (c:
               {CONTRACT_TYPE_LABEL[c.contractType]}
             </span>
             <span className="text-sm font-medium text-gray-800 truncate">{c.name}</span>
+            {ownerLabel && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">個人・{ownerLabel}</span>
+            )}
             {c.isAutoRenew && (
               <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" className="text-sage-400 shrink-0">
                 <path fillRule="evenodd" d="M8 3a5 5 0 104.546 2.914.5.5 0 000-.986A4 4 0 118 4.25v-.75a.5.5 0 00-.854-.354L5.646 4.646a.5.5 0 000 .708l1.5 1.5a.5.5 0 10.708-.708L7.207 5.5H8V3z"/>
@@ -528,7 +536,7 @@ function ContractCard({ contract: c, onEdit }: { contract: Contract; onEdit: (c:
 
 // ─── SortableContractCard ──────────────────────────────────────────────────────
 
-function SortableContractCard({ contract: c, onEdit }: { contract: Contract; onEdit: (c: Contract) => void }) {
+function SortableContractCard({ contract: c, onEdit, memberNames }: { contract: Contract; onEdit: (c: Contract) => void; memberNames: Record<string, string> }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: c.id })
 
@@ -554,7 +562,7 @@ function SortableContractCard({ contract: c, onEdit }: { contract: Contract; onE
         </svg>
       </button>
       <div className="flex-1 min-w-0">
-        <ContractCard contract={c} onEdit={onEdit} />
+        <ContractCard contract={c} onEdit={onEdit} memberNames={memberNames} />
       </div>
     </div>
   )
