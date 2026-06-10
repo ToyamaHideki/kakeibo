@@ -122,6 +122,7 @@ export interface SecuritiesAccount {
 
 export type ContractType = 'subscription' | 'insurance' | 'loan' | 'other'
 export type PaymentFrequency = 'monthly' | 'yearly'
+export type ContractScope = 'shared' | 'personal'
 
 export interface Contract {
   id: string
@@ -135,6 +136,8 @@ export interface Contract {
   isAutoRenew: boolean
   memo?: string
   order: number
+  scope?: ContractScope   // 未設定は 'shared' とみなす（既存データ互換）
+  owner?: string          // scope==='personal' のとき作成者 uid
 }
 
 // ─── Income Statement ────────────────────────────────────────────────────────

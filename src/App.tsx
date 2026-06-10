@@ -13,6 +13,7 @@ const AnnualPage = lazyWithReload(() => import('./pages/AnnualPage'))
 const CashflowPage = lazyWithReload(() => import('./pages/CashflowPage'))
 const FixedCostsPage = lazyWithReload(() => import('./pages/FixedCostsPage'))
 const PersonalPage = lazyWithReload(() => import('./pages/PersonalPage'))
+const PersonalFixedCostsPage = lazyWithReload(() => import('./pages/PersonalFixedCostsPage'))
 const ShoppingListPage = lazyWithReload(() => import('./pages/ShoppingListPage'))
 const HouseholdTasksPage = lazyWithReload(() => import('./pages/HouseholdTasksPage'))
 const BudgetPage = lazyWithReload(() => import('./pages/BudgetPage'))
@@ -61,6 +62,7 @@ function App() {
                 <Route path="fixed-costs" element={<FixedCostsPage />} />
                 <Route path="personal" element={<PayPeriodRedirect basePath="/personal/months" />} />
                 <Route path="personal/months/:yearMonth" element={<PersonalPage />} />
+                <Route path="personal/fixed-costs" element={<PersonalFixedCostsPage />} />
                 <Route path="shopping" element={<ShoppingListPage />} />
                 <Route path="tasks" element={<HouseholdTasksPage />} />
                 <Route path="budget" element={<PayPeriodRedirect basePath="/budget" />} />

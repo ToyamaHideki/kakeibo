@@ -13,6 +13,7 @@ import { signOut } from '../firebase/auth'
 import type { Household, MemberProfile } from '../firebase/householdFirestore'
 import type { TransactionListDisplayMode } from '../types'
 import { getDashboardAsHome, setDashboardAsHome } from '../utils/homePreference'
+import { getShowPersonalInFixedCosts, setShowPersonalInFixedCosts } from '../utils/fixedCostsPrefs'
 
 export default function HouseholdSettingsPage() {
   const {
@@ -40,6 +41,7 @@ export default function HouseholdSettingsPage() {
   const [savingDisplayMode, setSavingDisplayMode] = useState(false)
   const [displayModeSaved, setDisplayModeSaved] = useState(false)
   const [dashHome, setDashHome] = useState(getDashboardAsHome())
+  const [showPersonalFC, setShowPersonalFC] = useState(getShowPersonalInFixedCosts())
 
   useEffect(() => {
     // ゲストモードは認証ユーザー・世帯データが無いため Firestore は読まず、
@@ -382,6 +384,25 @@ export default function HouseholdSettingsPage() {
               例：5月の {selectedPayDay}日〜翌{selectedPayDay - 1}日として集計されます
             </p>
           )}
+        </div>
+
+        {/* 固定費一覧セクション */}
+        <h2 className="text-sm font-bold text-gray-700 pt-3 md:pt-4 px-1">固定費一覧</h2>
+
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6">
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">契約の表示</h2>
+          <label className="flex items-center justify-between gap-3">
+            <span className="text-sm text-gray-700">
+              個人の契約も固定費一覧に表示する
+              <span className="block text-xs text-gray-400 mt-0.5">世帯メンバー全員の個人契約を持ち主つきで表示します（オフは共有のみ）</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={showPersonalFC}
+              onChange={e => { setShowPersonalFC(e.target.checked); setShowPersonalInFixedCosts(e.target.checked) }}
+              className="w-5 h-5 accent-sage-600 shrink-0"
+            />
+          </label>
         </div>
       </div>
       <ConfirmDialog {...dialogProps} confirmLabel="再生成する" />

@@ -14,10 +14,12 @@ function buildCategories(ym: string): Category[] {
       label: '家計',
       firstPath: `/months/${ym}`,
       subPages: [
+        { label: '予算', path: `/budget/${ym}` },
         { label: '月別収支', path: `/months/${ym}` },
         { label: '年間収支', path: '/annual' },
         { label: '固定費', path: '/fixed-costs' },
-        { label: '予算', path: `/budget/${ym}` },
+        { label: 'サブスク', path: '/subscriptions' },
+        { label: '保険・ローン', path: '/contracts' },
         { label: '目標', path: '/goals' },
       ],
     },
@@ -28,8 +30,6 @@ function buildCategories(ym: string): Category[] {
       subPages: [
         { label: '買い物', path: '/shopping' },
         { label: '家事', path: '/tasks' },
-        { label: 'サブスク', path: '/subscriptions' },
-        { label: '保険・ローン', path: '/contracts' },
       ],
     },
     {
@@ -59,6 +59,7 @@ function buildCategories(ym: string): Category[] {
       firstPath: `/personal/months/${ym}`,
       subPages: [
         { label: '個人支出', path: `/personal/months/${ym}` },
+        { label: '固定費', path: '/personal/fixed-costs' },
       ],
     },
     {
@@ -75,7 +76,8 @@ function buildCategories(ym: string): Category[] {
 
 function activeCategory(pathname: string): string {
   if (pathname.startsWith('/personal')) return 'personal'
-  if (pathname === '/shopping' || pathname === '/tasks' || pathname === '/contracts' || pathname === '/subscriptions') return 'lifestyle'
+  if (pathname === '/contracts' || pathname === '/subscriptions') return 'kakeibo'
+  if (pathname === '/shopping' || pathname === '/tasks') return 'lifestyle'
   if (pathname === '/cashflow' || pathname.startsWith('/income-statement') || pathname.startsWith('/balance-sheet')) return 'lifeplan'
   if (pathname === '/goals' || pathname === '/securities' || pathname === '/savings-management') return 'assets'
   if (pathname === '/household-settings' || pathname === '/announcements') return 'settings'
@@ -84,7 +86,7 @@ function activeCategory(pathname: string): string {
 
 function isSubPageActive(pathname: string, subPath: string): boolean {
   if (subPath.startsWith('/months/')) return pathname.startsWith('/months/')
-  if (subPath.startsWith('/personal/months/')) return pathname.startsWith('/personal/')
+  if (subPath.startsWith('/personal/months/')) return pathname.startsWith('/personal/months') || pathname === '/personal'
   if (subPath.startsWith('/budget/')) return pathname.startsWith('/budget/')
   if (subPath === '/income-statement') return pathname.startsWith('/income-statement')
   if (subPath === '/balance-sheet') return pathname.startsWith('/balance-sheet')

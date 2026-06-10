@@ -16,7 +16,8 @@ export default function Sidebar() {
   const isAnnualActive = location.pathname === '/annual'
   const isCashflowActive = location.pathname === '/cashflow'
   const isFixedCostsActive = location.pathname === '/fixed-costs'
-  const isPersonalActive = location.pathname.startsWith('/personal')
+  const isPersonalActive = location.pathname.startsWith('/personal/months') || location.pathname === '/personal'
+  const isPersonalFixedActive = location.pathname === '/personal/fixed-costs'
   const isShoppingActive = location.pathname === '/shopping'
   const isTasksActive = location.pathname === '/tasks'
   const isContractsActive = location.pathname === '/contracts'
@@ -55,6 +56,15 @@ export default function Sidebar() {
         </Link>
 
         <li className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">家計管理</li>
+        <Link to={`/budget/${periodMonth}`} className={navItemClass(isBudgetActive)}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          予算管理
+        </Link>
+
         <Link to={`/months/${periodMonth}`} className={navItemClass(isMonthlyActive)}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -88,13 +98,19 @@ export default function Sidebar() {
           固定費一覧
         </Link>
 
-        <Link to={`/budget/${periodMonth}`} className={navItemClass(isBudgetActive)}>
+        <Link to="/subscriptions" className={navItemClass(isSubscriptionsActive)}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
+            <rect x="2" y="3" width="20" height="14" rx="2" />
+            <path d="M8 21h8M12 17v4" />
           </svg>
-          予算管理
+          サブスク管理
+        </Link>
+
+        <Link to="/contracts" className={navItemClass(isContractsActive)}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          保険・ローン管理
         </Link>
 
         <li className="pt-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">個人管理</li>
@@ -104,6 +120,18 @@ export default function Sidebar() {
             <circle cx="12" cy="7" r="4" />
           </svg>
           個人支出
+        </Link>
+
+        <Link to="/personal/fixed-costs" className={navItemClass(isPersonalFixedActive)}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+            <line x1="8" y1="14" x2="16" y2="14" />
+            <line x1="8" y1="18" x2="13" y2="18" />
+          </svg>
+          個人の固定費
         </Link>
 
         <li className="pt-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">生活管理</li>
@@ -123,21 +151,6 @@ export default function Sidebar() {
             <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
           </svg>
           家事タスク
-        </Link>
-
-        <Link to="/subscriptions" className={navItemClass(isSubscriptionsActive)}>
-          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="2" y="3" width="20" height="14" rx="2" />
-            <path d="M8 21h8M12 17v4" />
-          </svg>
-          サブスク管理
-        </Link>
-
-        <Link to="/contracts" className={navItemClass(isContractsActive)}>
-          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          保険・ローン管理
         </Link>
 
         <li className="pt-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">資産管理</li>

@@ -5,8 +5,10 @@ import { CSS } from '@dnd-kit/utilities'
 import { useContracts } from '../hooks/useContracts'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
+import { useHousehold } from '../hooks/useHousehold'
+import { useMemberProfiles } from '../hooks/useMemberProfiles'
 import ConfirmDialog from '../components/ConfirmDialog'
-import type { Contract, PaymentFrequency } from '../types'
+import type { Contract, ContractScope, PaymentFrequency } from '../types'
 
 // ─── ユーティリティ ────────────────────────────────────────────────────────────
 
@@ -72,6 +74,7 @@ type FormState = {
   startDate: string
   isAutoRenew: boolean
   memo: string
+  scope: ContractScope
 }
 
 const defaultForm: FormState = {
@@ -83,6 +86,7 @@ const defaultForm: FormState = {
   startDate: '',
   isAutoRenew: true,
   memo: '',
+  scope: 'shared',
 }
 
 function contractToForm(c: Contract): FormState {
@@ -95,6 +99,7 @@ function contractToForm(c: Contract): FormState {
     startDate: c.startDate ?? '',
     isAutoRenew: c.isAutoRenew,
     memo: c.memo ?? '',
+    scope: c.scope ?? 'shared',
   }
 }
 
@@ -102,6 +107,8 @@ function contractToForm(c: Contract): FormState {
 
 export default function SubscriptionsPage() {
   const { contracts: allContracts, loading, addContract, updateContract, deleteContract, reorderContracts } = useContracts()
+  const { user } = useHousehold()
+  const memberNames = useMemberProfiles()
   const subscriptions = allContracts.filter(c => c.contractType === 'subscription')
   const nonSubscriptions = allContracts.filter(c => c.contractType !== 'subscription')
   const { confirm, dialogProps } = useConfirm()
@@ -141,7 +148,11 @@ export default function SubscriptionsPage() {
       amount,
       frequency: form.frequency,
       isAutoRenew: form.isAutoRenew,
+      scope: form.scope,
     }
+    // 個人の持ち主は「既存は元のownerを維持／新規は作成者」。編集で他人のものを奪わない
+    const resolvedOwner = editTarget?.owner ?? user?.uid
+    if (form.scope === 'personal' && resolvedOwner) data.owner = resolvedOwner
     if (form.renewalDate) data.renewalDate = form.renewalDate
     if (form.paymentMethod.trim()) data.paymentMethod = form.paymentMethod.trim()
     if (form.startDate) data.startDate = form.startDate
@@ -229,7 +240,7 @@ export default function SubscriptionsPage() {
               まもなく更新
             </p>
             <div className="space-y-2">
-              {upcoming.map(c => <SubscriptionCard key={c.id} contract={c} onEdit={openEdit} />)}
+              {upcoming.map(c => <SubscriptionCard key={c.id} contract={c} onEdit={openEdit} memberNames={memberNames} />)}
             </div>
           </div>
         )}
@@ -243,7 +254,7 @@ export default function SubscriptionsPage() {
               <SortableContext items={rest.map(c => c.id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
                   {rest.map(c => (
-                    <SortableSubscriptionCard key={c.id} contract={c} onEdit={openEdit} />
+                    <SortableSubscriptionCard key={c.id} contract={c} onEdit={openEdit} memberNames={memberNames} />
                   ))}
                 </div>
               </SortableContext>
@@ -348,6 +359,10 @@ export default function SubscriptionsPage() {
                   onChange={e => setForm(f => ({ ...f, renewalDate: e.target.value }))}
                   className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
                 />
+                <p className="text-[11px] text-gray-400 mt-1">
+                  区分が「共有」かつ次回更新日を設定すると、<br />
+                  固定費一覧に表示され、月の合計にも反映されます。
+                </p>
               </div>
 
               {/* 支払い方法 */}
@@ -373,6 +388,29 @@ export default function SubscriptionsPage() {
                   onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
                   className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
                 />
+              </div>
+
+              {/* 共有/個人 */}
+              <div>
+                {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- 共有/個人の選択ボタン群のラベル */}
+                <label className="block text-xs font-medium text-gray-600 mb-1">区分</label>
+                <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+                  {(['shared', 'personal'] as ContractScope[]).map(s => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, scope: s }))}
+                      className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                        form.scope === s ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {s === 'shared' ? '共有' : '個人'}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  共有は世帯の固定費一覧に表示されます。個人は設定で表示を切り替えできます。
+                </p>
               </div>
 
               {/* 自動更新 */}
@@ -432,7 +470,7 @@ export default function SubscriptionsPage() {
 
 // ─── SubscriptionCard / SortableSubscriptionCard ──────────────────────────────
 
-function SortableSubscriptionCard({ contract: c, onEdit }: { contract: Contract; onEdit: (c: Contract) => void }) {
+function SortableSubscriptionCard({ contract: c, onEdit, memberNames }: { contract: Contract; onEdit: (c: Contract) => void; memberNames: Record<string, string> }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: c.id })
 
@@ -458,15 +496,16 @@ function SortableSubscriptionCard({ contract: c, onEdit }: { contract: Contract;
         </svg>
       </button>
       <div className="flex-1 min-w-0">
-        <SubscriptionCard contract={c} onEdit={onEdit} />
+        <SubscriptionCard contract={c} onEdit={onEdit} memberNames={memberNames} />
       </div>
     </div>
   )
 }
 
-function SubscriptionCard({ contract: c, onEdit }: { contract: Contract; onEdit: (c: Contract) => void }) {
+function SubscriptionCard({ contract: c, onEdit, memberNames }: { contract: Contract; onEdit: (c: Contract) => void; memberNames: Record<string, string> }) {
   const badge = c.renewalDate ? renewalBadge(c.renewalDate) : null
   const stats = calcStats(c)
+  const ownerLabel = c.scope === 'personal' ? (c.owner ? memberNames[c.owner] ?? 'メンバー' : '個人') : null
 
   return (
     <button
@@ -477,6 +516,9 @@ function SubscriptionCard({ contract: c, onEdit }: { contract: Contract; onEdit:
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-sm font-semibold text-gray-800 truncate">{c.name}</span>
+            {ownerLabel && (
+              <span className="text-[10px] shrink-0 px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">個人・{ownerLabel}</span>
+            )}
             {c.isAutoRenew && (
               <svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor" className="text-blue-300 shrink-0">
                 <path fillRule="evenodd" d="M8 3a5 5 0 104.546 2.914.5.5 0 000-.986A4 4 0 118 4.25v-.75a.5.5 0 00-.854-.354L5.646 4.646a.5.5 0 000 .708l1.5 1.5a.5.5 0 10.708-.708L7.207 5.5H8V3z"/>
