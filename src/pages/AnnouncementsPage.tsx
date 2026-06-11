@@ -28,7 +28,7 @@ export default function AnnouncementsPage() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="max-w-2xl mx-auto px-4 py-4 md:py-8">
+      <div className="max-w-2xl mx-auto px-4 py-4 md:py-8 pb-24 md:pb-8">
         <div className="flex items-baseline justify-between mb-4 md:mb-6 flex-wrap gap-2">
           <h1 className="text-xl font-bold text-gray-800">お知らせ</h1>
           <span className="text-xs text-gray-500">現在のバージョン: {APP_VERSION_LABEL}</span>
