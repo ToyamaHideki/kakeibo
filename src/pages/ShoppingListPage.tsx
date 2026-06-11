@@ -6,6 +6,7 @@ import { useShoppingList } from '../hooks/useShoppingList'
 import type { ShoppingItem } from '../types'
 import { SHOPPING_CATEGORIES, UNCATEGORIZED, ORDERED_KEYS, categoryOf } from '../data/shoppingCatalog'
 import BulkAddModal from '../features/BulkAddModal'
+import GhostLoader from '../components/GhostLoader'
 
 function groupUnchecked(items: ShoppingItem[]) {
   return ORDERED_KEYS
@@ -67,7 +68,7 @@ export default function ShoppingListPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-500 text-sm">読み込み中...</div>
+      <div className="flex items-center justify-center h-48"><GhostLoader label="読み込み中..." /></div>
     )
   }
 

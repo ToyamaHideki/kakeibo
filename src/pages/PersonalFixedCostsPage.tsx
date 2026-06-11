@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { User } from 'firebase/auth'
 import { useHousehold } from '../hooks/useHousehold'
 import { useContracts } from '../hooks/useContracts'
+import GhostLoader from '../components/GhostLoader'
 import FixedCostCalendar from '../features/FixedCostCalendar'
 import FixedCostDayModal from '../features/FixedCostDayModal'
 import ContractRow from '../features/ContractRow'
@@ -84,7 +85,7 @@ function PersonalFixedCostsView({ user }: { user: User }) {
   const monthlyTotal = applicableItems.reduce((sum, it) => sum + it.amount, 0)
 
   if (loading) {
-    return <div className="flex items-center justify-center h-48 text-gray-500 text-sm">読み込み中...</div>
+    return <div className="flex items-center justify-center h-48"><GhostLoader label="読み込み中..." /></div>
   }
 
   const dayModalCosts = selectedDay !== null ? (costsByDay.get(selectedDay) ?? []) : []

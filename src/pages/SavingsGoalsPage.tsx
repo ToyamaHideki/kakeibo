@@ -7,6 +7,7 @@ import { appendCfLifeEvent } from '../firebase/firestore'
 import { useHousehold } from '../hooks/useHousehold'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
+import GhostLoader from '../components/GhostLoader'
 import SavingsGoalModal from '../features/SavingsGoalModal'
 import { currentYearMonth } from '../utils/date'
 import { formatYenCompact as formatYen } from '../utils/format'
@@ -74,7 +75,7 @@ export default function SavingsGoalsPage() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-48 text-gray-500 text-sm">読み込み中...</div>
+    return <div className="flex items-center justify-center h-48"><GhostLoader label="読み込み中..." /></div>
   }
 
   return (

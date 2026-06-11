@@ -9,6 +9,11 @@ import type { TransactionListDisplayMode } from '../types'
 
 export type HouseholdState = 'loading' | 'unauthenticated' | 'needs_setup' | 'ready' | 'error'
 
+interface GuestSettings {
+  payDay?: number | null
+  transactionListDisplayMode?: TransactionListDisplayMode
+}
+
 interface HouseholdContextValue {
   user: User | null
   householdId: string | null
@@ -17,6 +22,8 @@ interface HouseholdContextValue {
   transactionListDisplayMode: TransactionListDisplayMode
   isGuest: boolean
   reloadHousehold: () => Promise<void>
+  // ゲストモード用：設定をセッション中だけ保持する（リロードでリセット）
+  applyGuestSettings: (settings: GuestSettings) => void
 }
 
 const HouseholdContext = createContext<HouseholdContextValue>({
@@ -27,6 +34,7 @@ const HouseholdContext = createContext<HouseholdContextValue>({
   transactionListDisplayMode: 'date',
   isGuest: false,
   reloadHousehold: async () => {},
+  applyGuestSettings: () => {},
 })
 
 export function HouseholdProvider({ children }: { children: ReactNode }) {
@@ -65,6 +73,13 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
     if (user) await loadHousehold(user)
   }
 
+  function applyGuestSettings(settings: GuestSettings) {
+    if (settings.payDay !== undefined) setPayDay(settings.payDay)
+    if (settings.transactionListDisplayMode !== undefined) {
+      setTransactionListDisplayMode(settings.transactionListDisplayMode)
+    }
+  }
+
   useEffect(() => {
     function handleGuestMode() {
       initGuestStore(buildGuestData())
@@ -95,7 +110,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
   const isGuest = householdId === GUEST_HOUSEHOLD_ID
 
   const value = useMemo(
-    () => ({ user, householdId, state, payDay, transactionListDisplayMode, isGuest, reloadHousehold }),
+    () => ({ user, householdId, state, payDay, transactionListDisplayMode, isGuest, reloadHousehold, applyGuestSettings }),
     [user, householdId, state, payDay, transactionListDisplayMode, isGuest], // eslint-disable-line react-hooks/exhaustive-deps
   )
 

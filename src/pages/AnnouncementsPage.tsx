@@ -1,5 +1,6 @@
 import { useAnnouncements } from '../hooks/useAnnouncements'
 import { APP_VERSION_LABEL } from '../constants/version'
+import GhostLoader from '../components/GhostLoader'
 import type { Announcement } from '../types'
 
 function formatReleasedAt(ms: number): string {
@@ -34,8 +35,8 @@ export default function AnnouncementsPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-48 text-gray-500 text-sm">
-            読み込み中...
+          <div className="flex items-center justify-center h-48">
+            <GhostLoader label="読み込み中..." />
           </div>
         ) : announcements.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center text-gray-500 text-sm">

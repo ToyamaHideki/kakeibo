@@ -2,10 +2,13 @@ import { Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { HouseholdProvider, useHousehold } from './hooks/useHousehold'
 import Layout from './components/Layout'
+import GhostLoader from './components/GhostLoader'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { currentYear, currentPayPeriodMonth } from './utils/date'
+import { getDashboardAsHome, isDesktopViewport } from './utils/homePreference'
 import { lazyWithReload } from './utils/lazyWithReload'
 
+const DashboardPage = lazyWithReload(() => import('./pages/DashboardPage'))
 const MonthlyPage = lazyWithReload(() => import('./pages/MonthlyPage'))
 const AnnualPage = lazyWithReload(() => import('./pages/AnnualPage'))
 const CashflowPage = lazyWithReload(() => import('./pages/CashflowPage'))
@@ -33,15 +36,27 @@ function PayPeriodRedirect({ basePath }: { basePath: string }) {
   return <Navigate to={`${basePath}/${currentPayPeriodMonth(payDay)}`} replace />
 }
 
+// トップ（/）の初期表示先を決める。
+// デスクトップ かつ「PCのトップにダッシュボードを表示する」設定が ON のときのみダッシュボードへ。
+// それ以外は従来通り給与日起算の月別収支へ。
+function RootRedirect() {
+  const { payDay } = useHousehold()
+  if (isDesktopViewport() && getDashboardAsHome()) {
+    return <Navigate to="/dashboard?view=household" replace />
+  }
+  return <Navigate to={`/months/${currentPayPeriodMonth(payDay)}`} replace />
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <HouseholdProvider>
         <BrowserRouter>
-          <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-gray-500 text-sm">読み込み中...</div>}>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><GhostLoader label="読み込み中..." /></div>}>
             <Routes>
               <Route path="/" element={<Layout />}>
-                <Route index element={<PayPeriodRedirect basePath="/months" />} />
+                <Route index element={<RootRedirect />} />
+                <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="months/:yearMonth" element={<MonthlyPage />} />
                 <Route path="annual" element={<AnnualPage />} />
                 <Route path="cashflow" element={<CashflowPage />} />

@@ -8,14 +8,24 @@ import {
 } from '../firebase/householdFirestore'
 import { useHousehold } from '../hooks/useHousehold'
 import { useConfirm } from '../hooks/useConfirm'
+import GhostLoader from '../components/GhostLoader'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { signOut } from '../firebase/auth'
 import type { Household, MemberProfile } from '../firebase/householdFirestore'
 import type { TransactionListDisplayMode } from '../types'
+import { getDashboardAsHome, setDashboardAsHome } from '../utils/homePreference'
 import { getShowPersonalInFixedCosts, setShowPersonalInFixedCosts } from '../utils/fixedCostsPrefs'
 
 export default function HouseholdSettingsPage() {
-  const { householdId, user, reloadHousehold } = useHousehold()
+  const {
+    householdId,
+    user,
+    isGuest,
+    payDay,
+    transactionListDisplayMode,
+    reloadHousehold,
+    applyGuestSettings,
+  } = useHousehold()
   const { confirm, dialogProps } = useConfirm()
   const [household, setHousehold] = useState<(Household & { id: string }) | null>(null)
   const [memberProfiles, setMemberProfiles] = useState<Record<string, MemberProfile>>({})
@@ -31,9 +41,18 @@ export default function HouseholdSettingsPage() {
   const [selectedDisplayMode, setSelectedDisplayMode] = useState<TransactionListDisplayMode>('date')
   const [savingDisplayMode, setSavingDisplayMode] = useState(false)
   const [displayModeSaved, setDisplayModeSaved] = useState(false)
+  const [dashHome, setDashHome] = useState(getDashboardAsHome())
   const [showPersonalFC, setShowPersonalFC] = useState(getShowPersonalInFixedCosts())
 
   useEffect(() => {
+    // ゲストモードは認証ユーザー・世帯データが無いため Firestore は読まず、
+    // 現在のセッション設定（コンテキスト）を初期値に反映して読み込みを解除する
+    if (isGuest) {
+      setSelectedPayDay(payDay)
+      setSelectedDisplayMode(transactionListDisplayMode)
+      setLoading(false)
+      return
+    }
     if (!householdId || !user) return
     Promise.all([fetchHousehold(householdId), fetchMemberProfiles(householdId)])
       .then(async ([householdData, profiles]) => {
@@ -57,10 +76,10 @@ export default function HouseholdSettingsPage() {
         }
       })
       .finally(() => setLoading(false))
-  }, [householdId, user])
+  }, [householdId, user, isGuest, payDay, transactionListDisplayMode])
 
   async function handleRefreshCode() {
-    if (!householdId) return
+    if (!householdId || isGuest) return
     if (!await confirm('招待コードを再生成しますか？\n現在のコードは無効になります。')) return
     setRefreshing(true)
     try {
@@ -82,8 +101,12 @@ export default function HouseholdSettingsPage() {
     if (!householdId) return
     setSavingPayDay(true)
     try {
-      await updateHouseholdSettings(householdId, { payDay: selectedPayDay })
-      await reloadHousehold()
+      if (isGuest) {
+        applyGuestSettings({ payDay: selectedPayDay })
+      } else {
+        await updateHouseholdSettings(householdId, { payDay: selectedPayDay })
+        await reloadHousehold()
+      }
       setPayDaySaved(true)
       setTimeout(() => setPayDaySaved(false), 2000)
     } finally {
@@ -95,8 +118,12 @@ export default function HouseholdSettingsPage() {
     if (!householdId) return
     setSavingDisplayMode(true)
     try {
-      await updateHouseholdSettings(householdId, { transactionListDisplayMode: selectedDisplayMode })
-      await reloadHousehold()
+      if (isGuest) {
+        applyGuestSettings({ transactionListDisplayMode: selectedDisplayMode })
+      } else {
+        await updateHouseholdSettings(householdId, { transactionListDisplayMode: selectedDisplayMode })
+        await reloadHousehold()
+      }
       setDisplayModeSaved(true)
       setTimeout(() => setDisplayModeSaved(false), 2000)
     } finally {
@@ -105,7 +132,7 @@ export default function HouseholdSettingsPage() {
   }
 
   async function handleSaveNickname() {
-    if (!householdId || !user) return
+    if (!householdId || !user || isGuest) return
     setSavingNickname(true)
     try {
       const trimmed = nickname.trim()
@@ -126,8 +153,8 @@ export default function HouseholdSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-500 text-sm">
-        読み込み中...
+      <div className="flex items-center justify-center h-48">
+        <GhostLoader label="読み込み中..." />
       </div>
     )
   }
@@ -138,6 +165,12 @@ export default function HouseholdSettingsPage() {
       <h1 className="text-xl font-bold text-gray-800 mb-4 md:mb-6">設定</h1>
 
       <div className="space-y-3 md:space-y-4">
+        {isGuest && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl px-4 py-3">
+            ゲストモードでの設定変更はこのセッションのみ有効です（リロードでリセットされます）。給与日・表示モードはお試しいただけますが、招待コードの再生成とニックネームの保存はできません。
+          </div>
+        )}
+
         {/* 世帯設定セクション */}
         <h2 className="text-sm font-bold text-gray-700 pt-1 px-1">世帯設定</h2>
 
@@ -160,7 +193,7 @@ export default function HouseholdSettingsPage() {
           </div>
           <button
             onClick={handleRefreshCode}
-            disabled={refreshing}
+            disabled={refreshing || isGuest}
             className="mt-2 text-xs text-gray-500 hover:text-gray-600 transition-colors disabled:opacity-50"
           >
             {refreshing ? '再生成中...' : 'コードを再生成する'}
@@ -206,7 +239,7 @@ export default function HouseholdSettingsPage() {
               />
               <button
                 onClick={handleSaveNickname}
-                disabled={savingNickname}
+                disabled={savingNickname || isGuest}
                 className="px-4 py-2.5 bg-sage-600 hover:bg-sage-700 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50 shrink-0"
               >
                 {nicknameSaved ? '保存済み' : savingNickname ? '保存中...' : '保存'}
@@ -257,6 +290,26 @@ export default function HouseholdSettingsPage() {
         )}
 
         {/* 月別収支セクション */}
+        {/* 表示設定（PC）セクション */}
+        <h2 className="text-sm font-bold text-gray-700 pt-3 md:pt-4 px-1">表示設定（PC）</h2>
+
+        {/* PC初期表示画面 */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6">
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">PCの初期表示</h2>
+          <label className="flex items-center justify-between gap-3 mt-2">
+            <span className="text-sm text-gray-700">
+              PCのトップにダッシュボードを表示する
+              <span className="block text-xs text-gray-400 mt-0.5">オフの場合は月別収支を表示します（スマホでは常に月別収支）</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={dashHome}
+              onChange={e => { setDashHome(e.target.checked); setDashboardAsHome(e.target.checked) }}
+              className="w-5 h-5 accent-sage-600 shrink-0"
+            />
+          </label>
+        </div>
+
         <h2 className="text-sm font-bold text-gray-700 pt-3 md:pt-4 px-1">月別収支</h2>
 
         {/* リスト表示モード */}

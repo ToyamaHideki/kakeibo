@@ -11,6 +11,7 @@ export default function Sidebar() {
   const { payDay } = useHousehold()
   // 月を持つ画面を閲覧中はその月を、それ以外は給与日起算の当月分を引き継ぐ
   const periodMonth = monthFromPath(location.pathname) ?? currentPayPeriodMonth(payDay)
+  const isDashboardActive = location.pathname === '/dashboard'
   const isMonthlyActive = location.pathname.startsWith('/months/')
   const isAnnualActive = location.pathname === '/annual'
   const isCashflowActive = location.pathname === '/cashflow'
@@ -44,6 +45,16 @@ export default function Sidebar() {
 
 
       <nav className="flex-1 overflow-y-auto px-3 space-y-1 py-1">
+        <Link to="/dashboard" className={navItemClass(isDashboardActive)}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="7" height="9" rx="1" />
+            <rect x="14" y="3" width="7" height="5" rx="1" />
+            <rect x="14" y="12" width="7" height="9" rx="1" />
+            <rect x="3" y="16" width="7" height="5" rx="1" />
+          </svg>
+          ダッシュボード
+        </Link>
+
         <li className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">家計管理</li>
         <Link to={`/budget/${periodMonth}`} className={navItemClass(isBudgetActive)}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

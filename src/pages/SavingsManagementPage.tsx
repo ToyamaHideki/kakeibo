@@ -8,6 +8,7 @@ import { useSavingsAccounts } from '../hooks/useSavingsAccounts'
 import { useHousehold } from '../hooks/useHousehold'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
+import GhostLoader from '../components/GhostLoader'
 import { fetchSecuritiesAccounts } from '../firebase/securitiesFirestore'
 import type { SavingsAccount, SecuritiesAccount } from '../types'
 
@@ -149,7 +150,7 @@ export default function SavingsManagementPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-48 text-gray-500 text-sm">読み込み中...</div>
+          <div className="flex items-center justify-center h-48"><GhostLoader label="読み込み中..." /></div>
         ) : (
           <>
             {/* 全資産合計カード */}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useBalanceSheet } from '../hooks/useBalanceSheet'
 import BalanceSheetItemRow from '../features/BalanceSheetItemRow'
+import GhostLoader from '../components/GhostLoader'
 import type { AssetSection, LiabilitySection } from '../types'
 
 const ASSET_SECTION_LABELS: Record<AssetSection, string> = {
@@ -119,7 +120,7 @@ export default function BalanceSheetPage() {
   const netWorthDiff = prevNetWorth !== null ? netWorth - prevNetWorth : null
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full text-gray-500 text-sm">読み込み中...</div>
+    return <div className="flex items-center justify-center h-full"><GhostLoader label="読み込み中..." /></div>
   }
 
   return (

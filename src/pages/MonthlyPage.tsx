@@ -6,6 +6,7 @@ import MonthlyChart from '../features/MonthlyChart'
 import { useMonthlyData } from '../hooks/useMonthlyData'
 import { useHousehold } from '../hooks/useHousehold'
 import { updateHouseholdSettings } from '../firebase/householdFirestore'
+import GhostLoader from '../components/GhostLoader'
 import type { Transaction, TransactionListDisplayMode } from '../types'
 import { adjacentMonth, currentYearMonth, formatYearMonth, formatPayPeriodLabel } from '../utils/date'
 import type { OutletContext } from '../components/Layout'
@@ -144,7 +145,7 @@ export default function MonthlyPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500 text-sm">読み込み中...</div>
+        <div className="py-12 flex items-center justify-center"><GhostLoader label="読み込み中..." /></div>
       ) : (
         <>
           {/* モバイル: タブ切り替え */}

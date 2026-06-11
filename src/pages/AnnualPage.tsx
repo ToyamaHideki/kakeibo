@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import type { OutletContext } from '../components/Layout'
+import GhostLoader from '../components/GhostLoader'
 import { useAnnualData } from '../hooks/useAnnualData'
 import type { Category, PaymentMethod } from '../types'
 
@@ -204,7 +205,7 @@ export default function AnnualPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-gray-500 text-sm">読み込み中...</div>
+        <div className="py-16 flex items-center justify-center"><GhostLoader label="読み込み中..." /></div>
       ) : (
         <div className="flex-1 overflow-auto min-h-0 rounded-xl shadow-sm border border-gray-200">
           <table
