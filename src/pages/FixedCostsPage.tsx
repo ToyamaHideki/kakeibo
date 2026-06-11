@@ -8,6 +8,7 @@ import { useContracts } from '../hooks/useContracts'
 import { useMemberProfiles } from '../hooks/useMemberProfiles'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
+import GhostLoader from '../components/GhostLoader'
 import FixedCostModal from '../features/FixedCostModal'
 import FixedCostCalendar from '../features/FixedCostCalendar'
 import FixedCostDayModal from '../features/FixedCostDayModal'
@@ -147,7 +148,7 @@ export default function FixedCostsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-500 text-sm">読み込み中...</div>
+      <div className="flex items-center justify-center h-48"><GhostLoader label="読み込み中..." /></div>
     )
   }
 

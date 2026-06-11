@@ -8,6 +8,7 @@ import { useConfirm } from '../hooks/useConfirm'
 import { useHousehold } from '../hooks/useHousehold'
 import { useMemberProfiles } from '../hooks/useMemberProfiles'
 import ConfirmDialog from '../components/ConfirmDialog'
+import GhostLoader from '../components/GhostLoader'
 import { formatYen } from '../utils/format'
 import type { Contract, ContractScope, ContractType, PaymentFrequency } from '../types'
 
@@ -200,7 +201,7 @@ export default function ContractsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-500 text-sm">読み込み中...</div>
+      <div className="flex items-center justify-center h-48"><GhostLoader label="読み込み中..." /></div>
     )
   }
 

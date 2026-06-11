@@ -21,6 +21,7 @@ import { getCfValue, fmtBalance, nKey } from '../features/cfUtils'
 import { useCfPlan } from '../hooks/useCfPlan'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
+import GhostLoader from '../components/GhostLoader'
 import type { CfItem } from '../types'
 
 export default function CashflowPage() {
@@ -218,7 +219,7 @@ export default function CashflowPage() {
   if (loading) {
     return (
       <div className="p-4 md:p-6 flex items-center justify-center min-h-[200px]">
-        <span className="text-sm text-gray-500">読み込み中...</span>
+        <GhostLoader label="読み込み中..." />
       </div>
     )
   }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
 import { useIncomeStatement } from '../hooks/useIncomeStatement'
+import GhostLoader from '../components/GhostLoader'
 
 export default function IncomeStatementPage() {
   const { year: yearParam } = useParams<{ year: string }>()
@@ -34,7 +35,7 @@ export default function IncomeStatementPage() {
     : expenseCategories.filter(cat => (effectiveExpenses[cat.id] ?? 0) > 0 || cat.id in editingExpense)
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-full text-gray-500 text-sm">読み込み中...</div>
+    return <div className="flex items-center justify-center h-full"><GhostLoader label="読み込み中..." /></div>
   }
 
   return (

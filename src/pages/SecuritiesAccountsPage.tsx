@@ -10,6 +10,7 @@ import { useSecuritiesAccounts } from '../hooks/useSecuritiesAccounts'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
+import GhostLoader from '../components/GhostLoader'
 import { SecuritiesAccountCard } from '../features/SecuritiesAccountCard'
 import { SecuritiesAccountModal } from '../features/SecuritiesAccountModal'
 import { formatYen, past12Months, ymLabel, defaultForm, accountToForm, type FormState } from '../features/securitiesUtils'
@@ -209,7 +210,7 @@ export default function SecuritiesAccountsPage() {
   const hasData = accounts.length > 0 && totalCurrent > 0
 
   if (loading) {
-    return <div className="flex items-center justify-center h-48 text-gray-500 text-sm">読み込み中...</div>
+    return <div className="flex items-center justify-center h-48"><GhostLoader label="読み込み中..." /></div>
   }
 
   return (

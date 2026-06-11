@@ -8,6 +8,7 @@ import {
 } from '../firebase/householdFirestore'
 import { useHousehold } from '../hooks/useHousehold'
 import { useConfirm } from '../hooks/useConfirm'
+import GhostLoader from '../components/GhostLoader'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { signOut } from '../firebase/auth'
 import type { Household, MemberProfile } from '../firebase/householdFirestore'
@@ -152,8 +153,8 @@ export default function HouseholdSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-500 text-sm">
-        読み込み中...
+      <div className="flex items-center justify-center h-48">
+        <GhostLoader label="読み込み中..." />
       </div>
     )
   }

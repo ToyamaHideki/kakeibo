@@ -1,0 +1,179 @@
+/* uiverse.io / BlackisPlay / sweet-frog-67 をベースにスコープ用クラスへ変換 */
+
+.gh {
+  position: relative;
+  scale: 0.8;
+}
+
+.gh-red {
+  animation: gh-upNDown infinite 0.5s;
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  grid-template-rows: repeat(14, 1fr);
+  grid-column-gap: 0;
+  grid-row-gap: 0;
+  grid-template-areas:
+    "a1  a2  a3  a4  a5  top0  top0  top0  top0  a10 a11 a12 a13 a14"
+    "b1  b2  b3  top1 top1 top1 top1 top1 top1 top1 top1 b12 b13 b14"
+    "c1 c2 top2 top2 top2 top2 top2 top2 top2 top2 top2 top2 c13 c14"
+    "d1 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 d14"
+    "e1 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 e14"
+    "f1 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 f14"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "st0 st0 an4 st1 an7 st2 an10 an10 st3 an13 st4 an16 st5 st5"
+    "an1 an2 an3 an5 an6 an8 an9 an9 an11 an12 an14 an15 an17 an18";
+}
+
+@keyframes gh-upNDown {
+  0%, 49%   { transform: translateY(0px); }
+  50%, 100% { transform: translateY(-10px); }
+}
+
+.gh-top0, .gh-top1, .gh-top2, .gh-top3, .gh-top4,
+.gh-st0, .gh-st1, .gh-st2, .gh-st3, .gh-st4, .gh-st5 {
+  background-color: red;
+}
+
+.gh-top0 { grid-area: top0; }
+.gh-top1 { grid-area: top1; }
+.gh-top2 { grid-area: top2; }
+.gh-top3 { grid-area: top3; }
+.gh-top4 { grid-area: top4; }
+.gh-st0  { grid-area: st0; }
+.gh-st1  { grid-area: st1; }
+.gh-st2  { grid-area: st2; }
+.gh-st3  { grid-area: st3; }
+.gh-st4  { grid-area: st4; }
+.gh-st5  { grid-area: st5; }
+
+.gh-an1  { grid-area: an1;  animation: gh-flicker0 infinite 0.5s; }
+.gh-an18 { grid-area: an18; animation: gh-flicker0 infinite 0.5s; }
+.gh-an2  { grid-area: an2;  animation: gh-flicker1 infinite 0.5s; }
+.gh-an17 { grid-area: an17; animation: gh-flicker1 infinite 0.5s; }
+.gh-an3  { grid-area: an3;  animation: gh-flicker1 infinite 0.5s; }
+.gh-an16 { grid-area: an16; animation: gh-flicker1 infinite 0.5s; }
+.gh-an4  { grid-area: an4;  animation: gh-flicker1 infinite 0.5s; }
+.gh-an15 { grid-area: an15; animation: gh-flicker1 infinite 0.5s; }
+.gh-an5  { grid-area: an5; }
+.gh-an14 { grid-area: an14; }
+.gh-an6  { grid-area: an6;  animation: gh-flicker0 infinite 0.5s; }
+.gh-an12 { grid-area: an12; animation: gh-flicker0 infinite 0.5s; }
+.gh-an7  { grid-area: an7;  animation: gh-flicker0 infinite 0.5s; }
+.gh-an13 { grid-area: an13; animation: gh-flicker0 infinite 0.5s; }
+.gh-an8  { grid-area: an8;  animation: gh-flicker0 infinite 0.5s; }
+.gh-an11 { grid-area: an11; animation: gh-flicker0 infinite 0.5s; }
+.gh-an9  { grid-area: an9;  animation: gh-flicker1 infinite 0.5s; }
+.gh-an10 { grid-area: an10; animation: gh-flicker1 infinite 0.5s; }
+
+@keyframes gh-flicker0 {
+  0%, 49%   { background-color: red; }
+  50%, 100% { background-color: transparent; }
+}
+@keyframes gh-flicker1 {
+  0%, 49%   { background-color: transparent; }
+  50%, 100% { background-color: red; }
+}
+
+.gh-eye {
+  width: 40px;
+  height: 50px;
+  position: absolute;
+  top: 30px;
+  left: 10px;
+}
+.gh-eye::before {
+  content: "";
+  background-color: white;
+  width: 20px;
+  height: 50px;
+  transform: translateX(10px);
+  display: block;
+  position: absolute;
+}
+.gh-eye::after {
+  content: "";
+  background-color: white;
+  width: 40px;
+  height: 30px;
+  transform: translateY(10px);
+  display: block;
+  position: absolute;
+}
+
+.gh-eye1 {
+  width: 40px;
+  height: 50px;
+  position: absolute;
+  top: 30px;
+  right: 30px;
+}
+.gh-eye1::before {
+  content: "";
+  background-color: white;
+  width: 20px;
+  height: 50px;
+  transform: translateX(10px);
+  display: block;
+  position: absolute;
+}
+.gh-eye1::after {
+  content: "";
+  background-color: white;
+  width: 40px;
+  height: 30px;
+  transform: translateY(10px);
+  display: block;
+  position: absolute;
+}
+
+.gh-pupil {
+  width: 20px;
+  height: 20px;
+  background-color: blue;
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  z-index: 1;
+  animation: gh-eyesMovement infinite 3s;
+}
+.gh-pupil1 {
+  width: 20px;
+  height: 20px;
+  background-color: blue;
+  position: absolute;
+  top: 50px;
+  right: 50px;
+  z-index: 1;
+  animation: gh-eyesMovement infinite 3s;
+}
+
+@keyframes gh-eyesMovement {
+  0%, 49%  { transform: translateX(0px); }
+  50%, 99% { transform: translateX(10px); }
+  100%     { transform: translateX(0px); }
+}
+
+.gh-shadow {
+  background-color: black;
+  width: 140px;
+  height: 140px;
+  position: absolute;
+  border-radius: 50%;
+  transform: rotateX(80deg);
+  filter: blur(20px);
+  top: 80%;
+  animation: gh-shadowMovement infinite 0.5s;
+}
+
+@keyframes gh-shadowMovement {
+  0%, 49%   { opacity: 0.5; }
+  50%, 100% { opacity: 0.2; }
+}

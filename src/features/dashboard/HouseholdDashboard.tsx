@@ -14,11 +14,14 @@ import { useBudget } from '../../hooks/useBudget'
 import { useAnnualData } from '../../hooks/useAnnualData'
 import type { OutletContext } from '../../components/Layout'
 import YearMonthPicker from '../../components/YearMonthPicker'
+import GhostLoader from '../../components/GhostLoader'
 import TransactionModal from '../TransactionModal'
 import IncomeExpenseSummaryCard from './cards/IncomeExpenseSummaryCard'
 import BudgetProgressCard from './cards/BudgetProgressCard'
 import TrendChartCard from './cards/TrendChartCard'
 import FixedCostSummaryCard from './cards/FixedCostSummaryCard'
+import AssetSummaryCard from './cards/AssetSummaryCard'
+import SavingsGoalCard from './cards/SavingsGoalCard'
 
 export default function HouseholdDashboard() {
   const { payDay } = useHousehold()
@@ -58,35 +61,37 @@ export default function HouseholdDashboard() {
   return (
     <>
       {/* 月ナビゲーション */}
-      <div className="flex items-center justify-center gap-2 mb-4">
-        <button
-          onClick={() => setViewMonth(adjacentMonth(viewMonth, -1))}
-          aria-label="前の月"
-          className="p-1.5 rounded-lg text-gray-500 hover:bg-white hover:shadow-sm transition-all"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-        <button
-          onClick={() => setIsPickerOpen(true)}
-          aria-label="年月を選択"
-          className="flex items-center gap-1.5 px-3 py-1 rounded-xl hover:bg-white hover:shadow-sm transition-all"
-        >
-          <span className="text-base font-bold text-gray-800">{periodLabel}</span>
-          <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
-        <button
-          onClick={() => setViewMonth(adjacentMonth(viewMonth, 1))}
-          aria-label="次の月"
-          className="p-1.5 rounded-lg text-gray-500 hover:bg-white hover:shadow-sm transition-all"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
+      <div className="flex items-center justify-center mb-5">
+        <div className="inline-flex items-center bg-white/80 backdrop-blur rounded-2xl border border-gray-200/80 shadow-sm p-1">
+          <button
+            onClick={() => setViewMonth(adjacentMonth(viewMonth, -1))}
+            aria-label="前の月"
+            className="p-2 rounded-xl text-gray-400 hover:text-sage-700 hover:bg-sage-50 transition-colors"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setIsPickerOpen(true)}
+            aria-label="年月を選択"
+            className="group flex items-center gap-2 px-4 py-1.5 rounded-xl hover:bg-sage-50 transition-colors"
+          >
+            <span className="text-lg font-bold text-gray-800 tracking-tight tabular-nums">{periodLabel}</span>
+            <svg className="w-3.5 h-3.5 text-gray-400 group-hover:text-sage-600 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewMonth(adjacentMonth(viewMonth, 1))}
+            aria-label="次の月"
+            className="p-2 rounded-xl text-gray-400 hover:text-sage-700 hover:bg-sage-50 transition-colors"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <YearMonthPicker
@@ -125,6 +130,17 @@ export default function HouseholdDashboard() {
           loading={annualLoading}
           year={year}
         />
+      </div>
+
+      {/* 下段：資産関連（左列は元の資産概要1枚分の幅で縦積み：資産概要(60%) → 貯蓄目標(40%)） */}
+      <div className="grid grid-cols-1 lg:grid-cols-[26fr_74fr] gap-4 mt-4">
+        <div className="grid grid-rows-[3fr_2fr] gap-4 h-[34rem]">
+          <AssetSummaryCard className="min-h-0" />
+          <SavingsGoalCard className="min-h-0" />
+        </div>
+        <section className="bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col items-center justify-center h-[34rem]">
+          <GhostLoader label="開発中" />
+        </section>
       </div>
 
       <TransactionModal

@@ -8,6 +8,7 @@ import { useNavAutoHide } from '../hooks/useNavAutoHide'
 import HouseholdSetupPage from '../pages/HouseholdSetupPage'
 import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
+import GhostLoader from './GhostLoader'
 
 export interface OutletContext {
   categories: Category[]
@@ -28,7 +29,7 @@ export default function Layout() {
   if (state === 'loading') {
     return (
       <div className="flex items-center justify-center h-screen bg-stone-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600" />
+        <GhostLoader />
       </div>
     )
   }
