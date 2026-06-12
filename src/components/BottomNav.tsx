@@ -123,11 +123,7 @@ export default function BottomNav() {
   const subPages = activeCat.subPages
 
   return (
-    <div
-      ref={navRef}
-      className="bg-white border-t border-gray-200"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-    >
+    <div ref={navRef} className="bg-white border-t border-gray-200">
       {/* サブページバー（サブページが1つ以上ある場合のみ表示）*/}
       {subPages.length >= 2 && (
         <div className="flex border-b border-gray-100 px-1 pt-1 gap-0.5 overflow-x-auto scrollbar-none">
