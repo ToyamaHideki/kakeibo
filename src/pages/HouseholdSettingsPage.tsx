@@ -161,7 +161,7 @@ export default function HouseholdSettingsPage() {
 
   return (
     <div className="h-full overflow-y-auto">
-    <div className="max-w-2xl mx-auto px-4 py-4 md:py-8 pb-24 md:pb-8">
+    <div className="max-w-2xl mx-auto px-4 py-4 md:py-8">
       <h1 className="text-xl font-bold text-gray-800 mb-4 md:mb-6">設定</h1>
 
       <div className="space-y-3 md:space-y-4">
