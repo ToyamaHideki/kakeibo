@@ -11,8 +11,10 @@ import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
 import GhostLoader from '../components/GhostLoader'
+import SidePanelLayout from '../components/SidePanelLayout'
 import { SecuritiesAccountCard } from '../features/SecuritiesAccountCard'
 import { SecuritiesAccountModal } from '../features/SecuritiesAccountModal'
+import SecuritiesAccountAddPanel from '../features/SecuritiesAccountAddPanel'
 import { formatYen, past12Months, ymLabel, defaultForm, accountToForm, type FormState } from '../features/securitiesUtils'
 import type { SecuritiesAccount, SecuritiesHolding } from '../types'
 import { currentYearMonth } from '../utils/date'
@@ -291,19 +293,21 @@ export default function SecuritiesAccountsPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col overflow-hidden">
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-5 shrink-0">
-        <h2 className="text-xl font-bold text-gray-800">証券口座</h2>
-        {accounts.length > 0 && (
-          <div className="text-right">
-            <p className="text-xs text-gray-500">総評価額</p>
-            <p className="text-sm font-bold text-gray-800">{formatYen(totalCurrent)}</p>
-          </div>
-        )}
-      </div>
+    <SidePanelLayout
+      title="証券口座"
+      sidePanelTitle="口座を追加"
+      fabAriaLabel="証券口座を追加"
+      onFabClick={openAdd}
+      sidePanel={<SecuritiesAccountAddPanel onAdd={addAccount} />}
+    >
+      {accounts.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-200 px-4 py-3 flex items-center justify-between xl:shrink-0">
+          <p className="text-xs text-gray-500">総評価額</p>
+          <p className="text-sm font-bold text-gray-800">{formatYen(totalCurrent)}</p>
+        </div>
+      )}
 
-      <div className="flex-1 overflow-y-auto pb-2">
+      <div className="xl:flex-1 xl:min-h-0 xl:overflow-y-auto">
         {accounts.length === 0 ? (
           <div className="text-center py-16 text-gray-500">
             <svg className="w-12 h-12 mx-auto mb-3 text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -311,7 +315,8 @@ export default function SecuritiesAccountsPage() {
               <polyline points="7 14 11 10 14 13 21 6" />
             </svg>
             <p className="text-sm">証券口座がありません</p>
-            <p className="text-xs mt-1">右下のボタンから口座を追加してください</p>
+            <p className="text-xs mt-1 xl:hidden">右下のボタンから口座を追加してください</p>
+            <p className="text-xs mt-1 hidden xl:block">右の入力パネルから口座を追加してください</p>
           </div>
         ) : (
           <>
@@ -375,17 +380,6 @@ export default function SecuritiesAccountsPage() {
         )}
       </div>
 
-      {/* FAB */}
-      <button
-        onClick={openAdd}
-        className="fixed fab-mobile right-4 md:bottom-6 md:right-6 w-14 h-14 bg-sage-600 hover:bg-sage-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-10"
-      >
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </button>
-
       <SecuritiesAccountModal
         showModal={showModal}
         editTarget={editTarget}
@@ -404,7 +398,7 @@ export default function SecuritiesAccountsPage() {
         onDeleteRecord={handleDeleteRecord}
       />
       <ConfirmDialog {...dialogProps} />
-    </div>
+    </SidePanelLayout>
   )
 }
 

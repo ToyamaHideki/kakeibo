@@ -27,6 +27,7 @@ const SecuritiesAccountsPage = lazyWithReload(() => import('./pages/SecuritiesAc
 const SavingsManagementPage = lazyWithReload(() => import('./pages/SavingsManagementPage'))
 const HouseholdSettingsPage = lazyWithReload(() => import('./pages/HouseholdSettingsPage'))
 const AnnouncementsPage = lazyWithReload(() => import('./pages/AnnouncementsPage'))
+const HealthPage = lazyWithReload(() => import('./pages/HealthPage'))
 
 // 給与日を起算とした「当月分」へリダイレクトする。
 // 給与日未設定の場合はカレンダー月。state==='ready'（payDay 読込済み）の
@@ -79,6 +80,7 @@ function App() {
                 <Route path="savings-management" element={<SavingsManagementPage />} />
                 <Route path="household-settings" element={<HouseholdSettingsPage />} />
                 <Route path="announcements" element={<AnnouncementsPage />} />
+                <Route path="health" element={<HealthPage />} />
               </Route>
             </Routes>
           </Suspense>

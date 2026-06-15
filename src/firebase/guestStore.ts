@@ -269,6 +269,25 @@ export function guestUpdateCollectionItem(
   ;(col as any)[key] = updated
 }
 
+// 任意の id を指定して upsert する（既存なら全置換、無ければ新規追加）。
+// 健康日次レコードのように doc id = date のものを扱うために使用する。
+export function guestSetCollectionItem<T extends { id: string }>(
+  subPath: string,
+  item: T,
+): void {
+  const col = s().collections
+  const key = subPath as CollectionKey
+  const arr = (col[key] as unknown as T[] | undefined) ?? []
+  const idx = arr.findIndex(i => i.id === item.id)
+  if (idx >= 0) {
+    arr[idx] = item
+  } else {
+    arr.push(item)
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(col as any)[key] = arr
+}
+
 export function guestRemoveCollectionItem(subPath: string, id: string): void {
   const col = s().collections
   const key = subPath as CollectionKey

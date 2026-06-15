@@ -4,6 +4,8 @@ import type {
   CfPlan,
   Contract,
   FixedCost,
+  HealthDailyRecord,
+  HealthMetric,
   HouseholdTask,
   IncomeStatement,
   MonthDocument,
@@ -492,6 +494,63 @@ function buildPersonalMonthlyData(monthOffset: number): MonthDocument {
   return { year: y, month: m, transactions }
 }
 
+// ─── 健康管理 ─────────────────────────────────────────────────────────────────
+
+export const GUEST_HEALTH_METRICS: HealthMetric[] = [
+  { id: 'hm-1', name: '体重', unit: 'kg', decimalPlaces: 1, color: '#3b82f6', order: 1, visibility: 'shared' },
+]
+
+export const GUEST_PRIVATE_HEALTH_METRICS: HealthMetric[] = [
+  { id: 'phm-1', name: '体脂肪率', unit: '%',  decimalPlaces: 1, color: '#f59e0b', order: 1, visibility: 'private' },
+  { id: 'phm-2', name: '筋肉量',   unit: 'kg', decimalPlaces: 1, color: '#10b981', order: 2, visibility: 'private' },
+]
+
+function isoDay(offset: number): string {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() + offset)
+  return d.toISOString().slice(0, 10)
+}
+
+function round1(v: number): number {
+  return Math.round(v * 10) / 10
+}
+
+function buildGuestSharedHealthRecords(): HealthDailyRecord[] {
+  const records: HealthDailyRecord[] = []
+  for (let i = 13; i >= 0; i--) {
+    // 一部の日（4日前）は欠損にする
+    if (i === 4) continue
+    const date = isoDay(-i)
+    const weight = round1(65 + (Math.random() * 0.8 - 0.4) + i * 0.02)
+    records.push({
+      id: date,
+      date,
+      valuesByMetricId: { 'hm-1': weight },
+      visibility: 'shared',
+    })
+  }
+  return records
+}
+
+function buildGuestPrivateHealthRecords(): HealthDailyRecord[] {
+  const records: HealthDailyRecord[] = []
+  for (let i = 13; i >= 0; i--) {
+    // 体脂肪率系も 6日前は欠損
+    if (i === 6) continue
+    const date = isoDay(-i)
+    const fat = round1(20 + (Math.random() * 0.6 - 0.3))
+    const muscle = round1(50 + (Math.random() * 0.4 - 0.2))
+    records.push({
+      id: date,
+      date,
+      valuesByMetricId: { 'phm-1': fat, 'phm-2': muscle },
+      visibility: 'private',
+    })
+  }
+  return records
+}
+
 // ─── GuestStoreData 型 ────────────────────────────────────────────────────────
 
 export interface GuestStoreData {
@@ -512,6 +571,10 @@ export interface GuestStoreData {
     securitiesAccounts: SecuritiesAccount[]
     privateSecuritiesAccounts: SecuritiesAccount[]
     contracts: Contract[]
+    healthMetrics: HealthMetric[]
+    privateHealthMetrics: HealthMetric[]
+    healthDailyRecords: HealthDailyRecord[]
+    privateHealthDailyRecords: HealthDailyRecord[]
   }
 }
 
@@ -551,6 +614,10 @@ export function buildGuestData(): GuestStoreData {
       securitiesAccounts:        GUEST_SECURITIES_ACCOUNTS,
       privateSecuritiesAccounts: [],
       contracts:                 GUEST_CONTRACTS,
+      healthMetrics:             GUEST_HEALTH_METRICS,
+      privateHealthMetrics:      GUEST_PRIVATE_HEALTH_METRICS,
+      healthDailyRecords:        buildGuestSharedHealthRecords(),
+      privateHealthDailyRecords: buildGuestPrivateHealthRecords(),
     },
   }
 }

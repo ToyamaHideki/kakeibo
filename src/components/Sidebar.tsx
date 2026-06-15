@@ -30,6 +30,7 @@ export default function Sidebar() {
   const isSecuritiesActive = location.pathname === '/securities'
   const isHouseholdSettingsActive = location.pathname === '/household-settings'
   const isAnnouncementsActive = location.pathname === '/announcements'
+  const isHealthActive = location.pathname === '/health'
 
   const navItemClass = (active: boolean) =>
     `flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -132,6 +133,14 @@ export default function Sidebar() {
             <line x1="8" y1="18" x2="13" y2="18" />
           </svg>
           個人の固定費
+        </Link>
+
+        <li className="pt-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">体重測定</li>
+        <Link to="/health" className={navItemClass(isHealthActive)}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+          </svg>
+          体重測定
         </Link>
 
         <li className="pt-2 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">生活管理</li>

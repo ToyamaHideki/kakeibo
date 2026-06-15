@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import TransactionList from '../features/TransactionList'
 import TransactionModal from '../features/TransactionModal'
+import TransactionAddPanel from '../features/TransactionAddPanel'
 import MonthlyChart from '../features/MonthlyChart'
 import { useMonthlyData } from '../hooks/useMonthlyData'
 import { useHousehold } from '../hooks/useHousehold'
@@ -169,9 +170,9 @@ export default function MonthlyPage() {
             )}
           </div>
 
-          {/* デスクトップ: 左カラム（収支・グラフ）右カラム（リスト）*/}
+          {/* デスクトップ: 左カラム（収支・グラフ）中央（リスト）xl で右カラム（登録パネル）*/}
           <div className="hidden md:flex md:flex-1 md:min-h-0 gap-6">
-            <div className="w-3/5 shrink-0 flex flex-col gap-4 min-h-0">
+            <div className="w-3/5 xl:w-2/5 shrink-0 flex flex-col gap-4 min-h-0">
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                   <p className="text-xs text-gray-500 mb-1">収入</p>
@@ -201,15 +202,33 @@ export default function MonthlyPage() {
                 onToggleDisplayMode={handleToggleDisplayMode}
               />
             </div>
+            {/* xl 以上：右サイドパネル（収支登録） */}
+            <aside className="hidden xl:flex xl:flex-col w-[340px] shrink-0 min-h-0">
+              <div className="bg-white rounded-2xl border border-gray-200 flex flex-col flex-1 min-h-0">
+                <h2 className="text-sm font-semibold text-gray-700 px-4 pt-4 pb-2 shrink-0">収支を登録</h2>
+                <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-4">
+                  <TransactionAddPanel
+                    categories={categories}
+                    paymentMethods={paymentMethods}
+                    onSaved={reload}
+                    onCategoryAdded={onCategoryAdded}
+                    onPaymentMethodAdded={onPaymentMethodAdded}
+                    onCategoryDeleted={onCategoryDeleted}
+                    onPaymentMethodDeleted={onPaymentMethodDeleted}
+                    onCategoryUpdated={onCategoryUpdated}
+                  />
+                </div>
+              </div>
+            </aside>
           </div>
         </>
       )}
 
-      {/* FAB */}
+      {/* FAB（xl 未満のみ） */}
       <button
         onClick={() => setIsAddModalOpen(true)}
         aria-label="収支を登録"
-        className="fixed right-4 fab-mobile md:bottom-6 z-20 w-14 h-14 bg-sage-600 hover:bg-sage-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
+        className="xl:hidden fixed right-4 fab-mobile md:bottom-6 z-20 w-14 h-14 bg-sage-600 hover:bg-sage-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
       >
         <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <line x1="12" y1="5" x2="12" y2="19" />

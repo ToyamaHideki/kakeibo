@@ -5,6 +5,8 @@ import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
 import GhostLoader from '../components/GhostLoader'
+import SidePanelLayout from '../components/SidePanelLayout'
+import TaskAddPanel from '../features/TaskAddPanel'
 import { fetchHousehold, fetchMemberProfiles, addExtraAssignee, removeExtraAssignee } from '../firebase/householdFirestore'
 import type { HouseholdTask } from '../types'
 
@@ -148,15 +150,36 @@ export default function HouseholdTasksPage() {
     )
   }
 
-  return (
-    <div className="p-4 md:p-6 max-w-lg mx-auto h-full flex flex-col overflow-hidden">
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-4 shrink-0">
-        <h2 className="text-xl font-bold text-gray-800">家事タスク</h2>
-      </div>
+  // パネル経由の担当者追加・削除（モーダル削除は confirm を挟む）
+  async function handlePanelAddAssignee(name: string) {
+    if (!householdId) return
+    await addExtraAssignee(householdId, name)
+    setAssignees(prev => [...prev, name])
+  }
+  async function handlePanelRemoveAssignee(name: string) {
+    if (!householdId) return
+    if (!await confirm(`「${name}」を担当者リストから削除しますか？`)) return
+    await removeExtraAssignee(householdId, name)
+    setAssignees(prev => prev.filter(a => a !== name))
+  }
 
+  return (
+    <SidePanelLayout
+      title="家事タスク"
+      sidePanelTitle="タスクを追加"
+      fabAriaLabel="家事タスクを追加"
+      onFabClick={() => setShowModal(true)}
+      sidePanel={(
+        <TaskAddPanel
+          assignees={assignees}
+          onAdd={addTask}
+          onAddAssignee={handlePanelAddAssignee}
+          onRemoveAssignee={handlePanelRemoveAssignee}
+        />
+      )}
+    >
       {/* フィルタータブ */}
-      <div className="flex gap-1 mb-4 shrink-0 bg-gray-100 rounded-xl p-1">
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 xl:shrink-0">
         {(['active', 'done'] as const).map(f => (
           <button
             key={f}
@@ -171,7 +194,7 @@ export default function HouseholdTasksPage() {
       </div>
 
       {/* タスクリスト */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="xl:flex-1 xl:min-h-0 xl:overflow-y-auto">
         {tasks.length === 0 ? (
           <div className="text-center py-16 text-gray-500">
             <svg className="w-12 h-12 mx-auto mb-3 text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -181,7 +204,10 @@ export default function HouseholdTasksPage() {
             </svg>
             <p className="text-sm">{filter === 'active' ? 'タスクはありません' : '完了済みのタスクはありません'}</p>
             {filter === 'active' && (
-              <p className="text-xs mt-1">右下のボタンからタスクを追加してください</p>
+              <>
+                <p className="text-xs mt-1 xl:hidden">右下のボタンからタスクを追加してください</p>
+                <p className="text-xs mt-1 hidden xl:block">右の入力パネルからタスクを追加してください</p>
+              </>
             )}
           </div>
         ) : (
@@ -254,17 +280,6 @@ export default function HouseholdTasksPage() {
           </div>
         )}
       </div>
-
-      {/* FAB */}
-      <button
-        onClick={() => setShowModal(true)}
-        className="fixed fab-mobile right-4 md:bottom-6 md:right-6 w-14 h-14 bg-sage-600 hover:bg-sage-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-10"
-      >
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </button>
 
       {/* 追加モーダル */}
       {showModal && (
@@ -428,6 +443,6 @@ export default function HouseholdTasksPage() {
         </div>
       )}
       <ConfirmDialog {...dialogProps} confirmLabel="削除する" />
-    </div>
+    </SidePanelLayout>
   )
 }

@@ -161,8 +161,9 @@ export default function TransactionList({
 
   return (
     <div className="space-y-3">
-      {/* ヘッダーカード（表示モード切替トグル：ピルがスライドアニメーション） */}
+      {/* ヘッダーカード（表示モード切替トグル）。スクロール時もリスト上部に固定表示する。 */}
       <SegmentedToggle
+        className="sticky top-0 z-10 shadow-sm"
         ariaLabel="リスト表示モード"
         value={displayMode}
         onChange={() => onToggleDisplayMode()}

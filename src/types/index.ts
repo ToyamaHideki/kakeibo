@@ -254,6 +254,38 @@ export type TransactionListDisplayMode = 'date' | 'category'
 
 export type BudgetMap = Record<string, number>  // categoryId → amount
 
+// ─── Health ──────────────────────────────────────────────────────────────────
+
+// 公開範囲:
+// - 'shared': 世帯メンバー全員に表示（households/{hid}/healthMetrics に保存）
+// - 'private': 作成者本人のみ表示（users/{uid}/privateHealthMetrics に保存）
+// 日次レコードも metric の visibility に従い、対応するストレージへ保存する。
+export type HealthVisibility = 'shared' | 'private'
+
+// 体重計などで測定する項目の定義。
+// 機種により取得項目が異なるためユーザー定義制とする（体重 / 体脂肪率 / 筋肉量 / 骨量 等）。
+export interface HealthMetric {
+  id: string
+  name: string                       // 例: "体重"
+  unit: string                       // 例: "kg" / "%" / "歳"
+  decimalPlaces: number              // 0〜2
+  color: string                      // チャート色 #rrggbb
+  order: number
+  visibility: HealthVisibility
+  memo?: string | undefined
+}
+
+// 日次の記録。1日に複数 metric の値をまとめて保持する。
+// shared / private はパスが完全に分かれるため、同 date に両方の値があれば
+// 物理的には 2 ドキュメントになる（UI 上は date キーでマージ表示）。
+export interface HealthDailyRecord {
+  id: string                                   // 通常は date と同じ
+  date: string                                 // "yyyy-MM-dd"
+  valuesByMetricId: Record<string, number>     // metric.id → 数値
+  memo?: string | undefined
+  visibility: HealthVisibility
+}
+
 // ─── Announcements ────────────────────────────────────────────────────────────
 
 // Firestore: announcements/{docId}（全ユーザー共通リリースノート、読み取り専用）

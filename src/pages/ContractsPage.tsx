@@ -9,6 +9,8 @@ import { useHousehold } from '../hooks/useHousehold'
 import { useMemberProfiles } from '../hooks/useMemberProfiles'
 import ConfirmDialog from '../components/ConfirmDialog'
 import GhostLoader from '../components/GhostLoader'
+import SidePanelLayout from '../components/SidePanelLayout'
+import ContractAddPanel from '../features/ContractAddPanel'
 import { formatYen } from '../utils/format'
 import type { Contract, ContractScope, ContractType, PaymentFrequency } from '../types'
 
@@ -206,24 +208,29 @@ export default function ContractsPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-lg mx-auto h-full flex flex-col overflow-hidden">
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-4 shrink-0">
-        <h2 className="text-xl font-bold text-gray-800">保険・ローン管理</h2>
-        {contracts.length > 0 && (
+    <SidePanelLayout
+      title="保険・ローン管理"
+      sidePanelTitle="契約を追加"
+      fabAriaLabel="契約を追加"
+      onFabClick={openAdd}
+      sidePanel={<ContractAddPanel onAdd={addContract} defaultOwner={user?.uid} />}
+    >
+      {contracts.length > 0 && (
+        <div className="text-right xl:shrink-0">
           <span className="text-xs text-gray-500">月額換算：<span className="font-semibold text-gray-700">{formatYen(monthlyTotal)}</span></span>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* コンテンツ */}
-      <div className="flex-1 overflow-y-auto space-y-4">
+      <div className="space-y-4 xl:flex-1 xl:min-h-0 xl:overflow-y-auto">
         {contracts.length === 0 && (
           <div className="text-center py-16 text-gray-500">
             <svg className="w-12 h-12 mx-auto mb-3 text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <p className="text-sm">契約がありません</p>
-            <p className="text-xs mt-1">右下のボタンから保険・ローンを追加してください</p>
+            <p className="text-xs mt-1 xl:hidden">右下のボタンから保険・ローンを追加してください</p>
+            <p className="text-xs mt-1 hidden xl:block">右の入力パネルから契約を追加してください</p>
           </div>
         )}
 
@@ -260,17 +267,6 @@ export default function ContractsPage() {
           </div>
         )}
       </div>
-
-      {/* FAB */}
-      <button
-        onClick={openAdd}
-        className="fixed fab-mobile right-4 md:bottom-6 md:right-6 w-14 h-14 bg-sage-600 hover:bg-sage-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-10"
-      >
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </button>
 
       {/* 追加・編集モーダル */}
       {showModal && (
@@ -478,7 +474,7 @@ export default function ContractsPage() {
         </div>
       )}
       <ConfirmDialog {...dialogProps} />
-    </div>
+    </SidePanelLayout>
   )
 }
 

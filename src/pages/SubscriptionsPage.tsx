@@ -9,6 +9,8 @@ import { useHousehold } from '../hooks/useHousehold'
 import { useMemberProfiles } from '../hooks/useMemberProfiles'
 import ConfirmDialog from '../components/ConfirmDialog'
 import GhostLoader from '../components/GhostLoader'
+import SidePanelLayout from '../components/SidePanelLayout'
+import SubscriptionAddPanel from '../features/SubscriptionAddPanel'
 import type { Contract, ContractScope, PaymentFrequency } from '../types'
 
 // ─── ユーティリティ ────────────────────────────────────────────────────────────
@@ -198,16 +200,20 @@ export default function SubscriptionsPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-lg mx-auto h-full flex flex-col overflow-hidden">
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-4 shrink-0">
-        <h2 className="text-xl font-bold text-gray-800">サブスク管理</h2>
+    <SidePanelLayout
+      title="サブスク管理"
+      sidePanelTitle="サブスクを追加"
+      fabAriaLabel="サブスクを追加"
+      onFabClick={openAdd}
+      sidePanel={<SubscriptionAddPanel onAdd={addContract} defaultOwner={user?.uid} />}
+    >
+      <div className="flex items-center justify-end xl:shrink-0">
         <span className="text-xs text-gray-500">{subscriptions.length}件</span>
       </div>
 
       {/* コストサマリー */}
       {subscriptions.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 mb-4 shrink-0">
+        <div className="grid grid-cols-2 gap-3 xl:shrink-0">
           <div className="bg-blue-50 rounded-xl px-4 py-3">
             <p className="text-xs text-blue-500 font-medium">月払い合計</p>
             <p className="text-lg font-bold text-blue-700 mt-0.5">¥{monthlyTotal.toLocaleString()}</p>
@@ -220,7 +226,7 @@ export default function SubscriptionsPage() {
       )}
 
       {/* コンテンツ */}
-      <div className="flex-1 overflow-y-auto space-y-4">
+      <div className="space-y-4 xl:flex-1 xl:min-h-0 xl:overflow-y-auto">
         {subscriptions.length === 0 && (
           <div className="text-center py-16 text-gray-500">
             <svg className="w-12 h-12 mx-auto mb-3 text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -228,7 +234,8 @@ export default function SubscriptionsPage() {
               <path d="M8 21h8M12 17v4" />
             </svg>
             <p className="text-sm">サブスクがありません</p>
-            <p className="text-xs mt-1">右下のボタンから追加してください</p>
+            <p className="text-xs mt-1 xl:hidden">右下のボタンから追加してください</p>
+            <p className="text-xs mt-1 hidden xl:block">右の入力パネルから追加してください</p>
           </div>
         )}
 
@@ -263,17 +270,6 @@ export default function SubscriptionsPage() {
           </div>
         )}
       </div>
-
-      {/* FAB */}
-      <button
-        onClick={openAdd}
-        className="fixed fab-mobile right-4 md:bottom-6 md:right-6 w-14 h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-10"
-      >
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </button>
 
       {/* 追加・編集モーダル */}
       {showModal && (
@@ -465,7 +461,7 @@ export default function SubscriptionsPage() {
         </div>
       )}
       <ConfirmDialog {...dialogProps} />
-    </div>
+    </SidePanelLayout>
   )
 }
 
