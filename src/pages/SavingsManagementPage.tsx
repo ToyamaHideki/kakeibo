@@ -9,7 +9,7 @@ import { useHousehold } from '../hooks/useHousehold'
 import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
 import GhostLoader from '../components/GhostLoader'
-import { fetchSecuritiesAccounts } from '../firebase/securitiesFirestore'
+import { fetchAllSecuritiesAccountsForUser } from '../firebase/privateSecuritiesFirestore'
 import type { SavingsAccount, SecuritiesAccount } from '../types'
 
 const PRESET_COLORS = [
@@ -29,7 +29,7 @@ function formatLastUpdated(dateStr: string): string {
 }
 
 export default function SavingsManagementPage() {
-  const { householdId } = useHousehold()
+  const { householdId, user } = useHousehold()
   const { accounts, loading: accountsLoading, addAccount, updateAccount, deleteAccount, reorderAccounts } = useSavingsAccounts()
   const { confirm, dialogProps } = useConfirm()
   const [securities, setSecurities] = useState<SecuritiesAccount[]>([])
@@ -47,10 +47,10 @@ export default function SavingsManagementPage() {
 
   useEffect(() => {
     if (!householdId) return
-    fetchSecuritiesAccounts(householdId)
+    fetchAllSecuritiesAccountsForUser(householdId, user?.uid ?? null)
       .then(data => setSecurities(data.sort((a, b) => a.order - b.order)))
       .finally(() => setSecLoading(false))
-  }, [householdId])
+  }, [householdId, user?.uid])
 
   const bankTotal = accounts.reduce((s, a) => s + a.currentAmount, 0)
   const secTotal = securities.reduce((s, a) => s + a.currentValue, 0)

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchBalanceSheet, saveBalanceSheet } from '../firebase/balanceSheetFirestore'
 import { fetchContracts } from '../firebase/contractFirestore'
-import { fetchSecuritiesAccounts } from '../firebase/securitiesFirestore'
+import { fetchAllSecuritiesAccountsForUser } from '../firebase/privateSecuritiesFirestore'
 import type { AssetItem, BalanceSheet, LiabilityItem } from '../types'
 import { useHousehold } from './useHousehold'
 
@@ -10,7 +10,7 @@ function emptySheet(year: number): BalanceSheet {
 }
 
 export function useBalanceSheet(year: number) {
-  const { householdId } = useHousehold()
+  const { householdId, user } = useHousehold()
   const [sheet, setSheet] = useState<BalanceSheet>(emptySheet(year))
   const [prevNetWorth, setPrevNetWorth] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -96,7 +96,8 @@ export function useBalanceSheet(year: number) {
 
   const syncSecuritiesAccounts = useCallback(async () => {
     if (!householdId) return 0
-    const accounts = await fetchSecuritiesAccounts(householdId)
+    // 自分が見える証券口座のみ取得（共有 + 自分のprivate）
+    const accounts = await fetchAllSecuritiesAccountsForUser(householdId, user?.uid ?? null)
     const existingNames = new Set(sheet.assets.filter(a => a.section === 'financial').map(a => a.name))
     const added: AssetItem[] = []
     for (const acc of accounts) {
@@ -115,7 +116,7 @@ export function useBalanceSheet(year: number) {
       await persist({ ...sheet, assets: [...sheet.assets, ...added] })
     }
     return added.length
-  }, [sheet, persist, householdId])
+  }, [sheet, persist, householdId, user?.uid])
 
   const totalAssets = sheet.assets.reduce((s, a) => s + a.amount, 0)
   const totalLiabilities = sheet.liabilities.reduce((s, l) => s + l.amount, 0)

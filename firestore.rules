@@ -40,6 +40,8 @@ service cloud.firestore {
     }
 
     // 世帯サブコレクション（メンバーのみ読み書き）
+    // 注: 「本人のみ表示」の証券口座は users/{uid}/privateSecuritiesAccounts に保存する設計のため、
+    //      ここでは visibility 制御は不要。
     match /households/{householdId}/{document=**} {
       allow read, write: if request.auth != null
         && request.auth.uid in get(

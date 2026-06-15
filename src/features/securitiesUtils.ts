@@ -1,4 +1,4 @@
-import type { SecuritiesAccount, SecuritiesAccountType } from '../types'
+import type { SecuritiesAccount, SecuritiesAccountType, SecuritiesHoldingCategory, SecuritiesVisibility } from '../types'
 import { currentYearMonth, adjacentMonth } from '../utils/date'
 export { formatYenCompact as formatYen } from '../utils/format'
 
@@ -12,6 +12,16 @@ export const ACCOUNT_TYPE_OPTIONS: { value: SecuritiesAccountType; label: string
   { value: 'nisa', label: 'NISA' },
   { value: 'ideco', label: 'iDeCo' },
   { value: 'foreign', label: '外国株' },
+  { value: 'other', label: 'その他' },
+]
+
+export const HOLDING_CATEGORY_OPTIONS: { value: SecuritiesHoldingCategory; label: string }[] = [
+  { value: 'mutual_fund', label: '投資信託' },
+  { value: 'domestic_stock', label: '国内株式' },
+  { value: 'foreign_stock', label: '国外株式' },
+  { value: 'bond', label: '債券' },
+  { value: 'reit', label: 'REIT' },
+  { value: 'crypto', label: '仮想通貨' },
   { value: 'other', label: 'その他' },
 ]
 
@@ -38,6 +48,8 @@ export type FormState = {
   color: string
   memo: string
   initialValue: string
+  unrealizedPnL: string              // 評価損益（符号付き、空文字なら未設定）
+  visibility: SecuritiesVisibility
 }
 
 export const defaultForm: FormState = {
@@ -48,6 +60,8 @@ export const defaultForm: FormState = {
   color: ACCOUNT_COLORS[0]!,
   memo: '',
   initialValue: '',
+  unrealizedPnL: '',
+  visibility: 'shared',
 }
 
 export function accountToForm(a: SecuritiesAccount): FormState {
@@ -59,5 +73,13 @@ export function accountToForm(a: SecuritiesAccount): FormState {
     color: a.color,
     memo: a.memo ?? '',
     initialValue: String(a.currentValue),
+    unrealizedPnL: a.unrealizedPnL !== undefined ? String(a.unrealizedPnL) : '',
+    visibility: a.visibility ?? 'shared',
   }
+}
+
+/** 元本 = 現在評価額 - 評価損益。評価損益が未設定なら null を返す */
+export function computePrincipal(currentValue: number, unrealizedPnL: number | undefined): number | null {
+  if (unrealizedPnL === undefined || Number.isNaN(unrealizedPnL)) return null
+  return currentValue - unrealizedPnL
 }

@@ -1,7 +1,10 @@
 import type { Dispatch, SetStateAction } from 'react'
-import type { SecuritiesAccount, SecuritiesAccountType } from '../types'
-import { ACCOUNT_COLORS, ACCOUNT_TYPE_OPTIONS, type FormState } from './securitiesUtils'
+import type { SecuritiesAccount, SecuritiesAccountType, SecuritiesHolding, SecuritiesVisibility } from '../types'
+import { ACCOUNT_COLORS, ACCOUNT_TYPE_OPTIONS, computePrincipal, formatYen, type FormState } from './securitiesUtils'
 import { SecuritiesRecordTab } from './SecuritiesRecordTab'
+import { SecuritiesHoldingsTab } from './SecuritiesHoldingsTab'
+
+type Tab = 'settings' | 'holdings' | 'record'
 
 interface Props {
   showModal: boolean
@@ -9,17 +12,22 @@ interface Props {
   accounts: SecuritiesAccount[]
   form: FormState
   setForm: Dispatch<SetStateAction<FormState>>
-  activeTab: 'settings' | 'record'
-  setActiveTab: Dispatch<SetStateAction<'settings' | 'record'>>
-  recordMonth: string
-  setRecordMonth: Dispatch<SetStateAction<string>>
-  recordInput: string
-  setRecordInput: Dispatch<SetStateAction<string>>
+  activeTab: Tab
+  setActiveTab: Dispatch<SetStateAction<Tab>>
+  holdings: SecuritiesHolding[]
+  onHoldingsChange: (holdings: SecuritiesHolding[]) => void
   onClose: () => void
   onSave: () => Promise<void>
   onDelete: () => Promise<void>
-  onRecord: () => Promise<void>
+  onRecordAccount: (yearMonth: string, value: number) => Promise<void>
+  onRecordHoldings: (yearMonth: string, valuesById: Record<string, number>) => Promise<void>
   onDeleteRecord: (ym: string) => Promise<void>
+}
+
+const TAB_LABELS: Record<Tab, string> = {
+  settings: '基本設定',
+  holdings: '保有商品',
+  record: '評価額を記録',
 }
 
 export function SecuritiesAccountModal({
@@ -30,17 +38,23 @@ export function SecuritiesAccountModal({
   setForm,
   activeTab,
   setActiveTab,
-  recordMonth,
-  setRecordMonth,
-  recordInput,
-  setRecordInput,
+  holdings,
+  onHoldingsChange,
   onClose,
   onSave,
   onDelete,
-  onRecord,
+  onRecordAccount,
+  onRecordHoldings,
   onDeleteRecord,
 }: Props) {
   if (!showModal) return null
+
+  // 基本設定の評価額・評価損益は常に手入力（保有商品との auto-calc は廃止）
+  const currentValue = Number(form.initialValue) || 0
+  const pnlStr = form.unrealizedPnL.trim()
+  const pnl = pnlStr === '' ? undefined : Number(pnlStr)
+  const principal = computePrincipal(currentValue, pnl)
+  const pnlRate = principal && principal > 0 && pnl !== undefined ? (pnl / principal) * 100 : null
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" role="presentation" onClick={onClose}>
@@ -56,13 +70,13 @@ export function SecuritiesAccountModal({
 
         {editTarget && (
           <div className="flex gap-1 px-4 pt-3 shrink-0">
-            {(['settings', 'record'] as const).map(tab => (
+            {(['settings', 'holdings', 'record'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${activeTab === tab ? 'bg-sage-600 text-white' : 'bg-gray-100 text-gray-500'}`}
               >
-                {tab === 'settings' ? '基本設定' : '評価額を記録'}
+                {TAB_LABELS[tab]}
               </button>
             ))}
           </div>
@@ -122,26 +136,87 @@ export function SecuritiesAccountModal({
               </select>
             </div>
 
-            {!editTarget && (
-              <div>
-                <label htmlFor="securities-account-initial-value" className="block text-xs font-medium text-gray-600 mb-1">現在の評価額（初回登録）</label>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm text-gray-500">¥</span>
-                  <input
-                    id="securities-account-initial-value"
-                    type="number"
-                    min="0"
-                    inputMode="numeric"
-                    value={form.initialValue}
-                    onChange={e => setForm(f => ({ ...f, initialValue: e.target.value }))}
-                    placeholder="1000000"
-                    className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sage-300 focus:border-sage-400"
-                  />
-                  <span className="text-sm text-gray-500">円</span>
-                </div>
-                <p className="text-[11px] text-gray-500 mt-1">0より大きい値を入力すると今月の記録として保存されます</p>
+            {/* 公開範囲 */}
+            <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- ラジオグループのラベル */}
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">公開範囲</label>
+              <div className="grid grid-cols-2 gap-2">
+                {(['shared', 'private'] as const).map(v => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, visibility: v as SecuritiesVisibility }))}
+                    className={`py-2 px-3 rounded-xl text-xs font-medium transition-colors border ${
+                      form.visibility === v
+                        ? 'bg-sage-600 border-sage-600 text-white'
+                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {v === 'shared' ? '世帯で共有' : '本人のみ表示'}
+                  </button>
+                ))}
               </div>
-            )}
+              {form.visibility === 'private' && (
+                <p className="text-[11px] text-gray-500 mt-1.5">この口座と保有商品は作成者本人にのみ表示されます</p>
+              )}
+            </div>
+
+            {/* 現在の評価額（手入力） */}
+            <div>
+              <label htmlFor="securities-account-initial-value" className="block text-xs font-medium text-gray-600 mb-1">
+                現在の評価額
+              </label>
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-gray-500">¥</span>
+                <input
+                  id="securities-account-initial-value"
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={form.initialValue}
+                  onChange={e => setForm(f => ({ ...f, initialValue: e.target.value }))}
+                  placeholder="1000000"
+                  className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sage-300 focus:border-sage-400"
+                />
+                <span className="text-sm text-gray-500">円</span>
+              </div>
+              {!editTarget && (
+                <p className="text-[11px] text-gray-500 mt-1">0より大きい値を入力すると今月の記録として保存されます</p>
+              )}
+            </div>
+
+            {/* 評価損益と元本（手入力） */}
+            <div>
+              <label htmlFor="securities-account-pnl" className="block text-xs font-medium text-gray-600 mb-1">
+                評価損益（任意）
+              </label>
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-gray-500">¥</span>
+                <input
+                  id="securities-account-pnl"
+                  type="number"
+                  inputMode="numeric"
+                  value={form.unrealizedPnL}
+                  onChange={e => setForm(f => ({ ...f, unrealizedPnL: e.target.value }))}
+                  placeholder="符号付き（例: 50000 / -20000）"
+                  className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sage-300 focus:border-sage-400"
+                />
+                <span className="text-sm text-gray-500">円</span>
+              </div>
+              {principal !== null && (
+                <div className="mt-2 bg-gray-50 rounded-lg px-3 py-2 flex items-center justify-between text-xs">
+                  <span className="text-gray-500">元本（自動計算）</span>
+                  <span className="font-bold text-gray-700 tabular-nums">
+                    {formatYen(principal)}
+                    {pnlRate !== null && (
+                      <span className={`ml-2 text-[11px] font-medium ${pnl! >= 0 ? 'text-sage-600' : 'text-red-500'}`}>
+                        ({pnl! >= 0 ? '+' : ''}{pnlRate.toFixed(2)}%)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
 
             <div>
               {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- カラーピッカーボタングループのラベルはhtmlForで関連付け不可 */}
@@ -190,18 +265,18 @@ export function SecuritiesAccountModal({
           </div>
         )}
 
+        {activeTab === 'holdings' && editTarget && (
+          <SecuritiesHoldingsTab
+            holdings={holdings}
+            onChange={onHoldingsChange}
+          />
+        )}
+
         {activeTab === 'record' && editTarget && (
           <SecuritiesRecordTab
             account={accounts.find(a => a.id === editTarget.id) ?? editTarget}
-            recordMonth={recordMonth}
-            recordInput={recordInput}
-            onMonthChange={ym => {
-              setRecordMonth(ym)
-              const acc = accounts.find(a => a.id === editTarget.id) ?? editTarget
-              setRecordInput(acc.monthlyValues[ym] !== undefined ? String(acc.monthlyValues[ym]) : '')
-            }}
-            onInputChange={setRecordInput}
-            onRecord={onRecord}
+            onRecordAccount={onRecordAccount}
+            onRecordHoldings={onRecordHoldings}
             onDeleteRecord={onDeleteRecord}
           />
         )}

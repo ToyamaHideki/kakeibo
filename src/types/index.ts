@@ -105,6 +105,32 @@ export interface SavingsAccount {
 
 export type SecuritiesAccountType = 'specific' | 'nisa' | 'ideco' | 'foreign' | 'other'
 
+export type SecuritiesHoldingCategory =
+  | 'mutual_fund'        // 投資信託
+  | 'domestic_stock'     // 国内株式
+  | 'foreign_stock'      // 国外株式
+  | 'bond'               // 債券
+  | 'reit'               // REIT
+  | 'crypto'             // 仮想通貨
+  | 'other'              // その他
+
+export interface SecuritiesHolding {
+  id: string
+  name: string
+  category: SecuritiesHoldingCategory
+  memo?: string
+  order: number
+  // 「商品ごとに記録」モードで入力された月次評価額。
+  // 最新月の値が商品の現在評価額として扱われる（UIで派生表示）。
+  monthlyValues?: Record<string, number>
+}
+
+// 公開範囲:
+// - 'shared': 世帯メンバー全員に表示（households/{hid}/securitiesAccounts に保存）
+// - 'private': 作成者本人のみ表示（users/{uid}/privateSecuritiesAccounts に保存）
+// 永続化はしないがフック層で取得元に応じて付与する derived フィールド。
+export type SecuritiesVisibility = 'shared' | 'private'
+
 export interface SecuritiesAccount {
   id: string
   name: string
@@ -116,6 +142,10 @@ export interface SecuritiesAccount {
   order: number
   currentValue: number
   monthlyValues: Record<string, number>  // "yyyy-MM" → 評価額
+  // ── 拡張フィールド（既存ドキュメントは未設定の可能性あり）
+  unrealizedPnL?: number                  // 口座全体の評価損益（任意）
+  holdings?: SecuritiesHolding[]          // 保有商品（任意、付随情報）
+  visibility?: SecuritiesVisibility       // フック層で derive。保存はしない
 }
 
 // ─── Contracts ───────────────────────────────────────────────────────────────

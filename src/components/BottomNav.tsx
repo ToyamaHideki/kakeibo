@@ -20,7 +20,6 @@ function buildCategories(ym: string): Category[] {
         { label: '固定費', path: '/fixed-costs' },
         { label: 'サブスク', path: '/subscriptions' },
         { label: '保険・ローン', path: '/contracts' },
-        { label: '目標', path: '/goals' },
       ],
     },
     {

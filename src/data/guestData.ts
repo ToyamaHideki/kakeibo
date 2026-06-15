@@ -510,6 +510,7 @@ export interface GuestStoreData {
     savingsGoals: SavingsGoal[]
     savingsAccounts: SavingsAccount[]
     securitiesAccounts: SecuritiesAccount[]
+    privateSecuritiesAccounts: SecuritiesAccount[]
     contracts: Contract[]
   }
 }
@@ -545,10 +546,11 @@ export function buildGuestData(): GuestStoreData {
     shoppingItems:   GUEST_SHOPPING_ITEMS,
     householdTasks:  GUEST_HOUSEHOLD_TASKS,
     collections: {
-      savingsGoals:       GUEST_SAVINGS_GOALS,
-      savingsAccounts:    GUEST_SAVINGS_ACCOUNTS,
-      securitiesAccounts: GUEST_SECURITIES_ACCOUNTS,
-      contracts:          GUEST_CONTRACTS,
+      savingsGoals:              GUEST_SAVINGS_GOALS,
+      savingsAccounts:           GUEST_SAVINGS_ACCOUNTS,
+      securitiesAccounts:        GUEST_SECURITIES_ACCOUNTS,
+      privateSecuritiesAccounts: [],
+      contracts:                 GUEST_CONTRACTS,
     },
   }
 }
