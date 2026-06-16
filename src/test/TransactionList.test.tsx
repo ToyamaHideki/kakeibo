@@ -44,7 +44,7 @@ describe('TransactionList', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     expect(screen.getByText('収支データがありません')).toBeInTheDocument()
@@ -59,7 +59,7 @@ describe('TransactionList', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     const dateLabels = screen.getAllByText(/月\d+日/)
@@ -76,7 +76,7 @@ describe('TransactionList', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     expect(screen.getByText('食費')).toBeInTheDocument()
@@ -95,7 +95,7 @@ describe('TransactionList', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     expect(screen.getByText('ランチ')).toBeInTheDocument()
@@ -111,7 +111,7 @@ describe('TransactionList', () => {
         onEdit={onEdit}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     const editButtons = screen.getAllByRole('button', { name: '編集' })
@@ -128,7 +128,7 @@ describe('TransactionList', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     await userEvent.click(screen.getAllByRole('button', { name: '削除' })[0]!)
@@ -146,7 +146,7 @@ describe('TransactionList', () => {
         onEdit={noop}
         onDeleted={onDeleted}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     await userEvent.click(screen.getAllByRole('button', { name: '削除' })[0]!)
@@ -165,7 +165,7 @@ describe('TransactionList', () => {
         onDeleted={noop}
         onDelete={onDelete}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     await userEvent.click(screen.getByRole('button', { name: '削除' }))
@@ -185,7 +185,7 @@ describe('TransactionList - 表示モード切替', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     expect(screen.getByRole('tab', { name: '日付順' })).toBeInTheDocument()
@@ -201,7 +201,7 @@ describe('TransactionList - 表示モード切替', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     expect(screen.getByRole('tab', { name: '日付順' })).toHaveAttribute('aria-selected', 'true')
@@ -217,14 +217,14 @@ describe('TransactionList - 表示モード切替', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="category"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     expect(screen.getByRole('tab', { name: 'カテゴリ順' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tab', { name: '日付順' })).toHaveAttribute('aria-selected', 'false')
   })
 
-  it('非アクティブタブ押下で onToggleDisplayMode が呼ばれる', async () => {
+  it('非アクティブタブ押下で onChangeDisplayMode が呼ばれる', async () => {
     const onToggle = vi.fn()
     render(
       <TransactionList
@@ -234,14 +234,14 @@ describe('TransactionList - 表示モード切替', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={onToggle}
+        onChangeDisplayMode={onToggle}
       />
     )
     await userEvent.click(screen.getByRole('tab', { name: 'カテゴリ順' }))
     expect(onToggle).toHaveBeenCalledOnce()
   })
 
-  it('アクティブタブ押下では onToggleDisplayMode が呼ばれない', async () => {
+  it('アクティブタブ押下では onChangeDisplayMode が呼ばれない', async () => {
     const onToggle = vi.fn()
     render(
       <TransactionList
@@ -251,7 +251,7 @@ describe('TransactionList - 表示モード切替', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={onToggle}
+        onChangeDisplayMode={onToggle}
       />
     )
     await userEvent.click(screen.getByRole('tab', { name: '日付順' }))
@@ -267,7 +267,7 @@ describe('TransactionList - 表示モード切替', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     expect(screen.getByRole('tab', { name: '日付順' })).toBeInTheDocument()
@@ -288,7 +288,7 @@ describe('TransactionList - 表示モード切替', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="category"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     // ヘッダー部分のカテゴリラベル（食費、給与）を取得
@@ -310,7 +310,7 @@ describe('TransactionList - 表示モード切替', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="date"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     // 同日に両方ある → 合計表示で両方出る（行の金額と合わせると複数ヒット）
@@ -331,7 +331,7 @@ describe('TransactionList - 表示モード切替', () => {
         onEdit={noop}
         onDeleted={noop}
         displayMode="category"
-        onToggleDisplayMode={noop}
+        onChangeDisplayMode={noop}
       />
     )
     expect(screen.getByText('（不明）')).toBeInTheDocument()

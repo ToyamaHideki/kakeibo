@@ -32,8 +32,7 @@ export default function MonthlyPage() {
     setDisplayMode(transactionListDisplayMode)
   }, [transactionListDisplayMode])
 
-  async function handleToggleDisplayMode() {
-    const next: TransactionListDisplayMode = displayMode === 'date' ? 'category' : 'date'
+  async function handleChangeDisplayMode(next: TransactionListDisplayMode) {
     setDisplayMode(next)
     if (!householdId || isGuest) return
     try {
@@ -160,7 +159,7 @@ export default function MonthlyPage() {
                   onEdit={handleEdit}
                   onDeleted={reload}
                   displayMode={displayMode}
-                  onToggleDisplayMode={handleToggleDisplayMode}
+                  onChangeDisplayMode={handleChangeDisplayMode}
                 />
               </div>
             ) : (
@@ -199,7 +198,7 @@ export default function MonthlyPage() {
                 onEdit={handleEdit}
                 onDeleted={reload}
                 displayMode={displayMode}
-                onToggleDisplayMode={handleToggleDisplayMode}
+                onChangeDisplayMode={handleChangeDisplayMode}
               />
             </div>
             {/* xl 以上：右サイドパネル（収支登録） */}

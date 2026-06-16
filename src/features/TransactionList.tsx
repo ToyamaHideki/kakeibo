@@ -14,7 +14,7 @@ interface Props {
   onDeleted: () => void
   onDelete?: (yearMonth: string, transactionId: string) => Promise<void>
   displayMode: TransactionListDisplayMode
-  onToggleDisplayMode: () => void
+  onChangeDisplayMode: (mode: TransactionListDisplayMode) => void
 }
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
@@ -94,6 +94,19 @@ function groupByDate(transactions: Transaction[]): Group[] {
   return groups
 }
 
+// 入力順（新しい順）。グルーピングせず、配列の自然順を逆順で 1 グループにまとめる。
+function groupByInput(transactions: Transaction[]): Group[] {
+  if (transactions.length === 0) return []
+  const items = [...transactions].reverse()
+  return [{
+    key: '__input__',
+    label: '入力順（新しい順）',
+    color: null,
+    items,
+    summary: summarize(items),
+  }]
+}
+
 function groupByCategory(
   transactions: Transaction[],
   categoryMap: Map<string, Category>,
@@ -136,7 +149,7 @@ export default function TransactionList({
   onDeleted,
   onDelete,
   displayMode,
-  onToggleDisplayMode,
+  onChangeDisplayMode,
 }: Props) {
   const { householdId } = useHousehold()
   const { confirm, dialogProps } = useConfirm()
@@ -148,6 +161,7 @@ export default function TransactionList({
 
   const groups = useMemo<Group[]>(() => {
     if (displayMode === 'category') return groupByCategory(transactions, categoryMap)
+    if (displayMode === 'input') return groupByInput(transactions)
     return groupByDate(transactions)
   }, [transactions, displayMode, categoryMap])
 
@@ -166,10 +180,11 @@ export default function TransactionList({
         className="sticky top-0 z-10 shadow-sm"
         ariaLabel="リスト表示モード"
         value={displayMode}
-        onChange={() => onToggleDisplayMode()}
+        onChange={onChangeDisplayMode}
         options={[
           { value: 'date', label: '日付順' },
           { value: 'category', label: 'カテゴリ順' },
+          { value: 'input', label: '入力順' },
         ]}
       />
 

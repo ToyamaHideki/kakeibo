@@ -80,8 +80,7 @@ function PersonalExpenseView({ user }: { user: User }) {
     setDisplayMode(transactionListDisplayMode)
   }, [transactionListDisplayMode])
 
-  async function handleToggleDisplayMode() {
-    const next: TransactionListDisplayMode = displayMode === 'date' ? 'category' : 'date'
+  async function handleChangeDisplayMode(next: TransactionListDisplayMode) {
     setDisplayMode(next)
     if (!householdId || isGuest) return
     try {
@@ -203,7 +202,7 @@ function PersonalExpenseView({ user }: { user: User }) {
                   onDeleted={reload}
                   onDelete={(ym, id) => deletePersonalTransaction(user.uid, ym, id)}
                   displayMode={displayMode}
-                  onToggleDisplayMode={handleToggleDisplayMode}
+                  onChangeDisplayMode={handleChangeDisplayMode}
                 />
               </div>
             ) : (
@@ -243,7 +242,7 @@ function PersonalExpenseView({ user }: { user: User }) {
                 onDeleted={reload}
                 onDelete={(ym, id) => deletePersonalTransaction(user.uid, ym, id)}
                 displayMode={displayMode}
-                onToggleDisplayMode={handleToggleDisplayMode}
+                onChangeDisplayMode={handleChangeDisplayMode}
               />
             </div>
             {/* xl 以上：右サイドパネル（個人収支登録） */}

@@ -248,7 +248,7 @@ export interface CfPlan {
 
 // ─── Transaction List Display Mode ───────────────────────────────────────────
 
-export type TransactionListDisplayMode = 'date' | 'category'
+export type TransactionListDisplayMode = 'date' | 'category' | 'input'
 
 // ─── Budget ───────────────────────────────────────────────────────────────────
 
