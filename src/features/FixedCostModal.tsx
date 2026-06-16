@@ -17,6 +17,13 @@ const FREQ_OPTIONS: { value: FixedCostFrequency; label: string }[] = [
   { value: 'every3years', label: '3年毎' },
 ]
 
+// 指定月の日数。うるう年でも 28 として扱う（毎年発生する固定費の安全側に倒す）。
+function daysInMonth(m: number): number {
+  if (m === 2) return 28
+  if (m === 4 || m === 6 || m === 9 || m === 11) return 30
+  return 31
+}
+
 export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props) {
   const [name, setName] = useState('')
   const [frequency, setFrequency] = useState<FixedCostFrequency>('monthly')
@@ -57,6 +64,12 @@ export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props)
   }, [isOpen, cost])
 
   useEscapeKey(onClose, isOpen)
+
+  // 月／頻度の変更で日の上限を超えるなら自動で末日に丸める（毎月は 31 まで許容）
+  useEffect(() => {
+    const max = frequency === 'monthly' ? 31 : daysInMonth(month)
+    if (dayOfMonth > max) setDayOfMonth(max)
+  }, [month, frequency, dayOfMonth])
 
   async function handleSave() {
     if (!name.trim()) return
@@ -159,26 +172,33 @@ export default function FixedCostModal({ isOpen, onClose, cost, onSave }: Props)
             <div className="flex items-center gap-2">
               {frequency !== 'monthly' && (
                 <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    min={1}
-                    max={12}
+                  <select
                     value={month}
-                    onChange={e => setMonth(Math.min(12, Math.max(1, Number(e.target.value))))}
-                    className="w-14 px-2 py-2.5 border border-gray-200 rounded-lg text-gray-800 text-center focus:outline-none focus:ring-2 focus:ring-sage-300 focus:border-sage-400"
-                  />
+                    onChange={e => setMonth(Number(e.target.value))}
+                    aria-label="発生月"
+                    className="px-2 py-2.5 border border-gray-200 rounded-lg text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-sage-300 focus:border-sage-400"
+                  >
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
                   <span className="text-sm text-gray-500 shrink-0">月</span>
                 </div>
               )}
               <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  min={1}
-                  max={31}
+                <select
                   value={dayOfMonth}
-                  onChange={e => setDayOfMonth(Math.min(31, Math.max(1, Number(e.target.value))))}
-                  className="w-14 px-2 py-2.5 border border-gray-200 rounded-lg text-gray-800 text-center focus:outline-none focus:ring-2 focus:ring-sage-300 focus:border-sage-400"
-                />
+                  onChange={e => setDayOfMonth(Number(e.target.value))}
+                  aria-label={frequency === 'monthly' ? '引き落とし日' : '発生日'}
+                  className="px-2 py-2.5 border border-gray-200 rounded-lg text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-sage-300 focus:border-sage-400"
+                >
+                  {Array.from(
+                    { length: frequency === 'monthly' ? 31 : daysInMonth(month) },
+                    (_, i) => i + 1,
+                  ).map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
                 <span className="text-sm text-gray-500 shrink-0">日</span>
               </div>
             </div>

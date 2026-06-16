@@ -47,9 +47,9 @@ describe('FixedCostModal', () => {
   it('「毎年」を選択すると月フィールドが表示される', async () => {
     render(<FixedCostModal isOpen onClose={noop} cost={null} onSave={noop} />)
     await userEvent.click(screen.getByRole('button', { name: '毎年' }))
-    // 月フィールドが表示される（月入力 + 日入力の2つのnumber input）
-    const numberInputs = screen.getAllByRole('spinbutton')
-    expect(numberInputs.length).toBeGreaterThanOrEqual(2)
+    // 発生月セレクト・発生日セレクトが表示される
+    expect(screen.getByLabelText('発生月')).toBeInTheDocument()
+    expect(screen.getByLabelText('発生日')).toBeInTheDocument()
   })
 
   it('「毎月」のとき引き落とし日ラベルが表示され、月フィールドは表示されない', () => {
