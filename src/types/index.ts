@@ -8,6 +8,9 @@ export interface Transaction {
   paymentMethodId?: string
   date: string
   memo: string
+  // 登録日時（Unix ms）。「入力順」表示の真の時系列ソートに使用する。
+  // 既存レコードは未設定の場合があり、その場合は配列順をフォールバックに使う。
+  createdAt?: number
 }
 
 // Firestore: months/{yyyy-MM}

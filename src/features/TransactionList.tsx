@@ -94,10 +94,21 @@ function groupByDate(transactions: Transaction[]): Group[] {
   return groups
 }
 
-// 入力順（新しい順）。グルーピングせず、配列の自然順を逆順で 1 グループにまとめる。
+// 入力順（新しい順）。createdAt があるレコードは新しい順、無い既存レコードは配列の自然順を逆順で後ろに並べる。
+// 配列の自然順だけでは「給与日起算で月をまたぐとき」に正しい時系列が得られないため createdAt を優先する。
 function groupByInput(transactions: Transaction[]): Group[] {
   if (transactions.length === 0) return []
-  const items = [...transactions].reverse()
+  const indexed = transactions.map((t, idx) => ({ t, idx }))
+  indexed.sort((a, b) => {
+    const ac = a.t.createdAt
+    const bc = b.t.createdAt
+    if (ac !== undefined && bc !== undefined) return bc - ac
+    if (ac !== undefined) return -1
+    if (bc !== undefined) return 1
+    // 両方とも createdAt 無し（旧データ）。配列内の登場順を逆転して新しい順を擬似的に再現
+    return b.idx - a.idx
+  })
+  const items = indexed.map(x => x.t)
   return [{
     key: '__input__',
     label: '入力順（新しい順）',

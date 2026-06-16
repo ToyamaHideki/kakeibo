@@ -73,16 +73,18 @@ export async function fetchMonthData(householdId: string, yearMonth: string): Pr
 }
 
 export async function saveTransaction(householdId: string, yearMonth: string, transaction: Transaction): Promise<void> {
-  if (householdId === GUEST_HOUSEHOLD_ID) { guestSaveTransaction(yearMonth, transaction); return }
+  // 既に createdAt がある（moveTransaction 等の引越し）はそのまま、無ければ now を埋める
+  const t: Transaction = transaction.createdAt !== undefined ? transaction : { ...transaction, createdAt: Date.now() }
+  if (householdId === GUEST_HOUSEHOLD_ID) { guestSaveTransaction(yearMonth, t); return }
   const [year, month] = yearMonth.split('-').map(Number)
   const ref = doc(db, 'households', householdId, 'months', yearMonth)
   const snap = await getDoc(ref)
 
   if (!snap.exists()) {
-    await setDoc(ref, { year, month, transactions: [transaction] })
+    await setDoc(ref, { year, month, transactions: [t] })
   } else {
     const data = snap.data() as MonthDocument
-    await updateDoc(ref, { transactions: [...data.transactions, transaction] })
+    await updateDoc(ref, { transactions: [...data.transactions, t] })
   }
 }
 

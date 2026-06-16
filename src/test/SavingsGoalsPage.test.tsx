@@ -57,39 +57,35 @@ describe('SavingsGoalsPage', () => {
 
   it('FABボタンをクリックするとモーダルが開く', async () => {
     render(<SavingsGoalsPage />)
-    // FABは固定位置のボタン（aria-label なし・SVGのみ）
-    const buttons = screen.getAllByRole('button')
-    const fab = buttons[buttons.length - 1]!  // ページ内の最後のボタンがFAB
+    // PC版サイドパネル「目標を追加」とFABの両方が常時DOMに存在する。FABは aria-label で取得。
+    const fab = screen.getByLabelText('貯蓄目標を追加')
     await userEvent.click(fab)
-    expect(screen.getByText('目標を追加')).toBeInTheDocument()
+    // モーダルが開くとサイドパネルとモーダル両方に「目標を追加」が現れる
+    const headings = screen.getAllByText('目標を追加')
+    expect(headings.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('モーダルで目標名と金額を入力して保存すると addGoal が呼ばれる', async () => {
+  it('サイドパネルから目標名と金額を入力して追加すると addGoal が呼ばれる', async () => {
     const addGoal = vi.fn().mockResolvedValue(undefined)
     vi.mocked(useSavingsGoals).mockReturnValue({ ...DEFAULT_HOOK, addGoal })
     render(<SavingsGoalsPage />)
 
-    // FAB クリック
-    const buttons = screen.getAllByRole('button')
-    await userEvent.click(buttons[buttons.length - 1]!)
-
-    // フォーム入力
+    // サイドパネルの入力欄に直接入力
     const nameInput = screen.getByPlaceholderText('例：マイホーム頭金')
     await userEvent.type(nameInput, '車の購入')
     const amountInputs = screen.getAllByRole('spinbutton')
     await userEvent.type(amountInputs[0]!, '1000000')
 
-    // 保存
+    // サイドパネル側の「追加する」（モーダルは開いていないのでこれが唯一の追加ボタン）
     await userEvent.click(screen.getByRole('button', { name: '追加する' }))
 
     await waitFor(() => expect(addGoal).toHaveBeenCalledOnce())
     expect(addGoal.mock.calls[0]![0]).toMatchObject({ name: '車の購入', targetAmount: 1000000 })
   })
 
-  it('目標名が空のとき保存ボタンは disabled', async () => {
+  it('目標名が空のときサイドパネルの追加ボタンは disabled', async () => {
     render(<SavingsGoalsPage />)
-    const buttons = screen.getAllByRole('button')
-    await userEvent.click(buttons[buttons.length - 1]!)
+    // 初期状態ではモーダル未表示。サイドパネルの「追加する」のみが存在し、入力空のため disabled
     expect(screen.getByRole('button', { name: '追加する' })).toBeDisabled()
   })
 

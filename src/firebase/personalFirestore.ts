@@ -56,15 +56,17 @@ export async function fetchPersonalMonthData(uid: string, yearMonth: string): Pr
 }
 
 export async function savePersonalTransaction(uid: string, yearMonth: string, transaction: Transaction): Promise<void> {
+  // 既に createdAt がある（引越し）はそのまま、無ければ now を埋める
+  const t: Transaction = transaction.createdAt !== undefined ? transaction : { ...transaction, createdAt: Date.now() }
   const [year, month] = yearMonth.split('-').map(Number)
   const ref = doc(db, 'users', uid, 'months', yearMonth)
   const snap = await getDoc(ref)
 
   if (!snap.exists()) {
-    await setDoc(ref, { year, month, transactions: [transaction] })
+    await setDoc(ref, { year, month, transactions: [t] })
   } else {
     const data = snap.data() as MonthDocument
-    await updateDoc(ref, { transactions: [...data.transactions, transaction] })
+    await updateDoc(ref, { transactions: [...data.transactions, t] })
   }
 }
 
