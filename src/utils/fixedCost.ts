@@ -44,6 +44,29 @@ export function isApplicableThisMonth(cost: RecurringSpec, year: number, month: 
   return false
 }
 
+// 期間 [periodStart, periodEnd] (yyyy-MM-dd) 内に発生するこの固定費の単一オカレンスを返す。
+// 給与日期間（暦月をまたぐ）に対応するため、開始月と終了月の両方を候補としてチェックする。
+export function getOccurrenceInPeriod(
+  cost: RecurringSpec & { dayOfMonth: number },
+  periodStart: string,
+  periodEnd: string,
+): { date: string; year: number; month: number; effectiveDay: number; isShifted: boolean } | null {
+  const [sy, sm] = periodStart.split('-').map(Number) as [number, number, number]
+  const [ey, em] = periodEnd.split('-').map(Number) as [number, number, number]
+  const candidates: Array<{ y: number; m: number }> = [{ y: sy, m: sm }]
+  if (sy !== ey || sm !== em) candidates.push({ y: ey, m: em })
+  for (const { y, m } of candidates) {
+    if (!isApplicableThisMonth(cost, y, m)) continue
+    const { effectiveDay, overflows, isShifted } = getEffectiveDay(cost.dayOfMonth, y, m)
+    if (overflows) continue
+    const date = `${y}-${String(m).padStart(2, '0')}-${String(effectiveDay).padStart(2, '0')}`
+    if (date >= periodStart && date <= periodEnd) {
+      return { date, year: y, month: m, effectiveDay, isShifted }
+    }
+  }
+  return null
+}
+
 export const FREQ_LABEL: Record<string, string | null> = {
   monthly: null,
   yearly: '毎年',

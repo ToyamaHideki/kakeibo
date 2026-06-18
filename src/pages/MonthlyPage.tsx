@@ -12,8 +12,7 @@ import { updateFixedCost } from '../firebase/firestore'
 import { updateHouseholdSettings } from '../firebase/householdFirestore'
 import GhostLoader from '../components/GhostLoader'
 import type { FixedCost, Transaction, TransactionListDisplayMode } from '../types'
-import { adjacentMonth, currentYearMonth, formatYearMonth, formatPayPeriodLabel } from '../utils/date'
-import { getEffectiveDay } from '../utils/fixedCost'
+import { adjacentMonth, currentYearMonth, formatYearMonth, formatPayPeriodLabel, getPayPeriodRange } from '../utils/date'
 import type { OutletContext } from '../components/Layout'
 import YearMonthPicker from '../components/YearMonthPicker'
 import SegmentedToggle from '../components/SegmentedToggle'
@@ -40,9 +39,16 @@ export default function MonthlyPage() {
     initialPaymentMethodId: string | undefined
   } | undefined>()
 
-  const [yearStr, monthStr] = yearMonth.split('-')
-  const viewYear = Number(yearStr)
-  const viewMonth = Number(monthStr)
+  // 給与日設定時は期間を [payDay日, 翌月payDay-1日] とし、未設定時は暦月の初日〜末日とする
+  const { periodStart, periodEnd } = (() => {
+    if (payDay && payDay >= 2) {
+      const { start, end } = getPayPeriodRange(yearMonth, payDay)
+      return { periodStart: start, periodEnd: end }
+    }
+    const [y, m] = yearMonth.split('-').map(Number) as [number, number]
+    const last = new Date(y, m, 0).getDate()
+    return { periodStart: `${yearMonth}-01`, periodEnd: `${yearMonth}-${String(last).padStart(2, '0')}` }
+  })()
 
   async function handleSkipFixedCost(cost: FixedCost) {
     if (!householdId) return
@@ -62,15 +68,12 @@ export default function MonthlyPage() {
     reloadFixedCosts()
   }
 
-  function handleClickFixedCost(cost: FixedCost) {
-    const { effectiveDay, overflows } = getEffectiveDay(cost.dayOfMonth, viewYear, viewMonth)
-    const day = overflows ? cost.dayOfMonth : effectiveDay
-    const dateStr = `${yearStr}-${monthStr}-${String(day).padStart(2, '0')}`
+  function handleClickFixedCost(cost: FixedCost, occurrenceDate: string) {
     const pmId = cost.paymentMethod
       ? paymentMethods.find(pm => pm.name === cost.paymentMethod)?.id
       : undefined
     setPrefill({
-      initialDate: dateStr,
+      initialDate: occurrenceDate,
       initialType: 'expense',
       initialAmount: cost.isVariable ? undefined : cost.amount,
       initialMemo: cost.name,
@@ -205,9 +208,9 @@ export default function MonthlyPage() {
               <div className="flex-1 overflow-y-auto min-h-0">
                 <MonthlyFixedCostsSection
                   fixedCosts={fixedCosts}
-                  year={viewYear}
-                  month={viewMonth}
-                  yearMonth={yearMonth}
+                  periodStart={periodStart}
+                  periodEnd={periodEnd}
+                  skipKey={yearMonth}
                   onClickItem={handleClickFixedCost}
                   onSkip={handleSkipFixedCost}
                   onRestore={handleRestoreFixedCost}
@@ -253,9 +256,9 @@ export default function MonthlyPage() {
             <div className="flex-1 overflow-y-auto min-h-0">
               <MonthlyFixedCostsSection
                 fixedCosts={fixedCosts}
-                year={viewYear}
-                month={viewMonth}
-                yearMonth={yearMonth}
+                periodStart={periodStart}
+                periodEnd={periodEnd}
+                skipKey={yearMonth}
                 onClickItem={handleClickFixedCost}
                 onSkip={handleSkipFixedCost}
                 onRestore={handleRestoreFixedCost}

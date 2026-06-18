@@ -1,22 +1,22 @@
 import { useMemo, useState } from 'react'
 import type { FixedCost } from '../types'
-import { isApplicableThisMonth, getEffectiveDay, FREQ_LABEL } from '../utils/fixedCost'
+import { getOccurrenceInPeriod, FREQ_LABEL } from '../utils/fixedCost'
 
 interface Props {
   fixedCosts: FixedCost[]
-  year: number
-  month: number
-  yearMonth: string         // "yyyy-MM" — skippedMonths との照合に使用
-  onClickItem: (cost: FixedCost) => void
+  periodStart: string       // "yyyy-MM-dd" — 給与日期間の開始（通常は yyyy-MM-01）
+  periodEnd: string         // "yyyy-MM-dd" — 給与日期間の終了（通常は yyyy-MM-末日）
+  skipKey: string           // "yyyy-MM" — skippedMonths への保存キー
+  onClickItem: (cost: FixedCost, occurrenceDate: string) => void
   onSkip: (cost: FixedCost) => void
   onRestore: (cost: FixedCost) => void
 }
 
 export default function MonthlyFixedCostsSection({
   fixedCosts,
-  year,
-  month,
-  yearMonth,
+  periodStart,
+  periodEnd,
+  skipKey,
   onClickItem,
   onSkip,
   onRestore,
@@ -25,21 +25,20 @@ export default function MonthlyFixedCostsSection({
   const [skippedOpen, setSkippedOpen] = useState(false)
 
   const { active, skipped } = useMemo(() => {
-    const a: Array<{ cost: FixedCost; effectiveDay: number; isShifted: boolean }> = []
+    const a: Array<{ cost: FixedCost; date: string; effectiveDay: number; isShifted: boolean }> = []
     const s: FixedCost[] = []
     for (const cost of fixedCosts) {
-      if (!isApplicableThisMonth(cost, year, month)) continue
-      const { effectiveDay, overflows } = getEffectiveDay(cost.dayOfMonth, year, month)
-      if (overflows) continue
-      if (cost.skippedMonths?.includes(yearMonth)) {
+      const occ = getOccurrenceInPeriod(cost, periodStart, periodEnd)
+      if (!occ) continue
+      if (cost.skippedMonths?.includes(skipKey)) {
         s.push(cost)
       } else {
-        a.push({ cost, effectiveDay, isShifted: getEffectiveDay(cost.dayOfMonth, year, month).isShifted })
+        a.push({ cost, date: occ.date, effectiveDay: occ.effectiveDay, isShifted: occ.isShifted })
       }
     }
-    a.sort((x, y) => x.effectiveDay - y.effectiveDay)
+    a.sort((x, y) => x.date.localeCompare(y.date))
     return { active: a, skipped: s }
-  }, [fixedCosts, year, month, yearMonth])
+  }, [fixedCosts, periodStart, periodEnd, skipKey])
 
   const plannedTotal = active
     .filter(x => !x.cost.isVariable)
@@ -78,17 +77,19 @@ export default function MonthlyFixedCostsSection({
 
       {!collapsed && (
         <div className="divide-y divide-gray-100 border-t border-gray-100">
-          {active.map(({ cost, effectiveDay, isShifted }) => {
+          {active.map(({ cost, date, effectiveDay, isShifted }) => {
             const freq = cost.frequency ?? 'monthly'
             const freqLabel = FREQ_LABEL[freq]
+            const [, mStr] = date.split('-')
             return (
               <div key={cost.id} className="group relative flex items-stretch hover:bg-sage-50 transition-colors">
                 <button
                   type="button"
-                  onClick={() => onClickItem(cost)}
+                  onClick={() => onClickItem(cost, date)}
                   className="flex-1 flex items-center gap-3 px-4 py-2.5 text-left min-w-0"
                 >
-                  <div className="w-10 shrink-0 text-center">
+                  <div className="w-12 shrink-0 text-center">
+                    <span className="text-[10px] text-gray-400 block leading-none">{Number(mStr)}月</span>
                     <span className={`text-sm font-bold ${isShifted ? 'text-amber-600' : 'text-sage-600'}`}>
                       {effectiveDay}
                     </span>

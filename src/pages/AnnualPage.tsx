@@ -3,8 +3,15 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import type { OutletContext } from '../components/Layout'
 import GhostLoader from '../components/GhostLoader'
 import { useAnnualData } from '../hooks/useAnnualData'
-import { getAnnualCollapsedCategoryIds, setAnnualCollapsedCategoryIds } from '../utils/annualPrefs'
-import type { Category, PaymentMethod } from '../types'
+import { useHousehold } from '../hooks/useHousehold'
+import { adjacentMonth } from '../utils/date'
+import {
+  getAnnualCollapsedCategoryIds,
+  setAnnualCollapsedCategoryIds,
+  getAnnualUsePayDay,
+  setAnnualUsePayDay,
+} from '../utils/annualPrefs'
+import type { Category, PaymentMethod, Transaction } from '../types'
 
 const MONTH_LABELS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
 
@@ -29,9 +36,17 @@ const stickyRight = 'sticky right-0 z-10 border-l-2 px-2 py-2 text-center text-x
 export default function AnnualPage() {
   const [year, setYear] = useState(new Date().getFullYear())
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => new Set(getAnnualCollapsedCategoryIds()))
+  const [usePayDay, setUsePayDay] = useState(getAnnualUsePayDay())
   const { categories, paymentMethods } = useOutletContext<OutletContext>()
-  const { monthData, loading } = useAnnualData(year)
+  const { payDay } = useHousehold()
+  const effectivePayDay = usePayDay && payDay && payDay >= 2 ? payDay : null
+  const { monthData, loading } = useAnnualData(year, effectivePayDay)
   const navigate = useNavigate()
+
+  function toggleUsePayDay(next: boolean) {
+    setUsePayDay(next)
+    setAnnualUsePayDay(next)
+  }
 
   function toggleCategoryCollapsed(categoryId: string) {
     setCollapsedIds(prev => {
@@ -47,7 +62,18 @@ export default function AnnualPage() {
     `${year}-${String(i + 1).padStart(2, '0')}`
   )
 
-  const allTransactions = Object.values(monthData).flat()
+  // 列（月）に対応するトランザクション集合を返す。
+  // 給与日モード時は当月の payDay 日〜翌月の payDay-1 日に渡る期間でフィルタする。
+  function getColumnTransactions(yearMonth: string): Transaction[] {
+    if (!effectivePayDay) return monthData[yearMonth] ?? []
+    const start = `${yearMonth}-${String(effectivePayDay).padStart(2, '0')}`
+    const next = adjacentMonth(yearMonth, 1)
+    const end = `${next}-${String(effectivePayDay - 1).padStart(2, '0')}`
+    const all = [...(monthData[yearMonth] ?? []), ...(monthData[next] ?? [])]
+    return all.filter(t => t.date >= start && t.date <= end)
+  }
+
+  const allTransactions = months.flatMap(m => getColumnTransactions(m))
 
   const incomeCategories = categories
     .filter(c => c.type === 'income')
@@ -62,7 +88,7 @@ export default function AnnualPage() {
     .sort((a, b) => a.order - b.order)
 
   function getAmount(yearMonth: string, categoryId: string, paymentMethodId?: string): number {
-    const txs = monthData[yearMonth] ?? []
+    const txs = getColumnTransactions(yearMonth)
     return txs
       .filter(t =>
         t.categoryId === categoryId &&
@@ -226,7 +252,12 @@ export default function AnnualPage() {
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <h2 className="text-xl font-bold text-gray-800">{year}年</h2>
+        <h2 className="text-xl font-bold text-gray-800">
+          {year}年
+          {effectivePayDay && (
+            <span className="ml-2 text-xs font-normal text-gray-500">（{effectivePayDay}日締め）</span>
+          )}
+        </h2>
         <button
           onClick={() => setYear(y => y + 1)}
           aria-label="次の年"
@@ -237,6 +268,21 @@ export default function AnnualPage() {
           </svg>
         </button>
       </div>
+
+      {/* 表示設定 */}
+      {payDay && payDay >= 2 && (
+        <div className="flex items-center justify-end mb-3 shrink-0">
+          <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={usePayDay}
+              onChange={e => toggleUsePayDay(e.target.checked)}
+              className="w-4 h-4 accent-sage-600"
+            />
+            給与日（{payDay}日）から1か月で集計
+          </label>
+        </div>
+      )}
 
       {loading ? (
         <div className="py-16 flex items-center justify-center"><GhostLoader label="読み込み中..." /></div>

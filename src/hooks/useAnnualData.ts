@@ -3,7 +3,9 @@ import { fetchMonthData } from '../firebase/firestore'
 import type { Transaction } from '../types'
 import { useHousehold } from './useHousehold'
 
-export function useAnnualData(year: number) {
+// payDay (>=2) を指定した場合、当年の 12 ヶ月 + 翌年1月分を取得する。
+// 給与日期間は当月の payDay 日〜翌月の payDay-1 日に渡るため、12月期間の集計には翌年1月のドキュメントが必要。
+export function useAnnualData(year: number, payDay?: number | null) {
   const { householdId } = useHousehold()
   const [monthData, setMonthData] = useState<Record<string, Transaction[]>>({})
   const [loading, setLoading] = useState(true)
@@ -16,6 +18,9 @@ export function useAnnualData(year: number) {
         const months = Array.from({ length: 12 }, (_, i) =>
           `${year}-${String(i + 1).padStart(2, '0')}`
         )
+        if (payDay && payDay >= 2) {
+          months.push(`${year + 1}-01`)
+        }
         const results = await Promise.all(months.map(m => fetchMonthData(householdId!, m)))
         const data: Record<string, Transaction[]> = {}
         months.forEach((m, i) => {
@@ -27,7 +32,7 @@ export function useAnnualData(year: number) {
       }
     }
     load()
-  }, [year, householdId])
+  }, [year, householdId, payDay])
 
   return { monthData, loading }
 }

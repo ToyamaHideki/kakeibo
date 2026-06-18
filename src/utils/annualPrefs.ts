@@ -1,6 +1,23 @@
 // 年間収支ページの表示設定（端末内）。Firestore スキーマ変更なし。
 
 const KEY_COLLAPSED = 'annualCollapsedCategoryIds'
+const KEY_USE_PAY_DAY = 'annualUsePayDay'
+
+export function getAnnualUsePayDay(): boolean {
+  try {
+    return localStorage.getItem(KEY_USE_PAY_DAY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+export function setAnnualUsePayDay(value: boolean): void {
+  try {
+    localStorage.setItem(KEY_USE_PAY_DAY, value ? 'true' : 'false')
+  } catch {
+    // プライベートモード等で書き込めない場合は無視
+  }
+}
 
 export function getAnnualCollapsedCategoryIds(): string[] {
   try {
