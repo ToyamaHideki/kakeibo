@@ -53,6 +53,7 @@ export interface FixedCost {
   paymentMethod: string
   memo?: string
   order: number
+  skippedMonths?: string[]         // 月別収支での「今月はスキップ」("yyyy-MM" の配列)
 }
 
 // ─── Shopping & Household Tasks ──────────────────────────────────────────────

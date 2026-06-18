@@ -4,12 +4,16 @@ import TransactionList from '../features/TransactionList'
 import TransactionModal from '../features/TransactionModal'
 import TransactionAddPanel from '../features/TransactionAddPanel'
 import MonthlyChart from '../features/MonthlyChart'
+import MonthlyFixedCostsSection from '../features/MonthlyFixedCostsSection'
 import { useMonthlyData } from '../hooks/useMonthlyData'
+import { useFixedCosts } from '../hooks/useFixedCosts'
 import { useHousehold } from '../hooks/useHousehold'
+import { updateFixedCost } from '../firebase/firestore'
 import { updateHouseholdSettings } from '../firebase/householdFirestore'
 import GhostLoader from '../components/GhostLoader'
-import type { Transaction, TransactionListDisplayMode } from '../types'
+import type { FixedCost, Transaction, TransactionListDisplayMode } from '../types'
 import { adjacentMonth, currentYearMonth, formatYearMonth, formatPayPeriodLabel } from '../utils/date'
+import { getEffectiveDay } from '../utils/fixedCost'
 import type { OutletContext } from '../components/Layout'
 import YearMonthPicker from '../components/YearMonthPicker'
 import SegmentedToggle from '../components/SegmentedToggle'
@@ -20,6 +24,7 @@ export default function MonthlyPage() {
   const { categories, paymentMethods, onCategoryAdded, onPaymentMethodAdded, onCategoryDeleted, onPaymentMethodDeleted, onCategoryUpdated } = useOutletContext<OutletContext>()
   const { payDay, transactionListDisplayMode, householdId, isGuest, reloadHousehold } = useHousehold()
   const { transactions, loading, reload } = useMonthlyData(yearMonth, payDay ?? undefined)
+  const { fixedCosts, reload: reloadFixedCosts } = useFixedCosts()
   const periodLabel = payDay ? formatPayPeriodLabel(yearMonth, payDay) : formatYearMonth(yearMonth)
   const [editTarget, setEditTarget] = useState<Transaction | undefined>()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -27,6 +32,52 @@ export default function MonthlyPage() {
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'list' | 'chart'>('list')
   const [displayMode, setDisplayMode] = useState<TransactionListDisplayMode>(transactionListDisplayMode)
+  const [prefill, setPrefill] = useState<{
+    initialDate: string
+    initialType: 'expense'
+    initialAmount: number | undefined
+    initialMemo: string
+    initialPaymentMethodId: string | undefined
+  } | undefined>()
+
+  const [yearStr, monthStr] = yearMonth.split('-')
+  const viewYear = Number(yearStr)
+  const viewMonth = Number(monthStr)
+
+  async function handleSkipFixedCost(cost: FixedCost) {
+    if (!householdId) return
+    const current = cost.skippedMonths ?? []
+    if (current.includes(yearMonth)) return
+    const next = [...current, yearMonth]
+    await updateFixedCost(householdId, cost.id, { skippedMonths: next })
+    reloadFixedCosts()
+  }
+
+  async function handleRestoreFixedCost(cost: FixedCost) {
+    if (!householdId) return
+    const current = cost.skippedMonths ?? []
+    if (!current.includes(yearMonth)) return
+    const next = current.filter(m => m !== yearMonth)
+    await updateFixedCost(householdId, cost.id, { skippedMonths: next })
+    reloadFixedCosts()
+  }
+
+  function handleClickFixedCost(cost: FixedCost) {
+    const { effectiveDay, overflows } = getEffectiveDay(cost.dayOfMonth, viewYear, viewMonth)
+    const day = overflows ? cost.dayOfMonth : effectiveDay
+    const dateStr = `${yearStr}-${monthStr}-${String(day).padStart(2, '0')}`
+    const pmId = cost.paymentMethod
+      ? paymentMethods.find(pm => pm.name === cost.paymentMethod)?.id
+      : undefined
+    setPrefill({
+      initialDate: dateStr,
+      initialType: 'expense',
+      initialAmount: cost.isVariable ? undefined : cost.amount,
+      initialMemo: cost.name,
+      initialPaymentMethodId: pmId,
+    })
+    setIsAddModalOpen(true)
+  }
 
   useEffect(() => {
     setDisplayMode(transactionListDisplayMode)
@@ -152,6 +203,15 @@ export default function MonthlyPage() {
           <div className="md:hidden flex-1 flex flex-col min-h-0 overflow-hidden">
             {activeTab === 'list' ? (
               <div className="flex-1 overflow-y-auto min-h-0">
+                <MonthlyFixedCostsSection
+                  fixedCosts={fixedCosts}
+                  year={viewYear}
+                  month={viewMonth}
+                  yearMonth={yearMonth}
+                  onClickItem={handleClickFixedCost}
+                  onSkip={handleSkipFixedCost}
+                  onRestore={handleRestoreFixedCost}
+                />
                 <TransactionList
                   transactions={transactions}
                   categories={categories}
@@ -191,6 +251,15 @@ export default function MonthlyPage() {
               <MonthlyChart transactions={transactions} categories={categories} fillHeight />
             </div>
             <div className="flex-1 overflow-y-auto min-h-0">
+              <MonthlyFixedCostsSection
+                fixedCosts={fixedCosts}
+                year={viewYear}
+                month={viewMonth}
+                yearMonth={yearMonth}
+                onClickItem={handleClickFixedCost}
+                onSkip={handleSkipFixedCost}
+                onRestore={handleRestoreFixedCost}
+              />
               <TransactionList
                 transactions={transactions}
                 categories={categories}
@@ -225,7 +294,7 @@ export default function MonthlyPage() {
 
       {/* FAB（xl 未満のみ） */}
       <button
-        onClick={() => setIsAddModalOpen(true)}
+        onClick={() => { setPrefill(undefined); setIsAddModalOpen(true) }}
         aria-label="収支を登録"
         className="xl:hidden fixed right-4 fab-mobile md:bottom-6 z-20 w-14 h-14 bg-sage-600 hover:bg-sage-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
       >
@@ -238,8 +307,8 @@ export default function MonthlyPage() {
       {/* 新規追加モーダル */}
       <TransactionModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSaved={() => { setIsAddModalOpen(false); reload() }}
+        onClose={() => { setIsAddModalOpen(false); setPrefill(undefined) }}
+        onSaved={() => { setIsAddModalOpen(false); setPrefill(undefined); reload() }}
         onCategoryAdded={onCategoryAdded}
         onPaymentMethodAdded={onPaymentMethodAdded}
         onCategoryDeleted={onCategoryDeleted}
@@ -248,6 +317,11 @@ export default function MonthlyPage() {
         categories={categories}
         paymentMethods={paymentMethods}
         yearMonth={yearMonth}
+        initialDate={prefill?.initialDate}
+        initialType={prefill?.initialType}
+        initialAmount={prefill?.initialAmount}
+        initialMemo={prefill?.initialMemo}
+        initialPaymentMethodId={prefill?.initialPaymentMethodId}
       />
 
       {/* 編集モーダル */}
