@@ -113,13 +113,23 @@ export default function FixedCostsPage() {
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
-    const oldIndex = costs.findIndex(c => c.id === active.id)
-    const newIndex = costs.findIndex(c => c.id === over.id)
-    if (oldIndex === -1 || newIndex === -1) return
-    reorderCosts(arrayMove(costs, oldIndex, newIndex))
+    // 表示中（フィルタ後）のリスト内で並べ替え、非表示項目の相対位置は保持する
+    const visibleOld = visibleCosts.findIndex(c => c.id === active.id)
+    const visibleNew = visibleCosts.findIndex(c => c.id === over.id)
+    if (visibleOld === -1 || visibleNew === -1) return
+    const reorderedVisible = arrayMove(visibleCosts, visibleOld, visibleNew)
+    const visibleIds = new Set(visibleCosts.map(c => c.id))
+    const queue = [...reorderedVisible]
+    const merged = costs.map(c => (visibleIds.has(c.id) ? queue.shift()! : c))
+    reorderCosts(merged)
   }
 
   const daysInMonth = getDaysInMonth(viewYear, viewMonth)
+
+  // 年/隔年/3年ごとの固定費は登録月のみ表示。monthly は常時表示。
+  const visibleCosts = costs.filter(c =>
+    (c.frequency ?? 'monthly') === 'monthly' || isApplicableThisMonth(c, viewYear, viewMonth),
+  )
 
   // 固定費＋契約（共有＋設定ONで自分の個人）を正規化して集約
   const items = useMemo(
@@ -193,10 +203,10 @@ export default function FixedCostsPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-h-0 overflow-hidden md:flex md:gap-6">
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col md:flex-row gap-3 md:gap-6">
 
-        {/* 左カラム: カレンダー + 合計 */}
-        <div className="md:w-3/5 md:shrink-0 md:flex md:flex-col md:gap-4 md:overflow-y-auto flex flex-col gap-3">
+        {/* 左カラム / モバイル上段: カレンダー + 合計 */}
+        <div className="shrink-0 md:w-3/5 md:shrink-0 md:flex md:flex-col md:gap-4 md:overflow-y-auto flex flex-col gap-3">
           <FixedCostCalendar
             viewYear={viewYear}
             viewMonth={viewMonth}
@@ -220,16 +230,18 @@ export default function FixedCostsPage() {
           </div>
         </div>
 
-        {/* 右カラム: 固定費リスト（デスクトップのみ・D&D対応）*/}
-        <div className="hidden md:block md:flex-1 md:overflow-y-auto md:min-h-0 space-y-4">
+        {/* 右カラム / モバイル下段: 固定費リスト（D&D対応）*/}
+        <div className="flex-1 min-h-0 overflow-y-auto md:flex-1 md:overflow-y-auto md:min-h-0 space-y-4">
           {costs.length === 0 ? (
             <div className="text-center py-10 text-gray-500 text-sm">固定費が登録されていません</div>
+          ) : visibleCosts.length === 0 ? (
+            <div className="text-center py-10 text-gray-500 text-sm">{viewYear}年{viewMonth}月に発生する固定費はありません</div>
           ) : (
             <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={costs.map(c => c.id)} strategy={verticalListSortingStrategy}>
+              <SortableContext items={visibleCosts.map(c => c.id)} strategy={verticalListSortingStrategy}>
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   <div className="divide-y divide-gray-100">
-                    {costs.map(cost => {
+                    {visibleCosts.map(cost => {
                       const freq = cost.frequency ?? 'monthly'
                       const applicable = isApplicableThisMonth(cost, viewYear, viewMonth)
                       const { effectiveDay, isShifted, overflows } = getEffectiveDay(cost.dayOfMonth, viewYear, viewMonth)

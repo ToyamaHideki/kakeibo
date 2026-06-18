@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import type { OutletContext } from '../components/Layout'
 import GhostLoader from '../components/GhostLoader'
 import { useAnnualData } from '../hooks/useAnnualData'
+import { getAnnualCollapsedCategoryIds, setAnnualCollapsedCategoryIds } from '../utils/annualPrefs'
 import type { Category, PaymentMethod } from '../types'
 
 const MONTH_LABELS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
@@ -27,9 +28,20 @@ const stickyRight = 'sticky right-0 z-10 border-l-2 px-2 py-2 text-center text-x
 
 export default function AnnualPage() {
   const [year, setYear] = useState(new Date().getFullYear())
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => new Set(getAnnualCollapsedCategoryIds()))
   const { categories, paymentMethods } = useOutletContext<OutletContext>()
   const { monthData, loading } = useAnnualData(year)
   const navigate = useNavigate()
+
+  function toggleCategoryCollapsed(categoryId: string) {
+    setCollapsedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(categoryId)) next.delete(categoryId)
+      else next.add(categoryId)
+      setAnnualCollapsedCategoryIds([...next])
+      return next
+    })
+  }
 
   const months = Array.from({ length: 12 }, (_, i) =>
     `${year}-${String(i + 1).padStart(2, '0')}`
@@ -108,6 +120,7 @@ export default function AnnualPage() {
     return cats.map(cat => {
       const usedPms = getUsedPaymentMethods(cat.id)
       const showSubs = usedPms.length >= 2
+      const isExpanded = !collapsedIds.has(cat.id)
       const annual = getCategoryAnnualTotal(cat.id)
       return (
         <Fragment key={cat.id}>
@@ -115,6 +128,27 @@ export default function AnnualPage() {
           <tr className="border-b border-gray-50">
             <td className={`${stickyLeft} bg-white font-medium text-gray-700 border-gray-100`}>
               <span className="flex items-center gap-1.5">
+                {showSubs ? (
+                  <button
+                    type="button"
+                    onClick={() => toggleCategoryCollapsed(cat.id)}
+                    className="shrink-0 w-4 h-4 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                    aria-label={isExpanded ? '支払い方法内訳を折りたたむ' : '支払い方法内訳を展開'}
+                    title={isExpanded ? '内訳を隠す' : '内訳を表示'}
+                  >
+                    <svg
+                      className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                ) : (
+                  <span className="w-4 h-4 shrink-0" />
+                )}
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
                 {cat.name}
               </span>
@@ -131,8 +165,8 @@ export default function AnnualPage() {
               {fmt(annual)}
             </td>
           </tr>
-          {/* 支払い方法サブ行（2種類以上の場合のみ） */}
-          {showSubs && usedPms.map(pm => {
+          {/* 支払い方法サブ行（2種類以上かつ展開中のみ表示） */}
+          {showSubs && isExpanded && usedPms.map(pm => {
             const pmAnnual = getCategoryAnnualTotal(cat.id, pm.id)
             return (
               <tr key={`${cat.id}-${pm.id}`} className="border-b border-gray-50">
