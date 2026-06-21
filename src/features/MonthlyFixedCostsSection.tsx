@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import type { FixedCost } from '../types'
+import type { FixedCost, Transaction } from '../types'
 import { getOccurrenceInPeriod, FREQ_LABEL } from '../utils/fixedCost'
 
 interface Props {
   fixedCosts: FixedCost[]
+  transactions: Transaction[]  // 当期間のトランザクション（fixedCostId で入力済みを判定する）
   periodStart: string       // "yyyy-MM-dd" — 給与日期間の開始（通常は yyyy-MM-01）
   periodEnd: string         // "yyyy-MM-dd" — 給与日期間の終了（通常は yyyy-MM-末日）
   skipKey: string           // "yyyy-MM" — skippedMonths への保存キー
@@ -14,6 +15,7 @@ interface Props {
 
 export default function MonthlyFixedCostsSection({
   fixedCosts,
+  transactions,
   periodStart,
   periodEnd,
   skipKey,
@@ -23,29 +25,44 @@ export default function MonthlyFixedCostsSection({
 }: Props) {
   const [collapsed, setCollapsed] = useState(false)
   const [skippedOpen, setSkippedOpen] = useState(false)
+  const [enteredOpen, setEnteredOpen] = useState(false)
 
-  const { active, skipped } = useMemo(() => {
-    const a: Array<{ cost: FixedCost; date: string; effectiveDay: number; isShifted: boolean }> = []
+  // fixedCostId → 入力済み合計額（同じ固定費を複数入力した場合は合算）
+  const enteredAmountById = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const t of transactions) {
+      if (!t.fixedCostId) continue
+      map.set(t.fixedCostId, (map.get(t.fixedCostId) ?? 0) + t.amount)
+    }
+    return map
+  }, [transactions])
+
+  const { pending, entered, skipped } = useMemo(() => {
+    const p: Array<{ cost: FixedCost; date: string; effectiveDay: number; isShifted: boolean }> = []
+    const e: Array<{ cost: FixedCost; date: string }> = []
     const s: FixedCost[] = []
     for (const cost of fixedCosts) {
       const occ = getOccurrenceInPeriod(cost, periodStart, periodEnd)
       if (!occ) continue
       if (cost.skippedMonths?.includes(skipKey)) {
         s.push(cost)
+      } else if (enteredAmountById.has(cost.id)) {
+        e.push({ cost, date: occ.date })
       } else {
-        a.push({ cost, date: occ.date, effectiveDay: occ.effectiveDay, isShifted: occ.isShifted })
+        p.push({ cost, date: occ.date, effectiveDay: occ.effectiveDay, isShifted: occ.isShifted })
       }
     }
-    a.sort((x, y) => x.date.localeCompare(y.date))
-    return { active: a, skipped: s }
-  }, [fixedCosts, periodStart, periodEnd, skipKey])
+    p.sort((x, y) => x.date.localeCompare(y.date))
+    e.sort((x, y) => x.date.localeCompare(y.date))
+    return { pending: p, entered: e, skipped: s }
+  }, [fixedCosts, periodStart, periodEnd, skipKey, enteredAmountById])
 
-  const plannedTotal = active
+  const plannedTotal = pending
     .filter(x => !x.cost.isVariable)
     .reduce((sum, x) => sum + x.cost.amount, 0)
-  const variableCount = active.filter(x => x.cost.isVariable).length
+  const variableCount = pending.filter(x => x.cost.isVariable).length
 
-  if (active.length === 0 && skipped.length === 0) return null
+  if (pending.length === 0 && entered.length === 0 && skipped.length === 0) return null
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-4">
@@ -65,7 +82,7 @@ export default function MonthlyFixedCostsSection({
             <polyline points="9 18 15 12 9 6" />
           </svg>
           <span className="text-sm font-semibold text-gray-700">今月予定の固定費</span>
-          <span className="text-xs text-gray-400">({active.length}件)</span>
+          <span className="text-xs text-gray-400">({pending.length}件)</span>
         </div>
         <div className="text-xs text-gray-500 tabular-nums">
           予定 ¥{plannedTotal.toLocaleString()}
@@ -77,7 +94,7 @@ export default function MonthlyFixedCostsSection({
 
       {!collapsed && (
         <div className="divide-y divide-gray-100 border-t border-gray-100">
-          {active.map(({ cost, date, effectiveDay, isShifted }) => {
+          {pending.map(({ cost, date, effectiveDay, isShifted }) => {
             const freq = cost.frequency ?? 'monthly'
             const freqLabel = FREQ_LABEL[freq]
             const [, mStr] = date.split('-')
@@ -137,9 +154,42 @@ export default function MonthlyFixedCostsSection({
               </div>
             )
           })}
-          {active.length > 0 && (
+          {pending.length > 0 && (
             <div className="px-4 py-2 text-[11px] text-gray-400 bg-gray-50">
               ※ クリックで入力フォームを開きます。収支サマリーには加算されません。
+            </div>
+          )}
+
+          {entered.length > 0 && (
+            <div className="bg-gray-50">
+              <button
+                type="button"
+                onClick={() => setEnteredOpen(o => !o)}
+                className="w-full flex items-center justify-between px-4 py-2 text-xs text-gray-500 hover:bg-gray-100 transition-colors"
+              >
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-sage-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  入力済み: {entered.length}件
+                </span>
+                <span className="text-gray-400">{enteredOpen ? '閉じる' : '展開'}</span>
+              </button>
+              {enteredOpen && (
+                <div className="divide-y divide-gray-100 border-t border-gray-100">
+                  {entered.map(({ cost }) => (
+                    <div key={cost.id} className="flex items-center gap-3 px-4 py-2 text-xs">
+                      <svg className="w-3.5 h-3.5 shrink-0 text-sage-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      <div className="flex-1 min-w-0 truncate text-gray-600">{cost.name}</div>
+                      <div className="shrink-0 text-right text-gray-500 tabular-nums">
+                        ¥{(enteredAmountById.get(cost.id) ?? 0).toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -150,13 +200,23 @@ export default function MonthlyFixedCostsSection({
                 onClick={() => setSkippedOpen(o => !o)}
                 className="w-full flex items-center justify-between px-4 py-2 text-xs text-gray-500 hover:bg-gray-100 transition-colors"
               >
-                <span>今月スキップ済み: {skipped.length}件</span>
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                  </svg>
+                  今月スキップ済み: {skipped.length}件
+                </span>
                 <span className="text-gray-400">{skippedOpen ? '閉じる' : '展開'}</span>
               </button>
               {skippedOpen && (
                 <div className="divide-y divide-gray-100 border-t border-gray-100">
                   {skipped.map(cost => (
                     <div key={cost.id} className="flex items-center gap-3 px-4 py-2 text-xs text-gray-500">
+                      <svg className="w-3.5 h-3.5 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                      </svg>
                       <div className="flex-1 min-w-0 truncate line-through">{cost.name}</div>
                       <button
                         type="button"

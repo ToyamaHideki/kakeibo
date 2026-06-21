@@ -13,6 +13,8 @@ interface Props {
 export default function MonthlyChart({ transactions, categories, fillHeight = false }: Props) {
   const [chartView, setChartView] = useState<'bar' | 'pie'>('bar')
 
+  // 金額の多い順に並べる。グラフの積み上げ順・凡例・ドーナツの並びを揃え、
+  // カテゴリ登録順による「ランダムに見える」並びを解消する。
   const incomeByCategory = categories
     .filter(c => c.type === 'income')
     .map(c => ({
@@ -22,6 +24,7 @@ export default function MonthlyChart({ transactions, categories, fillHeight = fa
         .reduce((s, t) => s + t.amount, 0),
     }))
     .filter(d => d.total > 0)
+    .sort((a, b) => b.total - a.total)
 
   const expenseByCategory = categories
     .filter(c => c.type === 'expense')
@@ -32,6 +35,7 @@ export default function MonthlyChart({ transactions, categories, fillHeight = fa
         .reduce((s, t) => s + t.amount, 0),
     }))
     .filter(d => d.total > 0)
+    .sort((a, b) => b.total - a.total)
 
   const hasData = incomeByCategory.length > 0 || expenseByCategory.length > 0
   const hasExpense = expenseByCategory.length > 0

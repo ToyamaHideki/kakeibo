@@ -11,6 +11,9 @@ export interface Transaction {
   // 登録日時（Unix ms）。「入力順」表示の真の時系列ソートに使用する。
   // 既存レコードは未設定の場合があり、その場合は配列順をフォールバックに使う。
   createdAt?: number
+  // 月別収支の「今月予定の固定費」セクションから入力された場合に、元の固定費 id を保持する。
+  // この紐付けにより、入力済みの固定費を予定一覧から「入力済み」として区別する。
+  fixedCostId?: string
 }
 
 // Firestore: months/{yyyy-MM}

@@ -37,6 +37,7 @@ export default function MonthlyPage() {
     initialAmount: number | undefined
     initialMemo: string
     initialPaymentMethodId: string | undefined
+    initialFixedCostId: string
   } | undefined>()
 
   // 給与日設定時は期間を [payDay日, 翌月payDay-1日] とし、未設定時は暦月の初日〜末日とする
@@ -78,6 +79,7 @@ export default function MonthlyPage() {
       initialAmount: cost.isVariable ? undefined : cost.amount,
       initialMemo: cost.name,
       initialPaymentMethodId: pmId,
+      initialFixedCostId: cost.id,
     })
     setIsAddModalOpen(true)
   }
@@ -208,6 +210,7 @@ export default function MonthlyPage() {
               <div className="flex-1 overflow-y-auto min-h-0">
                 <MonthlyFixedCostsSection
                   fixedCosts={fixedCosts}
+                  transactions={transactions}
                   periodStart={periodStart}
                   periodEnd={periodEnd}
                   skipKey={yearMonth}
@@ -256,6 +259,7 @@ export default function MonthlyPage() {
             <div className="flex-1 overflow-y-auto min-h-0">
               <MonthlyFixedCostsSection
                 fixedCosts={fixedCosts}
+                transactions={transactions}
                 periodStart={periodStart}
                 periodEnd={periodEnd}
                 skipKey={yearMonth}
@@ -325,6 +329,7 @@ export default function MonthlyPage() {
         initialAmount={prefill?.initialAmount}
         initialMemo={prefill?.initialMemo}
         initialPaymentMethodId={prefill?.initialPaymentMethodId}
+        initialFixedCostId={prefill?.initialFixedCostId}
       />
 
       {/* 編集モーダル */}

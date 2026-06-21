@@ -58,6 +58,11 @@ export default function TransactionAddPanel({
     .filter(c => c.type === type)
     .sort((a, b) => a.order - b.order)
 
+  // 支出カテゴリは変動費／固定費で表示を分ける。
+  // expenseType 未設定の既存カテゴリは「変動費」側にまとめる（従来の見え方を維持）。
+  const variableCategories = filteredCategories.filter(c => c.expenseType !== 'fixed')
+  const fixedCategories = filteredCategories.filter(c => c.expenseType === 'fixed')
+
   const nextCategoryOrder = Math.max(0, ...filteredCategories.map(c => c.order)) + 1
   const nextPaymentMethodOrder = Math.max(0, ...paymentMethods.map(pm => pm.order)) + 1
 
@@ -172,9 +177,28 @@ export default function TransactionAddPanel({
             className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-sage-300 focus:border-sage-400"
           >
             <option value="">選択してください</option>
-            {filteredCategories.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
+            {type === 'expense' ? (
+              <>
+                {variableCategories.length > 0 && (
+                  <optgroup label="変動費">
+                    {variableCategories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </optgroup>
+                )}
+                {fixedCategories.length > 0 && (
+                  <optgroup label="固定費">
+                    {fixedCategories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </optgroup>
+                )}
+              </>
+            ) : (
+              filteredCategories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))
+            )}
           </select>
           <button
             type="button"
