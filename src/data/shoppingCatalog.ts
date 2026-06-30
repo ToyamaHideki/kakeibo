@@ -1,20 +1,22 @@
 // 買い物リストの売り場カテゴリと、一括追加用の商品カタログ。
 
 export const SHOPPING_CATEGORIES = [
-  { key: 'veg',    label: '野菜',         emoji: '🥬' },
-  { key: 'fruit',  label: '果物',         emoji: '🍌' },
-  { key: 'meat',   label: '肉・魚',       emoji: '🥩' },
-  { key: 'dairy',  label: '乳・卵',       emoji: '🥚' },
-  { key: 'soy',    label: '大豆製品',     emoji: '🫘' },
-  { key: 'staple', label: 'パン・米',     emoji: '🍞' },
-  { key: 'drink',  label: '飲料',         emoji: '🥤' },
-  { key: 'frozen', label: '冷凍',         emoji: '❄️' },
-  { key: 'deli',   label: '惣菜',         emoji: '🍤' },
-  { key: 'season', label: '調味料・乾物', emoji: '🧂' },
-  { key: 'snack',  label: 'お菓子',       emoji: '🍫' },
-  { key: 'daily',  label: '日用品',       emoji: '🧴' },
-  { key: 'baby',   label: 'ベビー用品',   emoji: '👶' },
-  { key: 'kids',   label: '子供用品',     emoji: '🧒' },
+  { key: 'veg',      label: '野菜',         emoji: '🥬' },
+  { key: 'mushroom', label: 'キノコ類',     emoji: '🍄' },
+  { key: 'fruit',    label: '果物',         emoji: '🍌' },
+  { key: 'meat',     label: '肉・魚',       emoji: '🥩' },
+  { key: 'dairy',    label: '乳・卵',       emoji: '🥚' },
+  { key: 'soy',      label: '大豆製品',     emoji: '🫘' },
+  { key: 'staple',   label: 'パン・米',     emoji: '🍞' },
+  { key: 'drink',    label: '飲料',         emoji: '🥤' },
+  { key: 'frozen',   label: '冷凍',         emoji: '❄️' },
+  { key: 'deli',     label: '惣菜',         emoji: '🍤' },
+  { key: 'season',   label: '調味料',       emoji: '🧂' },
+  { key: 'dry',      label: '乾物',         emoji: '🍂' },
+  { key: 'snack',    label: 'お菓子',       emoji: '🍫' },
+  { key: 'daily',    label: '日用品',       emoji: '🧴' },
+  { key: 'baby',     label: 'ベビー用品',   emoji: '👶' },
+  { key: 'kids',     label: '子供用品',     emoji: '🧒' },
 ] as const
 
 export const UNCATEGORIZED = { key: '', label: '未分類', emoji: '📦' }
@@ -37,6 +39,10 @@ export const SHOPPING_CATALOG: Record<string, CatalogSection[]> = {
     { label: '果菜', items: ['トマト', 'きゅうり', 'なす', 'ピーマン', 'ブロッコリー', 'アボカド'] },
     { label: '根菜', items: ['にんじん', 'じゃがいも', 'たまねぎ', '大根', 'ごぼう', 'れんこん'] },
     { label: '薬味', items: ['ねぎ', 'にんにく', 'しょうが'] },
+  ],
+  mushroom: [
+    { label: '生キノコ', items: ['しいたけ', 'えのき', 'しめじ', 'まいたけ', 'エリンギ', 'マッシュルーム', 'なめこ'] },
+    { label: '乾燥キノコ', items: ['干ししいたけ', 'きくらげ'] },
   ],
   fruit: [
     { label: '果物', items: ['りんご', 'バナナ', '梨', 'キウイ', '柿'] },
@@ -94,8 +100,11 @@ export const SHOPPING_CATALOG: Record<string, CatalogSection[]> = {
     { label: '基本調味料', items: ['醤油', '味噌', '塩', '砂糖', '酢'] },
     { label: '酒類', items: ['みりん', '料理酒'] },
     { label: '油', items: ['サラダ油', 'ごま油', 'オリーブオイル'] },
-    { label: '出汁', items: ['だしの素', '出汁パック', '鰹節'] },
     { label: 'ソース・たれ', items: ['ケチャップ', 'マヨネーズ', '中濃ソース', 'めんつゆ'] },
+    { label: '薬味', items: ['きざみねぎ', 'にんにくチューブ', 'しょうがチューブ'] },
+  ],
+  dry: [
+    { label: '出汁', items: ['だしの素', '出汁パック', '鰹節'] },
     { label: '乾物', items: ['のり', 'わかめ', 'ごま', '片栗粉', 'パン粉'] },
   ],
   snack: [
