@@ -1,7 +1,7 @@
 {
   "name": "kakeibo",
   "private": true,
-  "version": "1.1004",
+  "version": "1.1005",
   "type": "module",
   "scripts": {
     "dev": "vite",
