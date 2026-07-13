@@ -77,7 +77,7 @@ export default function ShoppingListPage() {
 
   return (
     <div className="p-4 md:p-6 h-full overflow-y-auto">
-      <div className="max-w-lg">
+      <div className="max-w-lg mx-auto">
         {/* ヘッダー */}
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold text-gray-800">買い物リスト</h2>

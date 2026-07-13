@@ -110,6 +110,12 @@ export function useHouseholdTasks() {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, isCompleted: false, completedAt: undefined } : t))
   }
 
+  async function updateTask(id: string, updates: Partial<Omit<HouseholdTask, 'id'>>) {
+    if (!householdId) return
+    await updateHouseholdTask(householdId, id, updates)
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
+  }
+
   async function deleteTask(id: string) {
     if (!householdId) return
     await deleteTaskFn(householdId, id)
@@ -128,5 +134,5 @@ export function useHouseholdTasks() {
 
   const displayedTasks = filter === 'active' ? activeTasks : doneTasks
 
-  return { tasks: displayedTasks, loading, filter, setFilter, today, addTask, completeTask, uncompleteTask, deleteTask }
+  return { tasks: displayedTasks, loading, filter, setFilter, today, addTask, updateTask, completeTask, uncompleteTask, deleteTask }
 }

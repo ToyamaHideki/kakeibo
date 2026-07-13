@@ -37,7 +37,7 @@ export default function SidePanelLayout({
   children,
 }: Props) {
   return (
-    <div className="p-4 md:p-6 h-full overflow-y-auto xl:overflow-hidden xl:flex xl:flex-col">
+    <div className="px-4 pt-4 pb-24 md:px-6 md:pt-6 xl:pb-6 h-full overflow-y-auto xl:overflow-hidden xl:flex xl:flex-col">
       <div className="max-w-7xl mx-auto w-full xl:flex xl:flex-col xl:flex-1 xl:min-h-0">
         <h1 className="text-lg font-bold text-gray-800 mb-4 xl:shrink-0">{title}</h1>
 

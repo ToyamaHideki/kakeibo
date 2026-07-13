@@ -33,6 +33,8 @@ export default function FixedCostsPage() {
   const [editTarget, setEditTarget] = useState<FixedCost | null>(null)
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [dayModalOpen, setDayModalOpen] = useState(false)
+  // モバイルのみ有効：カレンダー / リストの表示切替（md 以上は常に両方表示）
+  const [mobileView, setMobileView] = useState<'calendar' | 'list'>('calendar')
 
   useEffect(() => {
     if (!householdId) return
@@ -202,11 +204,26 @@ export default function FixedCostsPage() {
         </button>
       </div>
 
+      {/* View toggle (mobile only) */}
+      <div className="md:hidden flex gap-1 bg-gray-100 rounded-xl p-1 shrink-0 mb-3">
+        {(['calendar', 'list'] as const).map(v => (
+          <button
+            key={v}
+            onClick={() => setMobileView(v)}
+            className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              mobileView === v ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'
+            }`}
+          >
+            {v === 'calendar' ? 'カレンダー' : 'リスト'}
+          </button>
+        ))}
+      </div>
+
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col md:flex-row gap-3 md:gap-6">
 
-        {/* 左カラム / モバイル上段: カレンダー + 合計 */}
-        <div className="shrink-0 md:w-3/5 md:shrink-0 md:flex md:flex-col md:gap-4 md:overflow-y-auto flex flex-col gap-3">
+        {/* 左カラム / モバイル: カレンダー + 合計（モバイルは mobileView=calendar のみ表示）*/}
+        <div className={`${mobileView === 'calendar' ? 'flex' : 'hidden'} md:flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto md:w-3/5 md:shrink-0 md:flex-none md:gap-4 md:overflow-y-auto`}>
           <FixedCostCalendar
             viewYear={viewYear}
             viewMonth={viewMonth}
@@ -230,8 +247,8 @@ export default function FixedCostsPage() {
           </div>
         </div>
 
-        {/* 右カラム / モバイル下段: 固定費リスト（D&D対応）*/}
-        <div className="flex-1 min-h-0 overflow-y-auto md:flex-1 md:overflow-y-auto md:min-h-0 space-y-4">
+        {/* 右カラム / モバイル: 固定費リスト（D&D対応・モバイルは mobileView=list のみ表示）*/}
+        <div className={`${mobileView === 'list' ? 'flex flex-col' : 'hidden'} md:flex md:flex-col flex-1 min-h-0 overflow-y-auto md:flex-1 md:overflow-y-auto md:min-h-0 space-y-4`}>
           {costs.length === 0 ? (
             <div className="text-center py-10 text-gray-500 text-sm">固定費が登録されていません</div>
           ) : visibleCosts.length === 0 ? (

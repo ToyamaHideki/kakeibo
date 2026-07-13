@@ -8,7 +8,7 @@ export const SHOPPING_CATEGORIES = [
   { key: 'dairy',    label: '乳・卵',       emoji: '🥚' },
   { key: 'soy',      label: '大豆製品',     emoji: '🫘' },
   { key: 'staple',   label: 'パン・米',     emoji: '🍞' },
-  { key: 'ramen',    label: 'ラーメン系',   emoji: '🍜' },
+  { key: 'ramen',    label: '麺類',         emoji: '🍜' },
   { key: 'canned',   label: '缶製品',       emoji: '🥫' },
   { key: 'drink',    label: '飲料',         emoji: '🥤' },
   { key: 'frozen',   label: '冷凍',         emoji: '❄️' },
@@ -75,13 +75,13 @@ export const SHOPPING_CATALOG: Record<string, CatalogSection[]> = {
   staple: [
     { label: '米', items: ['米', '無洗米', 'もち米'] },
     { label: 'パン', items: ['食パン', '菓子パン', 'ロールパン', 'バゲット'] },
-    { label: '麺類', items: ['パスタ', 'うどん', 'そば', 'そうめん'] },
     { label: '粉物', items: ['小麦粉', '強力粉', 'ホットケーキミックス'] },
   ],
   ramen: [
+    { label: '乾麺・生麺', items: ['パスタ', 'うどん', 'そば', 'そうめん', 'ひやむぎ', '中華麺'] },
     { label: 'カップ麺', items: ['カップラーメン', 'カップ焼きそば', 'カップうどん', 'カップそば'] },
     { label: '袋麺', items: ['袋ラーメン', 'インスタントラーメン', '袋焼きそば'] },
-    { label: 'チルド麺', items: ['生ラーメン', '冷やし中華'] },
+    { label: 'チルド麺', items: ['生ラーメン', '焼きそば麺', '冷やし中華'] },
   ],
   canned: [
     { label: '魚介缶', items: ['ツナ缶', 'さば缶', 'いわし缶', '鮭缶', 'かに缶', 'オイルサーディン'] },

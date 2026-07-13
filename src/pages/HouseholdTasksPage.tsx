@@ -10,19 +10,27 @@ import TaskAddPanel from '../features/TaskAddPanel'
 import { fetchHousehold, fetchMemberProfiles, addExtraAssignee, removeExtraAssignee } from '../firebase/householdFirestore'
 import type { HouseholdTask } from '../types'
 
+function RecurringIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" className="text-sage-500">
+      <path fillRule="evenodd" d="M8 3a5 5 0 104.546 2.914.5.5 0 000-.986A4 4 0 118 4.25v-.75a.5.5 0 00-.854-.354L5.646 4.646a.5.5 0 000 .708l1.5 1.5a.5.5 0 10.708-.708L7.207 5.5H8V3z"/>
+    </svg>
+  )
+}
+
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11.5 2.5l2 2L5 13H3v-2l8.5-8.5z" />
+    </svg>
+  )
+}
+
 function TrashIcon() {
   return (
     <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
       <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/>
       <path fillRule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 01-1-1V2a1 1 0 011-1H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1v1zM4.118 4L4 4.059V13a1 1 0 001 1h6a1 1 0 001-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-    </svg>
-  )
-}
-
-function RecurringIcon() {
-  return (
-    <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" className="text-sage-500">
-      <path fillRule="evenodd" d="M8 3a5 5 0 104.546 2.914.5.5 0 000-.986A4 4 0 118 4.25v-.75a.5.5 0 00-.854-.354L5.646 4.646a.5.5 0 000 .708l1.5 1.5a.5.5 0 10.708-.708L7.207 5.5H8V3z"/>
     </svg>
   )
 }
@@ -43,11 +51,22 @@ const defaultForm: AddForm = {
   recurrenceType: 'weekly',
 }
 
+function taskToForm(t: HouseholdTask): AddForm {
+  return {
+    name: t.name,
+    assignee: t.assignee ?? '',
+    dueDate: t.dueDate ?? '',
+    isRecurring: t.isRecurring,
+    recurrenceType: t.recurrenceType ?? 'weekly',
+  }
+}
+
 export default function HouseholdTasksPage() {
-  const { tasks, loading, filter, setFilter, today, addTask, completeTask, uncompleteTask, deleteTask } = useHouseholdTasks()
+  const { tasks, loading, filter, setFilter, today, addTask, updateTask, completeTask, uncompleteTask, deleteTask } = useHouseholdTasks()
   const { householdId } = useHousehold()
   const { confirm, dialogProps } = useConfirm()
   const [showModal, setShowModal] = useState(false)
+  const [editTarget, setEditTarget] = useState<HouseholdTask | null>(null)
   const [form, setForm] = useState<AddForm>(defaultForm)
 
   // 担当者候補リスト（ニックネーム + extraAssignees）
@@ -77,10 +96,23 @@ export default function HouseholdTasksPage() {
 
   const closeModal = useCallback(() => {
     setShowModal(false)
+    setEditTarget(null)
     setForm(defaultForm)
     setAddingNew(false)
     setNewName('')
   }, [])
+
+  function openAdd() {
+    setEditTarget(null)
+    setForm(defaultForm)
+    setShowModal(true)
+  }
+
+  function openEdit(task: HouseholdTask) {
+    setEditTarget(task)
+    setForm(taskToForm(task))
+    setShowModal(true)
+  }
 
   useEscapeKey(closeModal, showModal)
 
@@ -108,16 +140,27 @@ export default function HouseholdTasksPage() {
     e.preventDefault()
     const trimmed = form.name.trim()
     if (!trimmed) return
-    const task: Parameters<typeof addTask>[0] = {
+    const data: Partial<Omit<HouseholdTask, 'id'>> = {
       name: trimmed,
       isRecurring: form.isRecurring,
     }
-    if (form.assignee.trim()) task.assignee = form.assignee.trim()
-    if (form.dueDate) task.dueDate = form.dueDate
-    if (form.isRecurring) task.recurrenceType = form.recurrenceType
-    await addTask(task)
-    setForm(defaultForm)
-    setShowModal(false)
+    if (form.assignee.trim()) data.assignee = form.assignee.trim()
+    if (form.dueDate) data.dueDate = form.dueDate
+    if (form.isRecurring) data.recurrenceType = form.recurrenceType
+
+    if (editTarget) {
+      await updateTask(editTarget.id, data)
+    } else {
+      await addTask(data as Parameters<typeof addTask>[0])
+    }
+    closeModal()
+  }
+
+  async function handleDelete() {
+    if (!editTarget) return
+    if (!await confirm(`「${editTarget.name}」を削除しますか？`)) return
+    await deleteTask(editTarget.id)
+    closeModal()
   }
 
   function dueDateBadge(task: HouseholdTask) {
@@ -168,7 +211,7 @@ export default function HouseholdTasksPage() {
       title="家事タスク"
       sidePanelTitle="タスクを追加"
       fabAriaLabel="家事タスクを追加"
-      onFabClick={() => setShowModal(true)}
+      onFabClick={openAdd}
       sidePanel={(
         <TaskAddPanel
           assignees={assignees}
@@ -233,6 +276,7 @@ export default function HouseholdTasksPage() {
                       ? 'border-sage-400 bg-sage-400'
                       : 'border-gray-300 hover:border-sage-500'
                   }`}
+                  aria-label={task.isCompleted ? '未完了に戻す' : '完了にする'}
                 >
                   {task.isCompleted && (
                     <svg viewBox="0 0 12 12" width="9" height="9" fill="none" stroke="white" strokeWidth="2.5">
@@ -270,8 +314,18 @@ export default function HouseholdTasksPage() {
                 </div>
 
                 <button
+                  type="button"
+                  onClick={() => openEdit(task)}
+                  className="mt-0.5 text-gray-300 hover:text-sage-500 transition-colors shrink-0"
+                  aria-label={`${task.name} を編集`}
+                >
+                  <PencilIcon />
+                </button>
+                <button
+                  type="button"
                   onClick={() => deleteTask(task.id)}
                   className="mt-0.5 text-gray-300 hover:text-red-400 transition-colors shrink-0"
+                  aria-label={`${task.name} を削除`}
                 >
                   <TrashIcon />
                 </button>
@@ -286,7 +340,9 @@ export default function HouseholdTasksPage() {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" role="presentation" onClick={closeModal}>
           <div className="bg-white rounded-2xl w-full max-w-md max-h-[85svh] flex flex-col shadow-xl" role="presentation" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 shrink-0">
-              <h3 className="text-base font-bold text-gray-800">タスクを追加</h3>
+              <h3 className="text-base font-bold text-gray-800">
+                {editTarget ? 'タスクを編集' : 'タスクを追加'}
+              </h3>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-600">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -430,14 +486,25 @@ export default function HouseholdTasksPage() {
                 )}
               </div>
 
-              {/* 追加ボタン */}
-              <button
-                type="submit"
-                disabled={!form.name.trim()}
-                className="w-full py-3 bg-sage-600 hover:bg-sage-700 disabled:bg-sage-300 text-white rounded-xl font-medium text-sm transition-colors"
-              >
-                追加する
-              </button>
+              {/* 保存/追加・削除ボタン */}
+              <div className="space-y-2">
+                <button
+                  type="submit"
+                  disabled={!form.name.trim()}
+                  className="w-full py-3 bg-sage-600 hover:bg-sage-700 disabled:bg-sage-300 text-white rounded-xl font-medium text-sm transition-colors"
+                >
+                  {editTarget ? '保存する' : '追加する'}
+                </button>
+                {editTarget && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="w-full py-3 bg-white hover:bg-red-50 text-red-400 hover:text-red-500 border border-red-200 rounded-xl font-medium text-sm transition-colors"
+                  >
+                    削除する
+                  </button>
+                )}
+              </div>
             </form>
           </div>
         </div>
