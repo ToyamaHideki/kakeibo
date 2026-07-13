@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from 'react'
 import { moveTransaction, saveTransaction, updateTransaction } from '../firebase/firestore'
 import { useHousehold } from '../hooks/useHousehold'
 import BottomSheetModal from '../components/BottomSheetModal'
+import { todayLocalIso } from '../utils/date'
 import type { Category, PaymentMethod, Transaction, TransactionType } from '../types'
 import CategoryAddModal from './CategoryAddModal'
 import PaymentMethodAddModal from './PaymentMethodAddModal'
@@ -92,7 +93,7 @@ export default function TransactionModal({
       setCategoryId('')
       setPaymentMethodId(initialPaymentMethodId ?? '')
       setMemo(initialMemo ?? '')
-      setDate(initialDate ?? new Date().toISOString().slice(0, 10))
+      setDate(initialDate ?? todayLocalIso())
     }
   }, [isOpen, editTarget, yearMonth, initialDate, initialType, initialAmount, initialMemo, initialPaymentMethodId])
 

@@ -11,6 +11,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import GhostLoader from '../components/GhostLoader'
 import SidePanelLayout from '../components/SidePanelLayout'
 import SubscriptionAddPanel from '../features/SubscriptionAddPanel'
+import { todayLocalIso } from '../utils/date'
 import type { Contract, ContractScope, PaymentFrequency } from '../types'
 
 // ─── ユーティリティ ────────────────────────────────────────────────────────────
@@ -20,7 +21,7 @@ const FREQUENCY_LABEL: Record<PaymentFrequency, string> = {
   yearly: '年',
 }
 
-const today = new Date().toISOString().slice(0, 10)
+const today = todayLocalIso()
 
 function daysUntil(dateStr: string): number {
   return Math.ceil((new Date(dateStr).getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24))

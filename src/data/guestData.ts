@@ -16,6 +16,7 @@ import type {
   ShoppingItem,
   Transaction,
 } from '../types'
+import { todayLocalIso, formatLocalIso } from '../utils/date'
 
 // ─── カテゴリ（世帯・個人共通） ────────────────────────────────────────────────
 
@@ -125,7 +126,7 @@ export const GUEST_SAVINGS_ACCOUNTS: SavingsAccount[] = [
     memo: 'メインバンク',
     order: 1,
     currentAmount: 1850000,
-    lastUpdated: new Date().toISOString().slice(0, 10),
+    lastUpdated: todayLocalIso(),
   },
   {
     id: 'sa-2',
@@ -135,7 +136,7 @@ export const GUEST_SAVINGS_ACCOUNTS: SavingsAccount[] = [
     memo: '1年定期',
     order: 2,
     currentAmount: 500000,
-    lastUpdated: new Date().toISOString().slice(0, 10),
+    lastUpdated: todayLocalIso(),
   },
 ]
 
@@ -236,7 +237,7 @@ export const GUEST_SHOPPING_ITEMS: ShoppingItem[] = [
 function daysFromToday(days: number): string {
   const d = new Date()
   d.setDate(d.getDate() + days)
-  return d.toISOString().slice(0, 10)
+  return formatLocalIso(d)
 }
 
 export const GUEST_HOUSEHOLD_TASKS: HouseholdTask[] = [
@@ -507,9 +508,8 @@ export const GUEST_PRIVATE_HEALTH_METRICS: HealthMetric[] = [
 
 function isoDay(offset: number): string {
   const d = new Date()
-  d.setHours(0, 0, 0, 0)
   d.setDate(d.getDate() + offset)
-  return d.toISOString().slice(0, 10)
+  return formatLocalIso(d)
 }
 
 function round1(v: number): number {

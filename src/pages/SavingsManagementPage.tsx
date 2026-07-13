@@ -10,6 +10,7 @@ import { useConfirm } from '../hooks/useConfirm'
 import ConfirmDialog from '../components/ConfirmDialog'
 import GhostLoader from '../components/GhostLoader'
 import { fetchAllSecuritiesAccountsForUser } from '../firebase/privateSecuritiesFirestore'
+import { todayLocalIso } from '../utils/date'
 import type { SavingsAccount, SecuritiesAccount } from '../types'
 
 const PRESET_COLORS = [
@@ -19,7 +20,7 @@ const PRESET_COLORS = [
 ]
 
 function todayStr(): string {
-  return new Date().toISOString().slice(0, 10)
+  return todayLocalIso()
 }
 
 function formatLastUpdated(dateStr: string): string {

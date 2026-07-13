@@ -14,20 +14,22 @@ export interface MetricFormValues {
   decimalPlaces: number
   color: string
   visibility: HealthVisibility
+  ownerUid: string
   memo: string
 }
 
-function emptyDraft(): MetricFormValues {
-  return { name: '', unit: 'kg', decimalPlaces: 1, color: COLOR_PALETTE[0]!, visibility: 'shared', memo: '' }
+function emptyDraft(defaultOwnerUid: string): MetricFormValues {
+  return { name: '', unit: 'kg', decimalPlaces: 1, color: COLOR_PALETTE[0]!, visibility: 'shared', ownerUid: defaultOwnerUid, memo: '' }
 }
 
-function toDraft(m: HealthMetric): MetricFormValues {
+function toDraft(m: HealthMetric, defaultOwnerUid: string): MetricFormValues {
   return {
     name: m.name,
     unit: m.unit,
     decimalPlaces: m.decimalPlaces,
     color: m.color,
     visibility: m.visibility,
+    ownerUid: m.ownerUid ?? defaultOwnerUid,
     memo: m.memo ?? '',
   }
 }
@@ -35,19 +37,23 @@ function toDraft(m: HealthMetric): MetricFormValues {
 interface Props {
   isOpen: boolean
   editTarget: HealthMetric | null
+  /** 現在のユーザー uid（新規時のデフォルトオーナー） */
+  currentUid: string
+  /** 世帯メンバーのリスト（uid → 表示名）。オーナー選択に使う */
+  members: Array<{ uid: string; name: string }>
   onClose: () => void
   onSave: (values: MetricFormValues, editingTarget: HealthMetric | null) => Promise<void>
   onDelete?: ((metric: HealthMetric) => Promise<void>) | undefined
 }
 
-export function HealthMetricFormModal({ isOpen, editTarget, onClose, onSave, onDelete }: Props) {
-  const [draft, setDraft] = useState<MetricFormValues>(emptyDraft())
+export function HealthMetricFormModal({ isOpen, editTarget, currentUid, members, onClose, onSave, onDelete }: Props) {
+  const [draft, setDraft] = useState<MetricFormValues>(emptyDraft(currentUid))
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!isOpen) return
-    setDraft(editTarget ? toDraft(editTarget) : emptyDraft())
-  }, [isOpen, editTarget])
+    setDraft(editTarget ? toDraft(editTarget, currentUid) : emptyDraft(currentUid))
+  }, [isOpen, editTarget, currentUid])
 
   if (!isOpen) return null
 
@@ -191,6 +197,29 @@ export function HealthMetricFormModal({ isOpen, editTarget, onClose, onSave, onD
               ))}
             </div>
           </div>
+
+          {members.length >= 2 && (
+            <div>
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- ボタングループのラベル */}
+              <label className="block text-xs font-medium text-gray-600 mb-1">所有者（誰の項目か）</label>
+              <div className="flex flex-wrap gap-1.5">
+                {members.map(m => (
+                  <button
+                    key={m.uid}
+                    type="button"
+                    onClick={() => setDraft({ ...draft, ownerUid: m.uid })}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      draft.ownerUid === m.uid
+                        ? 'bg-sage-600 text-white border-sage-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-sage-300'
+                    }`}
+                  >
+                    {m.name}{m.uid === currentUid ? '（自分）' : ''}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div>
             <label htmlFor="hm-memo" className="block text-xs font-medium text-gray-600 mb-1">メモ（任意）</label>

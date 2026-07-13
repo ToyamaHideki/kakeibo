@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { saveTransaction } from '../firebase/firestore'
 import { useHousehold } from '../hooks/useHousehold'
+import { todayLocalIso } from '../utils/date'
 import type { Category, PaymentMethod, Transaction, TransactionType } from '../types'
 import CategoryAddModal from './CategoryAddModal'
 import PaymentMethodAddModal from './PaymentMethodAddModal'
@@ -48,7 +49,7 @@ export default function TransactionAddPanel({
   const [amount, setAmount] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [paymentMethodId, setPaymentMethodId] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(todayLocalIso())
   const [memo, setMemo] = useState('')
   const [saving, setSaving] = useState(false)
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)

@@ -279,6 +279,9 @@ export interface HealthMetric {
   color: string                      // チャート色 #rrggbb
   order: number
   visibility: HealthVisibility
+  // 所有者の uid（誰の測定項目か）。世帯メンバーの中から選択。
+  // 未指定はレガシーデータ（旧仕様）。UI では「全員」フィルターにのみ表示される。
+  ownerUid?: string | undefined
   memo?: string | undefined
 }
 

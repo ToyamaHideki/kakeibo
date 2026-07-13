@@ -2,6 +2,27 @@ export function currentYear(): number {
   return new Date().getFullYear()
 }
 
+// ローカル時刻での "yyyy-MM-dd"。toISOString() は UTC 変換が入るため、
+// JST 早朝や setHours(0,0,0,0) 後に呼ぶと前日になる不具合の温床になる。
+export function todayLocalIso(): string {
+  return formatLocalIso(new Date())
+}
+
+export function formatLocalIso(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+// "yyyy-MM-dd" 起点で offset 日ずらしたローカル日付。
+export function addDaysLocalIso(base: string, offset: number): string {
+  const [y, m, day] = base.split('-').map(Number)
+  const d = new Date(y!, (m ?? 1) - 1, day ?? 1)
+  d.setDate(d.getDate() + offset)
+  return formatLocalIso(d)
+}
+
 export function currentYearMonth(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`

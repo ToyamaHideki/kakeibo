@@ -12,6 +12,7 @@ import GhostLoader from '../components/GhostLoader'
 import SidePanelLayout from '../components/SidePanelLayout'
 import ContractAddPanel from '../features/ContractAddPanel'
 import { formatYen } from '../utils/format'
+import { todayLocalIso } from '../utils/date'
 import type { Contract, ContractScope, ContractType, PaymentFrequency } from '../types'
 
 // ─── 定数・ユーティリティ ──────────────────────────────────────────────────────
@@ -35,7 +36,7 @@ const FREQUENCY_LABEL: Record<PaymentFrequency, string> = {
   yearly: '年',
 }
 
-const today = new Date().toISOString().slice(0, 10)
+const today = todayLocalIso()
 
 function daysUntil(dateStr: string): number {
   const diff = new Date(dateStr).getTime() - new Date(today).getTime()

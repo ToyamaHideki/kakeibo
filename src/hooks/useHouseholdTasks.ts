@@ -7,6 +7,7 @@ import {
 } from '../firebase/lifestyleFirestore'
 import type { HouseholdTask } from '../types'
 import { nextOrder } from '../utils/order'
+import { todayLocalIso } from '../utils/date'
 import { useHousehold } from './useHousehold'
 
 export type TaskFilter = 'active' | 'done'
@@ -41,7 +42,7 @@ export function useHouseholdTasks() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<TaskFilter>('active')
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayLocalIso()
 
   useEffect(() => {
     if (!householdId) return

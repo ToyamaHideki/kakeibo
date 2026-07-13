@@ -24,6 +24,7 @@ import {
 import { GUEST_HOUSEHOLD_ID } from '../firebase/guestStore'
 import type { HealthDailyRecord, HealthMetric, HealthVisibility } from '../types'
 import { nextOrder } from '../utils/order'
+import { todayLocalIso, addDaysLocalIso } from '../utils/date'
 import { useHousehold } from './useHousehold'
 
 // 健康データ統合フック。
@@ -38,22 +39,9 @@ function effectiveUid(householdId: string | null, uid: string | null): string | 
   return uid
 }
 
-function todayIsoLocal(): string {
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  return d.toISOString().slice(0, 10)
-}
-
-function isoDayOffsetLocal(offset: number, from: string): string {
-  const [y, m, day] = from.split('-').map(Number)
-  const d = new Date(y!, (m ?? 1) - 1, day ?? 1)
-  d.setDate(d.getDate() + offset)
-  return d.toISOString().slice(0, 10)
-}
-
 function computeRange(days: number): { from: string; to: string } {
-  const to = todayIsoLocal()
-  const from = isoDayOffsetLocal(-(days - 1), to)
+  const to = todayLocalIso()
+  const from = addDaysLocalIso(to, -(days - 1))
   return { from, to }
 }
 

@@ -3,25 +3,15 @@ import { Line } from 'react-chartjs-2'
 import type { ChartOptions } from 'chart.js'
 import '../lib/chart'
 import { useHealth } from '../hooks/useHealth'
+import { useHousehold } from '../hooks/useHousehold'
+import { useMemberProfiles } from '../hooks/useMemberProfiles'
 import GhostLoader from '../components/GhostLoader'
 import SidePanelLayout from '../components/SidePanelLayout'
 import { HealthRecordPanel } from '../features/HealthRecordPanel'
 import { HealthRecordModal } from '../features/HealthRecordModal'
 import { HealthMetricFormModal, type MetricFormValues } from '../features/HealthMetricFormModal'
+import { todayLocalIso as todayIso, addDaysLocalIso as isoDayOffset } from '../utils/date'
 import type { HealthMetric } from '../types'
-
-function todayIso(): string {
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  return d.toISOString().slice(0, 10)
-}
-
-function isoDayOffset(offset: number, from: string): string {
-  const [y, m, day] = from.split('-').map(Number)
-  const d = new Date(y!, (m ?? 1) - 1, day ?? 1)
-  d.setDate(d.getDate() + offset)
-  return d.toISOString().slice(0, 10)
-}
 
 function formatValue(v: number | undefined, decimals: number): string {
   if (v === undefined) return '—'
@@ -41,6 +31,9 @@ const RANGE_OPTIONS: { key: RangeKey; label: string; days: number }[] = [
   { key: '1y',  label: '1年',  days: 365 },
 ]
 
+// フィルター値: 'all'（全員） | uid（特定メンバー）
+type OwnerFilter = 'all' | string
+
 export default function HealthPage() {
   const [range, setRange] = useState<RangeKey>('30d')
 
@@ -55,21 +48,49 @@ export default function HealthPage() {
     addMetric, updateMetric, removeMetric,
   } = useHealth(rangeDays)
 
+  const { user } = useHousehold()
+  const memberNames = useMemberProfiles()
+  const currentUid = user?.uid ?? ''
+
+  // メンバーリスト（表示順は自分を先頭に）。表示名が無いメンバーは仮ラベル。
+  const members = useMemo(() => {
+    const uids = new Set<string>()
+    if (currentUid) uids.add(currentUid)
+    for (const uid of Object.keys(memberNames)) uids.add(uid)
+    return Array.from(uids).map(uid => ({
+      uid,
+      name: memberNames[uid] ?? (uid === currentUid ? '自分' : 'メンバー'),
+    }))
+  }, [memberNames, currentUid])
+
+  // 所有者フィルター（デフォルトは「自分」）。レガシー項目は自分フィルター時にフォールバック表示。
+  const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>(currentUid || 'all')
+
   // モーダル制御
   const [recordOpen, setRecordOpen] = useState(false)
   const [metricFormOpen, setMetricFormOpen] = useState(false)
   const [metricEditTarget, setMetricEditTarget] = useState<HealthMetric | null>(null)
 
   const sortedMetrics = useMemo(
-    () => [...metrics].sort((a, b) => a.order - b.order),
-    [metrics],
+    () => {
+      const all = [...metrics].sort((a, b) => a.order - b.order)
+      if (ownerFilter === 'all') return all
+      // 特定メンバーを選択中：そのメンバー所有の項目。
+      // 自分を選択中はオーナー未指定（レガシー）もフォールバック表示する。
+      return all.filter(m => {
+        if (m.ownerUid === ownerFilter) return true
+        if (ownerFilter === currentUid && !m.ownerUid) return true
+        return false
+      })
+    },
+    [metrics, ownerFilter, currentUid],
   )
 
   // 範囲内で「少なくとも 1 項目に値がある日付」を昇順で抽出。
   // データがない日付を埋めると見た目がスカスカになるため、表/グラフとも実データのみ表示する。
   const recordedDatesInRange = useMemo(() => {
     const today = todayIso()
-    const cutoff = isoDayOffset(-(rangeDays - 1), today)
+    const cutoff = isoDayOffset(today, -(rangeDays - 1))
     const set = new Set<string>()
     for (const m of sortedMetrics) {
       for (const p of seriesForMetric(m.id)) {
@@ -143,6 +164,7 @@ export default function HealthPage() {
         decimalPlaces: values.decimalPlaces,
         color: values.color,
         visibility: values.visibility,
+        ownerUid: values.ownerUid || undefined,
         memo: values.memo.trim() === '' ? undefined : values.memo.trim(),
       })
     } else {
@@ -152,6 +174,7 @@ export default function HealthPage() {
         decimalPlaces: values.decimalPlaces,
         color: values.color,
         visibility: values.visibility,
+        ...(values.ownerUid && { ownerUid: values.ownerUid }),
         ...(values.memo.trim() !== '' && { memo: values.memo.trim() }),
       })
     }
@@ -181,6 +204,40 @@ export default function HealthPage() {
         />
       )}
     >
+          {/* ─── メンバーフィルター（世帯に複数メンバーがいる時のみ表示） ─── */}
+          {members.length > 1 && (
+            <div className="bg-white rounded-2xl border border-gray-200 p-3 xl:shrink-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-gray-500 shrink-0">表示対象</span>
+                <button
+                  type="button"
+                  onClick={() => setOwnerFilter('all')}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    ownerFilter === 'all'
+                      ? 'bg-sage-600 text-white border-sage-600'
+                      : 'bg-white text-gray-600 border-gray-200 hover:border-sage-300'
+                  }`}
+                >
+                  全員
+                </button>
+                {members.map(m => (
+                  <button
+                    key={m.uid}
+                    type="button"
+                    onClick={() => setOwnerFilter(m.uid)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                      ownerFilter === m.uid
+                        ? 'bg-sage-600 text-white border-sage-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-sage-300'
+                    }`}
+                  >
+                    {m.uid === currentUid ? '自分' : m.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ─── 月次推移グラフ（xl は固定高） ─── */}
           <div className="bg-white rounded-2xl border border-gray-200 p-4 xl:shrink-0">
             <div className="flex items-center justify-between mb-3">
@@ -281,6 +338,8 @@ export default function HealthPage() {
       <HealthMetricFormModal
         isOpen={metricFormOpen}
         editTarget={metricEditTarget}
+        currentUid={currentUid}
+        members={members}
         onClose={() => setMetricFormOpen(false)}
         onSave={handleMetricSave}
         onDelete={metricEditTarget ? handleMetricDelete : undefined}

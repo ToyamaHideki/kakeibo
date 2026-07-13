@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { HealthMetric } from '../types'
-
-function todayIso(): string {
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  return d.toISOString().slice(0, 10)
-}
+import { todayLocalIso as todayIso } from '../utils/date'
 
 function formatValue(v: number | undefined, decimals: number): string {
   if (v === undefined) return '—'

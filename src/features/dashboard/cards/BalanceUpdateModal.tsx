@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useEscapeKey } from '../../../hooks/useEscapeKey'
-import { currentYearMonth } from '../../../utils/date'
+import { currentYearMonth, todayLocalIso } from '../../../utils/date'
 import { formatYenCompact } from '../../../utils/format'
 import type { SavingsAccount, SecuritiesAccount } from '../../../types'
 
 function todayStr(): string {
-  return new Date().toISOString().slice(0, 10)
+  return todayLocalIso()
 }
 
 type SavingsTarget = {
